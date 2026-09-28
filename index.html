@@ -627,7 +627,9 @@
     // ================================================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwBiNwckLC-9o_m0X0TBDE-vjazUJMWD4UlIsySwcsFuUjMyBGBo3mfVQGEhWl47CJ7DA/exec";
     const SCHEMA = 1;
-    const APP_VER = "1.1.0";
+    const APP_VER = "1.1.1";
+    const VERSION_URL = "version.json";       // cùng repo; build_vocab.py tự đồng bộ số phiên bản vào file này
+    const VERSION_CHECK_MS = 10 * 60 * 1000;
     const NEW_BATCH = 20;                       // "Học thêm 20 thẻ mới"
     const PUSH_DEBOUNCE_MS = 3000;
     const RETRY_MS = 60000;
@@ -1489,6 +1491,30 @@
     $("sync-badge").addEventListener("click", () => show("settings"));
 
     // ================================================================
+    // TỰ CẬP NHẬT: so APP_VER với version.json trên server, khác thì tải lại bằng URL mới (bỏ qua cache)
+    // ================================================================
+    let lastVersionCheck = 0;
+    async function checkVersion() {
+      if (location.protocol === "file:") return;
+      if (Date.now() - lastVersionCheck < VERSION_CHECK_MS) return;
+      lastVersionCheck = Date.now();
+      try {
+        const res = await fetch(VERSION_URL + "?t=" + Date.now(), { cache: "no-store" });
+        if (!res.ok) return;
+        const j = await res.json(); const latest = String(j.ver || "");
+        if (!latest || latest === APP_VER) return;
+        let done = "";
+        try { done = sessionStorage.getItem(LS_PREFIX + "reloaded-for") || ""; } catch (e) {}
+        if (done === latest) { ui.toast("Có bản mới " + latest, "Trình duyệt vẫn giữ bản cũ. Đóng hẳn app rồi mở lại.", "warning"); return; }
+        if (state.dirty) flushBeacon();
+        try { sessionStorage.setItem(LS_PREFIX + "reloaded-for", latest); } catch (e) {}
+        ui.toast("Có bản mới " + latest, "Đang tải lại…", "info");
+        setTimeout(() => location.replace(location.pathname + "?v=" + encodeURIComponent(latest)), 600);
+      } catch (e) { /* offline: bỏ qua */ }
+    }
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkVersion(); });
+
+    // ================================================================
     // KHỞI ĐỘNG
     // ================================================================
     $("login-form").addEventListener("submit", (e) => { e.preventDefault(); login($("login-user").value); });
@@ -1504,6 +1530,7 @@
       renderLogin();
       $("scr-login").hidden = false;
       $("login-user").focus();
+      checkVersion();
     }
     boot();
   })();

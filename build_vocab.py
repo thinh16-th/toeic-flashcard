@@ -253,6 +253,17 @@ def embed(json_text: str) -> bool:
     return True
 
 
+def sync_version() -> str:
+    """Đọc APP_VER trong index.html, ghi version.json cùng folder (app so sánh để tự tải lại bản mới)."""
+    if not OUT_HTML.exists():
+        return "bỏ qua"
+    m = re.search(r'const APP_VER = "([^"]+)"', OUT_HTML.read_text(encoding="utf-8"))
+    if not m:
+        return "không thấy APP_VER"
+    (HERE / "version.json").write_text(json.dumps({"ver": m.group(1)}), encoding="utf-8")
+    return m.group(1)
+
+
 # ---------------------------------------------------------------- main
 def main(argv):
     no_embed = "--no-embed" in argv
@@ -291,6 +302,7 @@ def main(argv):
     print("Theme              :", ", ".join(f"{t}={c}" for t, c in themes.most_common()))
     print(f"vocab.json         : {OUT_JSON.stat().st_size/1024:.0f} KB → {OUT_JSON}")
     print(f"embed index.html   : {'OK' if embedded else 'bỏ qua'}")
+    print(f"version.json       : {sync_version()}")
 
 
 if __name__ == "__main__":
