@@ -627,13 +627,14 @@
     // ================================================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwBiNwckLC-9o_m0X0TBDE-vjazUJMWD4UlIsySwcsFuUjMyBGBo3mfVQGEhWl47CJ7DA/exec";
     const SCHEMA = 1;
-    const APP_VER = "1.1.1";
+    const APP_VER = "1.1.2";
     const VERSION_URL = "version.json";       // cùng repo; build_vocab.py tự đồng bộ số phiên bản vào file này
     const VERSION_CHECK_MS = 10 * 60 * 1000;
     const NEW_BATCH = 20;                       // "Học thêm 20 thẻ mới"
     const PUSH_DEBOUNCE_MS = 3000;
     const RETRY_MS = 60000;
-    const FETCH_TIMEOUT_MS = 15000;
+    const FETCH_TIMEOUT_MS = 45000;          // Apps Script khởi động nguội có thể mất 10 đến 30 giây
+    const RETRY_FAST_MS = 20000;
     const USER_RE = /^[a-z0-9_.-]{2,32}$/;
     const LS_PREFIX = "ets-fc:";
     // Leitner: hộp → số ngày tới lần ôn sau khi "Thuộc" (hộp 5 lặp lại: 30 ngày)
@@ -806,8 +807,9 @@
         }
       } catch (err) {
         const off = typeof navigator !== "undefined" && navigator.onLine === false;
-        setSync(off ? "offline" : "error", off ? "Không có mạng. Tiến độ giữ trên thiết bị, tự gửi khi có mạng." : "Không gọi được server (" + err.message + "). Sẽ thử lại sau 1 phút.");
-        state.retryTimer = setTimeout(() => push(), RETRY_MS);
+        const timeout = err && err.name === "AbortError";
+        setSync(off ? "offline" : "error", off ? "Không có mạng. Tiến độ giữ trên thiết bị, tự gửi khi có mạng." : timeout ? "Server phản hồi chậm, sẽ tự gửi lại sau 20 giây. Tiến độ vẫn an toàn trên thiết bị." : "Không gọi được server (" + err.message + "). Sẽ thử lại sau 1 phút.");
+        state.retryTimer = setTimeout(() => push(), timeout ? RETRY_FAST_MS : RETRY_MS);
       } finally { state.pushing = false; }
     }
 
@@ -851,7 +853,7 @@
             setSync("offline", "Không gọi được server, dùng bản trên thiết bị. Sẽ đồng bộ khi có mạng.");
             state.dirty = true; state.retryTimer = setTimeout(() => push(), RETRY_MS);
           } else {
-            showLoginError("Không kết nối được server (" + err.message + "). Kiểm tra mạng rồi thử lại.");
+            showLoginError(err && err.name === "AbortError" ? "Server phản hồi chậm quá 45 giây. Đợi một chút rồi bấm Vào học lại." : "Không kết nối được server (" + err.message + "). Kiểm tra mạng rồi thử lại.");
           }
           return;
         }
@@ -1459,7 +1461,7 @@
           ui.toast("Đồng bộ xong", changed ? "Đã gộp thay đổi từ thiết bị khác." : "Không có gì mới.", "success");
         } else if (res.ok) { state.dirty = true; await push(); }
         else setSync("error", "Server trả lời: " + (res.code || "không rõ"));
-      } catch (err) { setSync(navigator.onLine === false ? "offline" : "error", "Không gọi được server (" + err.message + ")."); }
+      } catch (err) { setSync(navigator.onLine === false ? "offline" : "error", err && err.name === "AbortError" ? "Server phản hồi chậm quá 45 giây. Thử lại sau ít phút." : "Không gọi được server (" + err.message + ")."); }
       finally { b.disabled = false; }
     });
 
