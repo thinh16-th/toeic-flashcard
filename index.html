@@ -144,6 +144,15 @@
     .box-seg-5 { background: var(--status-good); }
     [hidden] { display: none !important; }
     #grid { min-height: 320px; }
+    .qz-opt { white-space: normal; height: auto; min-height: 3rem; justify-content: flex-start; text-align: left; padding-block: 0.6rem; }
+    .qz-opt[data-state="correct"] { border-color: var(--status-good); color: var(--foreground); background: color-mix(in oklab, var(--status-good) 14%, var(--card)); }
+    .qz-opt[data-state="wrong"] { border-color: var(--status-critical); background: color-mix(in oklab, var(--status-critical) 12%, var(--card)); }
+    .hist-cell { aspect-ratio: 1; border-radius: 3px; background: var(--muted); }
+    .hist-cell[data-lv="1"] { background: color-mix(in oklab, var(--primary) 25%, var(--muted)); }
+    .hist-cell[data-lv="2"] { background: color-mix(in oklab, var(--primary) 50%, var(--muted)); }
+    .hist-cell[data-lv="3"] { background: color-mix(in oklab, var(--primary) 75%, var(--muted)); }
+    .hist-cell[data-lv="4"] { background: var(--primary); }
+    .hist-cell.is-today { outline: 2px solid var(--ring); outline-offset: 1px; }
     mark.fc-hl { background: color-mix(in oklab, var(--primary) 18%, transparent); color: inherit; border-radius: 3px; padding: 0 2px; }
   </style>
 
@@ -226,10 +235,18 @@
 
       <section class="card" data-size="sm">
         <section class="space-y-3">
-          <div class="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+          <div class="grid gap-3 md:grid-cols-[1fr_1fr_auto] md:items-end">
             <div role="group" class="field">
               <label for="deck-select">Bộ thẻ</label>
               <select id="deck-select" class="select"></select>
+            </div>
+            <div role="group" class="field">
+              <label for="mode-select">Chế độ</label>
+              <select id="mode-select" class="select">
+                <option value="card">Thẻ lật: từ, đoán nghĩa</option>
+                <option value="reverse">Thẻ lật ngược: nghĩa, đoán từ</option>
+                <option value="quiz">Trắc nghiệm 4 đáp án</option>
+              </select>
             </div>
             <button id="btn-study" class="btn w-full md:w-auto" data-size="lg">Học ngay</button>
           </div>
@@ -250,6 +267,18 @@
         <div class="card" data-size="sm"><header><p class="text-muted-foreground text-sm">Đến hạn hôm nay</p><h3 class="text-2xl font-semibold" data-num id="kpi-due">0</h3></header></div>
         <div class="card" data-size="sm"><header><p class="text-muted-foreground text-sm">Mới còn lại hôm nay</p><h3 class="text-2xl font-semibold" data-num id="kpi-new">0</h3></header></div>
         <div class="card" data-size="sm"><header><p class="text-muted-foreground text-sm">Đã thuộc (hộp 4, 5)</p><h3 class="text-2xl font-semibold" data-num id="kpi-known">0</h3></header></div>
+      </section>
+
+      <section class="card">
+        <header><h3>30 ngày qua</h3><p>Số thẻ ôn mỗi ngày, mọi bộ thẻ. Ô đậm hơn là ngày ôn nhiều hơn.</p></header>
+        <section class="space-y-3">
+          <div id="hist-grid" class="grid grid-cols-10 gap-1 sm:max-w-sm sm:grid-cols-15" role="img" aria-label="Số thẻ ôn mỗi ngày trong 30 ngày qua"></div>
+          <ul class="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+            <li><span data-num id="hist-total">0</span> <span class="text-muted-foreground">thẻ đã ôn</span></li>
+            <li><span data-num id="hist-rate">0%</span> <span class="text-muted-foreground">trả lời thuộc</span></li>
+            <li><span data-num id="hist-days">0</span> <span class="text-muted-foreground">ngày có học</span></li>
+          </ul>
+        </section>
       </section>
 
       <section class="card">
@@ -300,8 +329,10 @@
             <p class="font-medium" id="set-user"></p>
             <p class="text-muted-foreground text-sm" id="set-sync-detail"></p>
           </div>
-          <button class="btn" data-variant="outline" data-size="sm" id="btn-sync-now">Đồng bộ ngay</button>
-          <button class="btn" data-variant="outline" data-size="sm" id="btn-logout">Đổi người dùng</button>
+          <div class="flex w-full gap-2 sm:w-auto">
+            <button class="btn" data-variant="outline" data-size="sm" id="btn-sync-now">Đồng bộ ngay</button>
+            <button class="btn" data-variant="outline" data-size="sm" id="btn-logout">Đổi người dùng</button>
+          </div>
         </section>
       </div>
 
@@ -325,6 +356,15 @@
           <div role="group" class="field" data-orientation="horizontal">
             <input id="set-speakfront" type="checkbox" role="switch" />
             <label for="set-speakfront">Phát âm ngay khi hiện mặt trước</label>
+          </div>
+          <div role="group" class="field" data-orientation="horizontal">
+            <input id="set-speakexample" type="checkbox" role="switch" />
+            <label for="set-speakexample">Đọc cả câu ví dụ khi lật</label>
+          </div>
+          <div role="group" class="field md:col-span-2">
+            <label for="set-rate">Tốc độ đọc: <span data-num id="set-rate-val">0,95</span>×</label>
+            <input id="set-rate" type="range" min="0.6" max="1.3" step="0.05" class="input" />
+            <p>Kéo sang trái để đọc chậm hơn. Bấm nút loa để nghe thử.</p>
           </div>
         </section>
       </div>
@@ -377,6 +417,7 @@
         <p class="truncate text-sm font-medium" id="study-deck"></p>
         <p class="text-muted-foreground text-xs" id="study-counter"></p>
       </div>
+      <button class="btn" data-variant="ghost" data-size="sm" id="study-known" title="Từ này đã biết rồi: đưa thẳng lên hộp 5, ôn lại sau 30 ngày" hidden>Đã biết</button>
       <button class="btn" data-variant="ghost" data-size="icon" aria-label="Hoàn tác lần chấm trước" id="study-undo" disabled>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
       </button>
@@ -409,13 +450,43 @@
             </button>
           </div>
           <p class="leading-7" id="fc-def"></p>
-          <p class="text-muted-foreground border-t border-border pt-3 italic leading-6" id="fc-example"></p>
+          <div class="flex items-start gap-2 border-t border-border pt-3" id="fc-example-row">
+            <p class="text-muted-foreground min-w-0 flex-1 italic leading-6" id="fc-example"></p>
+            <button class="btn shrink-0" data-variant="ghost" data-size="icon-sm" aria-label="Đọc câu ví dụ" id="fc-speak-ex">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            </button>
+          </div>
           <div class="flex flex-wrap gap-1.5 pt-1" id="fc-chips"></div>
         </section>
       </div>
     </div>
 
+    <div id="quiz-panel" class="mx-auto w-full max-w-xl flex-1 overflow-auto px-3 py-3 min-h-0" hidden>
+      <div class="card">
+        <header>
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <span class="badge mb-1" data-variant="outline" id="qz-box"></span>
+              <h2 class="text-2xl font-semibold tracking-tight md:text-3xl" id="qz-word"></h2>
+              <p class="text-muted-foreground" id="qz-ipa"></p>
+            </div>
+            <button class="btn shrink-0" data-variant="outline" data-size="icon" aria-label="Phát âm" id="qz-speak">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+            </button>
+          </div>
+          <p>Chọn nghĩa đúng</p>
+        </header>
+        <section class="space-y-3">
+          <div id="qz-options" class="grid gap-2"></div>
+          <p id="qz-feedback" class="text-sm" aria-live="polite"></p>
+        </section>
+      </div>
+    </div>
+
     <footer class="shrink-0 px-3 pt-2 safe-b">
+      <div id="study-actions-quiz" class="mx-auto max-w-xl" hidden>
+        <button class="btn w-full" data-size="lg" id="btn-quiz-next">Tiếp theo</button>
+      </div>
       <div id="study-actions-front" class="mx-auto max-w-xl">
         <button class="btn w-full" data-size="lg" id="btn-flip">Lật thẻ</button>
       </div>
@@ -556,7 +627,7 @@
     // ================================================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwBiNwckLC-9o_m0X0TBDE-vjazUJMWD4UlIsySwcsFuUjMyBGBo3mfVQGEhWl47CJ7DA/exec";
     const SCHEMA = 1;
-    const APP_VER = "1.0.0";
+    const APP_VER = "1.1.0";
     const NEW_BATCH = 20;                       // "Học thêm 20 thẻ mới"
     const PUSH_DEBOUNCE_MS = 3000;
     const RETRY_MS = 60000;
@@ -603,12 +674,30 @@
       session: null, table: null, voices: [],
     };
 
+    const SETTINGS_DEFAULT = { newPerDay: 20, voice: "", autoSpeak: true, speakFront: false, speakExample: false, rate: 0.95, mode: "card" };
+    const HISTORY_DAYS = 90;
+    /** bù trường thiếu cho tiến độ cũ (schema cũ hơn) */
+    function normalizeProgress(p) {
+      p.settings = Object.assign({}, SETTINGS_DEFAULT, p.settings || {});
+      if (!p.history || typeof p.history !== "object") p.history = {};
+      if (!p.cards) p.cards = {};
+      return p;
+    }
+    function logHistory(known, isNew) {
+      const p = state.progress; const t = todayStr();
+      const h = p.history[t] || { r: 0, k: 0, n: 0 };
+      h.r++; if (known) h.k++; if (isNew) h.n++;
+      p.history[t] = h;
+      const cutoff = addDays(t, -HISTORY_DAYS);
+      for (const d of Object.keys(p.history)) if (d < cutoff) delete p.history[d];
+    }
     function emptyProgress(u) {
       return {
         schema: SCHEMA, username: u, updated: nowIso(),
-        settings: { newPerDay: 20, voice: "", autoSpeak: true, speakFront: false },
+        settings: clone(SETTINGS_DEFAULT),
         streak: { last: "", days: 0 },
         daily: { date: todayStr(), new: 0, reviews: 0 },
+        history: {},
         cards: {},
       };
     }
@@ -646,7 +735,13 @@
       out.streak = sa.last === sb.last ? { last: sa.last, days: Math.max(sa.days, sb.days) } : (sa.last > sb.last ? clone(sa) : clone(sb));
       const da = a.daily || { date: "", new: 0, reviews: 0 }, db = b.daily || { date: "", new: 0, reviews: 0 };
       out.daily = da.date === db.date ? { date: da.date, new: Math.max(da.new, db.new), reviews: Math.max(da.reviews, db.reviews) } : (da.date > db.date ? clone(da) : clone(db));
-      out.settings = Object.assign({}, other.settings || {}, base.settings || {});
+      out.settings = Object.assign({}, SETTINGS_DEFAULT, other.settings || {}, base.settings || {});
+      out.history = {};
+      const days = new Set([...Object.keys(a.history || {}), ...Object.keys(b.history || {})]);
+      for (const d of days) {
+        const ha = (a.history || {})[d] || { r: 0, k: 0, n: 0 }, hb = (b.history || {})[d] || { r: 0, k: 0, n: 0 };
+        out.history[d] = { r: Math.max(ha.r || 0, hb.r || 0), k: Math.max(ha.k || 0, hb.k || 0), n: Math.max(ha.n || 0, hb.n || 0) };
+      }
       out.updated = (a.updated || "") >= (b.updated || "") ? a.updated : b.updated;
       out.schema = SCHEMA;
       return out;
@@ -790,7 +885,7 @@
     }
 
     function enterApp() {
-      ensureDaily(); rememberUser(state.user);
+      normalizeProgress(state.progress); ensureDaily(); rememberUser(state.user);
       $("scr-login").hidden = true; $("shell").hidden = false;
       $("hdr-user").textContent = state.user;
       $("set-user").textContent = state.user; $("set-avatar").textContent = state.user.slice(0, 2).toUpperCase();
@@ -872,6 +967,8 @@
     function renderHome() {
       const sel = $("deck-select"); if (!sel.options.length) fillDeckSelect(sel);
       sel.value = state.deck;
+      $("mode-select").value = state.progress.settings.mode || "card";
+      renderHistory();
       const d = deckById(state.deck); const st = deckStats(state.deck);
       $("home-date").textContent = new Date().toLocaleDateString("vi-VN", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });
       $("home-streak").textContent = ui.fmt(state.progress.streak.days || 0);
@@ -904,6 +1001,26 @@
       }
     }
     $("deck-select").addEventListener("change", (e) => { state.deck = e.target.value; renderHome(); });
+    $("mode-select").addEventListener("change", (e) => { state.progress.settings.mode = e.target.value; markDirty(); });
+
+    // 30 ngày qua: heatmap tuần tự một màu (primary, nhạt → đậm theo số thẻ ôn)
+    function renderHistory() {
+      const p = state.progress; const grid = $("hist-grid"); grid.innerHTML = "";
+      const t = todayStr(); let total = 0, known = 0, days = 0;
+      const level = (r) => (r === 0 ? 0 : r < 10 ? 1 : r < 25 ? 2 : r < 50 ? 3 : 4);
+      for (let i = 29; i >= 0; i--) {
+        const d = addDays(t, -i); const h = p.history[d] || { r: 0, k: 0, n: 0 };
+        total += h.r; known += h.k; if (h.r) days++;
+        const cell = document.createElement("div");
+        cell.className = "hist-cell" + (d === t ? " is-today" : ""); cell.dataset.lv = level(h.r);
+        const [y, m, dd] = d.split("-");
+        cell.title = `${dd}/${m}: ${h.r ? `${h.r} thẻ, thuộc ${h.k}, mới ${h.n}` : "không học"}`;
+        grid.appendChild(cell);
+      }
+      $("hist-total").textContent = ui.fmt(total);
+      $("hist-rate").textContent = total ? Math.round((known / total) * 100) + "%" : "0%";
+      $("hist-days").textContent = ui.fmt(days);
+    }
     $("btn-study").addEventListener("click", () => startSession(state.deck, false));
     $("btn-extra-new").addEventListener("click", () => startSession(state.deck, true));
 
@@ -924,11 +1041,14 @@
         queue = cards.filter((c) => !cardState(c.id)).sort(byPriority).slice(0, NEW_BATCH).map((c) => c.id);
       }
       if (!queue.length) { ui.toast("Không có thẻ để học", "Bộ này không còn thẻ đến hạn hay thẻ mới.", "info"); return; }
-      state.session = { deckId, queue, idx: 0, known: 0, forgot: 0, history: [], again: new Set(), flipped: false };
+      const mode = p.settings.mode || "card";
+      state.session = { deckId, queue, idx: 0, known: 0, forgot: 0, history: [], again: new Set(), flipped: false, mode, quiz: null, extraNew: !!extraNew };
       $("shell").hidden = true; $("scr-study").hidden = false; $("study-done").hidden = true;
-      $("fc-scene").hidden = false; $("scr-study").querySelector("footer").hidden = false;
+      $("fc-scene").hidden = mode === "quiz"; $("quiz-panel").hidden = mode !== "quiz";
+      $("scr-study").querySelector("footer").hidden = false;
       window.scrollTo(0, 0);
-      $("study-deck").textContent = deckById(deckId).name + (extraNew ? " · thẻ mới" : "");
+      const modeLabel = { card: "", reverse: " · ngược", quiz: " · trắc nghiệm" }[mode] || "";
+      $("study-deck").textContent = deckById(deckId).name + modeLabel + (extraNew ? " · thẻ mới" : "");
       renderCard();
     }
 
@@ -951,6 +1071,19 @@
       return escapeHtml(example.slice(0, i)) + `<mark class="fc-hl">${escapeHtml(m[0])}</mark>` + escapeHtml(example.slice(i + m[0].length));
     }
 
+    function maskExample(example, word) {
+      if (!example) return "";
+      const html = highlight(example, word);
+      return html.replace(/<mark class="fc-hl">[^<]*<\/mark>/, "＿＿＿＿");
+    }
+
+    function renderProgressBar(s) {
+      $("study-counter").textContent = `Thẻ ${s.idx + 1} / ${s.queue.length}` + (s.idx + 1 > 1 ? ` · thuộc ${s.known}, quên ${s.forgot}` : "");
+      const pct = Math.round((s.idx / s.queue.length) * 100);
+      const pb = $("study-progress"); pb.setAttribute("aria-valuenow", pct); pb.querySelector("span").style.width = pct + "%";
+      $("study-undo").disabled = s.history.length === 0;
+    }
+
     function chipsHtml(e, s) {
       const chips = [];
       chips.push(`<span class="badge" data-variant="outline">${boxLabel(s)}</span>`);
@@ -964,39 +1097,112 @@
     function renderCard() {
       const s = state.session; const id = currentId();
       if (!id) { finishSession(); return; }
-      const e = BY_ID.get(id); const cs = cardState(id);
+      if (s.mode === "quiz") { renderQuiz(); return; }
+      const e = BY_ID.get(id); const cs = cardState(id); const reverse = s.mode === "reverse";
       s.flipped = false;
       const card = $("fc-card"); card.classList.remove("is-flipped"); card.style.transform = "";
       $("fc-box").textContent = boxLabel(cs) + (s.again.has(id) ? " · ôn lại" : "");
-      $("fc-word").textContent = e.word; $("fc-ipa").textContent = e.ipa;
+      const w = $("fc-word"), ipa = $("fc-ipa");
+      if (reverse) {
+        w.className = "text-xl font-medium leading-8 md:text-2xl"; w.textContent = e.def;
+        ipa.className = "text-muted-foreground text-sm italic leading-6"; ipa.innerHTML = e.example ? maskExample(e.example, e.word) : "";
+        $("fc-speak").hidden = true;
+      } else {
+        w.className = "text-3xl font-semibold tracking-tight md:text-4xl"; w.textContent = e.word;
+        ipa.className = "text-muted-foreground text-lg"; ipa.textContent = e.ipa;
+        $("fc-speak").hidden = false;
+      }
       $("fc-word-b").textContent = e.word; $("fc-ipa-b").textContent = e.ipa;
       $("fc-def").textContent = e.def;
-      const ex = $("fc-example");
-      if (e.example) { ex.innerHTML = highlight(e.example, e.word); ex.hidden = false; } else { ex.hidden = true; ex.innerHTML = ""; }
+      const ex = $("fc-example"), exRow = $("fc-example-row");
+      if (e.example) { ex.innerHTML = highlight(e.example, e.word); exRow.hidden = false; } else { exRow.hidden = true; ex.innerHTML = ""; }
       $("fc-chips").innerHTML = chipsHtml(e, cs);
-      $("study-counter").textContent = `Thẻ ${s.idx + 1} / ${s.queue.length}` + (s.idx + 1 > 1 ? ` · thuộc ${s.known}, quên ${s.forgot}` : "");
-      const pct = Math.round((s.idx / s.queue.length) * 100);
-      const pb = $("study-progress"); pb.setAttribute("aria-valuenow", pct); pb.querySelector("span").style.width = pct + "%";
-      $("study-actions-front").hidden = false; $("study-actions-back").hidden = true;
-      $("study-undo").disabled = s.history.length === 0;
+      renderProgressBar(s);
+      $("study-actions-front").hidden = false; $("study-actions-back").hidden = true; $("study-actions-quiz").hidden = true;
+      $("study-known").hidden = !!cs;
       const fine = matchMedia("(hover: hover)").matches;
-      $("fc-front-hint").textContent = fine ? "Bấm thẻ hoặc Space để lật, bấm lại để quay về" : "Chạm thẻ để lật, chạm lại để quay về";
+      $("fc-front-hint").textContent = reverse ? (fine ? "Đoán từ, rồi bấm thẻ hoặc Space để xem" : "Đoán từ, rồi chạm thẻ để xem") : (fine ? "Bấm thẻ hoặc Space để lật, bấm lại để quay về" : "Chạm thẻ để lật, chạm lại để quay về");
       $("study-hint").textContent = fine ? "Sau khi lật: kéo thẻ sang phải nếu thuộc, sang trái nếu quên. Phím 1: quên · 2: thuộc · U: hoàn tác · Esc: kết thúc" : "Sau khi lật: vuốt phải nếu thuộc, vuốt trái nếu quên";
+      if (state.progress.settings.speakFront && !reverse) speak(e.word);
+    }
+
+    // ---- Trắc nghiệm 4 đáp án
+    function shuffle(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+    const shortDef = (d) => { const t = d.replace(/^[=≈]\s*/, ""); return t.length > 140 ? t.slice(0, 137).replace(/,?\s+\S*$/, "") + "…" : t; };
+    function buildQuiz(id) {
+      const e = BY_ID.get(id); const wl = stripParen(e.word).toLowerCase();
+      const ok = (c) => c.id !== id && c.def && c.def !== e.def && !c.def.toLowerCase().includes(wl) && !e.def.toLowerCase().includes(stripParen(c.word).toLowerCase());
+      let pool = deckCards(state.session.deckId).filter(ok);
+      if (pool.length < 3) pool = VOCAB.filter(ok);
+      const sameTheme = pool.filter((c) => c.theme === e.theme);
+      const picks = shuffle(sameTheme.length >= 3 ? sameTheme : pool).slice(0, 3);
+      const options = shuffle([e, ...picks].map((c) => ({ id: c.id, def: shortDef(c.def) })));
+      return { options, answered: false, correct: null };
+    }
+    function renderQuiz() {
+      const s = state.session; const id = currentId(); const e = BY_ID.get(id); const cs = cardState(id);
+      s.flipped = false; s.quiz = buildQuiz(id);
+      $("qz-box").textContent = boxLabel(cs) + (s.again.has(id) ? " · ôn lại" : "");
+      $("qz-word").textContent = e.word; $("qz-ipa").textContent = e.ipa;
+      const box = $("qz-options"); box.innerHTML = "";
+      s.quiz.options.forEach((o, i) => {
+        const b = document.createElement("button"); b.type = "button"; b.className = "btn qz-opt w-full"; b.dataset.variant = "outline"; b.dataset.i = i;
+        b.innerHTML = `<kbd class="kbd me-2 shrink-0">${i + 1}</kbd><span>${escapeHtml(o.def)}</span>`;
+        b.addEventListener("click", () => answerQuiz(i));
+        box.appendChild(b);
+      });
+      $("qz-feedback").textContent = "";
+      renderProgressBar(s);
+      $("study-actions-front").hidden = true; $("study-actions-back").hidden = true; $("study-actions-quiz").hidden = false;
+      $("btn-quiz-next").hidden = true; $("study-known").hidden = true;
+      $("study-hint").textContent = matchMedia("(hover: hover)").matches ? "Phím 1 đến 4 để chọn · Space: tiếp theo · U: hoàn tác · Esc: kết thúc" : "Chạm đáp án đúng";
+      $("quiz-panel").scrollTop = 0;
       if (state.progress.settings.speakFront) speak(e.word);
     }
+    function answerQuiz(i) {
+      const s = state.session; if (!s || !s.quiz || s.quiz.answered) return;
+      const id = currentId(); const q = s.quiz; q.answered = true;
+      const correctIdx = q.options.findIndex((o) => o.id === id); q.correct = i === correctIdx;
+      const btns = $("qz-options").querySelectorAll("button");
+      btns.forEach((b, j) => { b.disabled = true; if (j === correctIdx) b.dataset.state = "correct"; else if (j === i) b.dataset.state = "wrong"; });
+      $("qz-feedback").textContent = q.correct ? "Đúng." : "Chưa đúng. Đáp án đúng được đánh dấu bên trên; thẻ sẽ về hộp 1 và quay lại cuối phiên.";
+      $("btn-quiz-next").hidden = false; $("btn-quiz-next").focus();
+      if (state.progress.settings.autoSpeak) speak(BY_ID.get(id).word);
+    }
+    function quizNext() {
+      const s = state.session; if (!s || !s.quiz || !s.quiz.answered) return;
+      s.flipped = true; rate(s.quiz.correct);
+    }
+    $("btn-quiz-next").addEventListener("click", quizNext);
+    $("qz-speak").addEventListener("click", () => speak(BY_ID.get(currentId()).word));
+
+    // ---- Đã biết: thẻ mới đưa thẳng lên hộp 5
+    function markKnown() {
+      const s = state.session; const id = currentId(); if (!s || !id || cardState(id)) return;
+      const p = state.progress;
+      s.history.push({ id, prev: null, daily: clone(p.daily), streak: clone(p.streak), hist: clone(p.history[todayStr()] || null), qlen: s.queue.length, known: null });
+      p.cards[id] = { box: 5, due: addDays(todayStr(), INTERVAL_MAX), seen: 1, lapses: 0, updated: nowIso() };
+      markDirty(); s.idx++; renderCard();
+      ui.toast("Đã biết: " + BY_ID.get(id).word, "Đưa lên hộp 5, ôn lại sau 30 ngày.", "success");
+    }
+    $("study-known").addEventListener("click", markKnown);
 
     function flip() {
       const s = state.session; if (!s) return;
       s.flipped = !s.flipped; $("fc-card").classList.toggle("is-flipped", s.flipped);
       $("study-actions-front").hidden = s.flipped; $("study-actions-back").hidden = !s.flipped;
-      if (s.flipped && state.progress.settings.autoSpeak) speak(BY_ID.get(currentId()).word);
+      if (s.flipped && state.progress.settings.autoSpeak) {
+        const e = BY_ID.get(currentId()); speak(e.word);
+        if (state.progress.settings.speakExample && e.example) speak(e.example, { queue: true });
+      }
     }
 
     function rate(known) {
       const s = state.session; if (!s || !s.flipped) return;
       const id = currentId(); const p = state.progress; ensureDaily();
       const prev = cardState(id);
-      s.history.push({ id, prev: prev ? clone(prev) : null, daily: clone(p.daily), streak: clone(p.streak), qlen: s.queue.length, known });
+      s.history.push({ id, prev: prev ? clone(prev) : null, daily: clone(p.daily), streak: clone(p.streak), hist: clone(p.history[todayStr()] || null), qlen: s.queue.length, known });
+      logHistory(known, !prev);
       const ns = prev ? clone(prev) : { box: 1, seen: 0, lapses: 0 };
       if (!prev) p.daily.new++;
       ns.seen++;
@@ -1021,14 +1227,15 @@
       const h = s.history.pop(); const p = state.progress;
       if (h.prev) p.cards[h.id] = h.prev; else delete p.cards[h.id];
       p.daily = h.daily; p.streak = h.streak;
-      s.queue.length = h.qlen; if (!h.known) s.again.delete(h.id);
-      if (h.known) s.known--; else s.forgot--;
+      if (h.hist) p.history[todayStr()] = h.hist; else delete p.history[todayStr()];
+      s.queue.length = h.qlen;
+      if (h.known === false) { s.again.delete(h.id); s.forgot--; } else if (h.known === true) s.known--;
       s.idx--; markDirty(); renderCard();
     }
 
     function finishSession() {
       const s = state.session; if (!s) return;
-      $("fc-scene").hidden = true; $("scr-study").querySelector("footer").hidden = true;
+      $("fc-scene").hidden = true; $("quiz-panel").hidden = true; $("scr-study").querySelector("footer").hidden = true;
       const done = $("study-done"); done.hidden = false;
       const total = s.known + s.forgot;
       $("done-total").textContent = ui.fmt(total); $("done-known").textContent = ui.fmt(s.known); $("done-forgot").textContent = ui.fmt(s.forgot);
@@ -1056,6 +1263,7 @@
     $("btn-done-more").addEventListener("click", () => { const d = state.session.deckId; state.session = null; startSession(d, true); });
     $("fc-speak").addEventListener("click", () => speak(BY_ID.get(currentId()).word));
     $("fc-speak-b").addEventListener("click", () => speak(BY_ID.get(currentId()).word));
+    $("fc-speak-ex").addEventListener("click", () => speak(BY_ID.get(currentId()).example));
 
     // Chạm = lật qua lại. Sau khi lật: kéo/vuốt phải = thuộc, trái = quên (chuột lẫn cảm ứng, qua Pointer Events)
     (() => {
@@ -1093,11 +1301,16 @@
     document.addEventListener("keydown", (e) => {
       if ($("scr-study").hidden || !state.session) return;
       if (e.target.matches("input, select, textarea") || document.querySelector("dialog[open]")) return;
+      if (e.key === "u" || e.key === "U") { undo(); return; }
+      if (e.key === "Escape") { exitStudy(); return; }
+      if (state.session.mode === "quiz") {
+        if (e.key === " " || e.key === "Enter") { e.preventDefault(); quizNext(); return; }
+        if (/^[1-4]$/.test(e.key)) answerQuiz(Number(e.key) - 1);
+        return;
+      }
       if (e.key === " ") { e.preventDefault(); flip(); return; }
       if (e.key === "1") rate(false);
       else if (e.key === "2") rate(true);
-      else if (e.key === "u" || e.key === "U") undo();
-      else if (e.key === "Escape") exitStudy();
     });
 
     // ================================================================
@@ -1114,14 +1327,15 @@
     }
     if ("speechSynthesis" in window) { loadVoices(); speechSynthesis.addEventListener("voiceschanged", loadVoices); }
 
-    function speak(text) {
+    function speak(text, opts) {
+      if (!text) return;
       if (!("speechSynthesis" in window)) { ui.toast("Không phát âm được", "Trình duyệt này không hỗ trợ đọc văn bản.", "warning"); return; }
       try {
-        speechSynthesis.cancel();
+        if (!(opts && opts.queue)) speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance(stripParen(text));
-        const want = state.progress && state.progress.settings.voice;
-        const v = state.voices.find((x) => x.voiceURI === want) || state.voices.find((x) => /en-GB/i.test(x.lang)) || state.voices[0];
-        if (v) u.voice = v; u.lang = v ? v.lang : "en-GB"; u.rate = 0.95;
+        const st = state.progress ? state.progress.settings : SETTINGS_DEFAULT;
+        const v = state.voices.find((x) => x.voiceURI === st.voice) || state.voices.find((x) => /en-GB/i.test(x.lang)) || state.voices[0];
+        if (v) u.voice = v; u.lang = v ? v.lang : "en-GB"; u.rate = Number(st.rate) || 0.95;
         speechSynthesis.speak(u);
       } catch (e) {}
     }
@@ -1214,7 +1428,8 @@
     function renderSettings() {
       const st = state.progress.settings;
       $("set-newperday").value = st.newPerDay;
-      $("set-autospeak").checked = !!st.autoSpeak; $("set-speakfront").checked = !!st.speakFront;
+      $("set-autospeak").checked = !!st.autoSpeak; $("set-speakfront").checked = !!st.speakFront; $("set-speakexample").checked = !!st.speakExample;
+      $("set-rate").value = st.rate; $("set-rate-val").textContent = Number(st.rate).toLocaleString("vi-VN", { minimumFractionDigits: 2 });
       loadVoices();
       $("dlg-reset-desc").textContent = "Người dùng: " + state.user;
       $("about-count").textContent = `${ui.fmt(VOCAB.length)} từ, ${ui.fmt(VOCAB.filter((e) => e.hf).length)} high-frequency, ${ui.fmt(VOCAB.filter((e) => e.example).length)} từ có câu ví dụ. Phiên bản ${APP_VER}.`;
@@ -1224,6 +1439,9 @@
     $("set-voice").addEventListener("change", (e) => { state.progress.settings.voice = e.target.value; markDirty(); speak("example"); });
     $("set-autospeak").addEventListener("change", (e) => { state.progress.settings.autoSpeak = e.target.checked; markDirty(); });
     $("set-speakfront").addEventListener("change", (e) => { state.progress.settings.speakFront = e.target.checked; markDirty(); });
+    $("set-speakexample").addEventListener("change", (e) => { state.progress.settings.speakExample = e.target.checked; markDirty(); });
+    $("set-rate").addEventListener("input", (e) => { $("set-rate-val").textContent = Number(e.target.value).toLocaleString("vi-VN", { minimumFractionDigits: 2 }); });
+    $("set-rate").addEventListener("change", (e) => { state.progress.settings.rate = Number(e.target.value); markDirty(); speak("Please ensure that all forms are submitted by Friday."); });
     $("btn-logout").addEventListener("click", logout);
     $("btn-sync-now").addEventListener("click", async () => {
       if (!API_URL) { ui.toast("Chưa cấu hình server", "Dán URL Apps Script vào hằng API_URL trong index.html.", "warning"); return; }
@@ -1254,7 +1472,7 @@
         const data = JSON.parse(await f.text());
         if (!data || typeof data !== "object" || typeof data.cards !== "object") throw new Error("File không đúng định dạng tiến độ.");
         const before = Object.keys(state.progress.cards).length;
-        state.progress = mergeProgress(state.progress, data); touch(); saveLocal(); renderAll(); markDirty();
+        state.progress = normalizeProgress(mergeProgress(state.progress, data)); touch(); saveLocal(); renderAll(); markDirty();
         ui.toast("Đã nhập tiến độ", `${ui.fmt(Object.keys(data.cards).length)} thẻ trong file, gộp với ${ui.fmt(before)} thẻ hiện có.`, "success");
       } catch (err) { ui.toast("Không nhập được", err.message + " Chọn file JSON đã tải từ nút bên cạnh.", "error"); }
     });

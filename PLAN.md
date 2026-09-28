@@ -117,6 +117,19 @@ Mỗi bước bàn giao file lẻ (không zip), ghi đè cùng tên. Bước 2 v
 - **Từ trùng dạng** (`request (v.)` vs `request (n.)`) → id giữ nguyên chuỗi gốc, không gộp.
 - **Bản quyền passage ETS** → chỉ nhúng 1 câu ví dụ/từ, không nhúng nguyên passage.
 
-## 6. Ngoài phạm vi phiên bản 1
+## 6. Đã làm thêm sau v1 (2026-09-28, v1.1.0)
+
+- Chế độ học chọn ở Trang chính: Thẻ lật · Thẻ lật ngược (nghĩa → từ, câu ví dụ che từ) · Trắc nghiệm 4 đáp án (3 đáp án nhiễu ưu tiên cùng chủ đề, cùng bộ thẻ; sai → về hộp 1 và lặp lại cuối phiên).
+- Nút "Đã biết" trên thẻ mới → hộp 5, ôn lại sau 30 ngày; có hoàn tác.
+- TTS: đọc câu ví dụ (nút cạnh câu, hoặc tự đọc khi lật), chỉnh tốc độ đọc 0,6 đến 1,3×.
+- Thống kê 30 ngày: heatmap số thẻ ôn/ngày (một màu primary, 5 mức), tổng thẻ, tỉ lệ thuộc, số ngày có học; dữ liệu `history[YYYY-MM-DD] = {r, k, n}` trong JSON tiến độ, giữ 90 ngày, merge theo ngày lấy max.
+- Chạm thẻ lật qua lại; kéo/vuốt thẻ để chấm (Pointer Events, chuột lẫn cảm ứng).
+
+## 7. Chưa làm (đã cân nhắc, để sau)
+
+- Giới hạn thẻ mỗi phiên (gợi ý mục 3 ngày 2026-09-28).
+- Offline hoàn toàn: vendor 4 lib + service worker (gợi ý mục 7).
+
+## 8. Ngoài phạm vi
 
 Mật khẩu/PIN · offline hoàn toàn (service worker) · chế độ trắc nghiệm 4 đáp án · thống kê biểu đồ theo ngày · bảng xếp hạng nhiều người dùng. Ghi lại để không "tiện tay" làm thêm.
