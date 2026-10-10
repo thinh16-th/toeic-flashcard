@@ -33,6 +33,7 @@ SUMMARY = SRC / "Boost_Vocab_TOEIC_SUMMARY_ALL.docx"
 HF_XLSX = SRC / "High_Freq_316.xlsx"
 TESTS = [SRC / f"Boost_Vocab_TOEIC_Reading_TEST{i}.docx" for i in range(1, 11)]
 OUT_JSON = HERE / "vocab.json"
+ENRICH = HERE / "vocab_enrich.json"   # lớp hiệu đính: loại từ, nghĩa tách theo loại từ, topic, IPA Mỹ (sửa tay được)
 OUT_HTML = HERE / "index.html"
 
 THEMES = [
@@ -238,6 +239,36 @@ def read_examples(entries):
     return cands, kw_total, kw_unmatched, unmatched_samples
 
 
+# ---------------------------------------------------------------- 4. Enrichment (vocab_enrich.json)
+POS_LABEL = {"n": "n.", "v": "v.", "adj": "adj.", "adv": "adv.", "prep": "prep.", "conj": "conj.",
+             "pron": "pron.", "det": "det.", "phr.v": "phr. v.", "phr": "phr."}
+LABEL_RE = re.compile(r"\s*\((n|v|adj|adv|prep|conj)\.\)\s*$", re.I)
+
+
+def apply_enrich(entries) -> tuple[int, list[str]]:
+    """Gộp vocab_enrich.json vào entries. Từ chưa có trong file (tài liệu mới thêm) giữ dữ liệu gốc, gán loại từ theo nhãn nếu có."""
+    E = json.loads(ENRICH.read_text(encoding="utf-8")) if ENRICH.exists() else {}
+    missing = []
+    for k, e in entries.items():
+        e["def_full"] = e["def"]
+        x = E.get(k)
+        if not x:
+            missing.append(k)
+            m = LABEL_RE.search(e["word"])
+            pos = m.group(1).lower() if m else ("phr" if " " in e["word"].strip() else "n")
+            e["word"] = LABEL_RE.sub("", e["word"]).strip()
+            e["pos"] = [pos]
+            e["senses"] = [{"pos": pos, "syn": re.sub(r"^[=≈]\s*", "", e["def"]).rstrip(".")[:90]}]
+        else:
+            e["word"] = x["hw"]
+            e["pos"] = x["pos"]
+            e["senses"] = x["senses"]
+            e["theme"] = x["topic"]
+            e["ipa"] = x["ipa_us"]
+        e["def"] = "; ".join(f'{POS_LABEL.get(s["pos"], s["pos"])} {s["syn"]}' for s in e["senses"])
+    return len(E), missing
+
+
 # ---------------------------------------------------------------- embed
 def embed(json_text: str) -> bool:
     if not OUT_HTML.exists():
@@ -282,6 +313,7 @@ def main(argv):
             e["count"] = len(e["tests"])
         e["example"] = pick_example(cands.get(k, []))
 
+    n_enrich, enrich_missing = apply_enrich(entries)
     hf_miss = [w for w in hf if w not in entries]
     out = list(entries.values())
     OUT_JSON.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
@@ -300,6 +332,8 @@ def main(argv):
     if unmatched:
         print("   mẫu không khớp  :", ", ".join(f"{w}" for w, _ in unmatched.most_common(12)))
     print("Theme              :", ", ".join(f"{t}={c}" for t, c in themes.most_common()))
+    print(f"Enrichment         : {n - len(enrich_missing)}/{n} từ có loại từ + nghĩa tách + topic + IPA Mỹ"
+          + (f" | CHƯA hiệu đính {len(enrich_missing)}: {enrich_missing[:10]}" if enrich_missing else ""))
     print(f"vocab.json         : {OUT_JSON.stat().st_size/1024:.0f} KB → {OUT_JSON}")
     print(f"embed index.html   : {'OK' if embedded else 'bỏ qua'}")
     print(f"version.json       : {sync_version()}")

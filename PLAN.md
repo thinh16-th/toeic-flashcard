@@ -125,6 +125,8 @@ Mỗi bước bàn giao file lẻ (không zip), ghi đè cùng tên. Bước 2 v
 - Thống kê 30 ngày: heatmap số thẻ ôn/ngày (một màu primary, 5 mức), tổng thẻ, tỉ lệ thuộc, số ngày có học; dữ liệu `history[YYYY-MM-DD] = {r, k, n}` trong JSON tiến độ, giữ 90 ngày, merge theo ngày lấy max.
 - Chạm thẻ lật qua lại; kéo/vuốt thẻ để chấm (Pointer Events, chuột lẫn cảm ứng).
 
+- v1.2.0 (2026-10-10): `vocab_enrich.json` là lớp hiệu đính nằm giữa tài liệu gốc và app, key = id từ (giữ nguyên để không mất tiến độ). Mỗi từ: `hw` (từ hiển thị, bỏ nhãn "(v.)"), `pos` (n, v, adj, adv, prep, conj, pron, det, phr.v, phr), `senses` (nghĩa tách theo loại từ, tối đa 5 synonym, ≤ 90 ký tự), `topic` (14 topic TOEIC), `ipa_us` (CMUdict, giọng Mỹ). Muốn sửa nghĩa/topic/IPA một từ: sửa file này rồi chạy `build_vocab.py`. Từ mới thêm vào tài liệu mà chưa có trong file sẽ được báo "CHƯA hiệu đính" khi build và hiện theo dữ liệu gốc.
+
 ## 7. Chưa làm (đã cân nhắc, để sau)
 
 - Giới hạn thẻ mỗi phiên (gợi ý mục 3 ngày 2026-09-28).
