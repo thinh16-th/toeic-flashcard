@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Xem trước: đổ gạch và nền phi thuyền</title>
+
+  <!-- 1. basecoat: component CSS + token shadcn (:root / html.dark). Pin version. -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/basecoat-css@1.0.2/dist/basecoat.cdn.min.css" />
+
+  <!-- 2. Tailwind Play CDN v4 -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style type="text/tailwindcss">
+    @custom-variant dark (&:where(.dark, .dark *));
+    @theme {
+      --color-background: var(--background);
+      --color-foreground: var(--foreground);
+      --color-card: var(--card);
+      --color-card-foreground: var(--card-foreground);
+      --color-popover: var(--popover);
+      --color-popover-foreground: var(--popover-foreground);
+      --color-primary: var(--primary);
+      --color-primary-foreground: var(--primary-foreground);
+      --color-secondary: var(--secondary);
+      --color-secondary-foreground: var(--secondary-foreground);
+      --color-muted: var(--muted);
+      --color-muted-foreground: var(--muted-foreground);
+      --color-accent: var(--accent);
+      --color-accent-foreground: var(--accent-foreground);
+      --color-destructive: var(--destructive);
+      --color-border: var(--border);
+      --color-input: var(--input);
+      --color-ring: var(--ring);
+      --radius-sm: calc(var(--radius) - 4px);
+      --radius-md: calc(var(--radius) - 2px);
+      --radius-lg: var(--radius);
+      --radius-xl: calc(var(--radius) + 4px);
+    }
+  </style>
+
+  <!-- 3. House tokens + token riêng cho gạch / thép / vũ trụ -->
+  <style>
+    :root {
+      --status-good: #0ca30c;
+      --status-warning: #fab219;
+      --status-critical: #d03b3b;
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --dur-fast: 120ms;
+      --dur-base: 200ms;
+      --dur-slow: 260ms;
+      --z-overlay: 40;
+      /* gạch đất nung */
+      --brick: #b5562f; --brick-hi: #db7a4d; --brick-lo: #7c3417; --mortar: #5a2a14;
+      /* thép */
+      --steel: #8b97a4; --steel-hi: #e1e7ee; --steel-lo: #4f5a66; --rivet: #3d4650;
+      --spark: #ffb347;
+      /* vũ trụ (giống app) */
+      --space-bg: #0b1024; --space-star: #e8ecff; --space-text: #ffffff; --rock-a: #b8a18b; --rock-b: #5a4535;
+      --ship-hull: #eef2f8; --ship-glass: #7cc4ff; --ship-flame: #ffb347;
+      --hud-bg: rgba(20, 30, 66, 0.72); --hud-line: rgba(124, 196, 255, 0.35); --hud-muted: rgba(232, 236, 255, 0.68);
+    }
+    ::selection { background: color-mix(in oklab, var(--primary) 25%, transparent); }
+    :root { caret-color: var(--primary); accent-color: var(--primary); }
+    :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+    h1, h2, h3 { text-wrap: balance; }
+    input, select, textarea { font-size: max(1rem, 0.875em); }
+
+    /* custom: gạch chữ cái — basecoat không có component này */
+    .wall { display: flex; flex-wrap: wrap; justify-content: center; gap: .35rem; }
+    .wall.inline { display: inline-flex; vertical-align: middle; margin: 0 .25rem; gap: .2rem; }
+    .slot { position: relative; --w: min(2.35rem, calc((100vw - 5.5rem) / var(--n, 7) - .35rem)); width: var(--w); height: calc(var(--w) * 1.19); flex: none; }
+    .wall.inline .slot { --w: min(1.6rem, calc((100vw - 5.5rem) / var(--n, 7) - .2rem)); }
+    .gap { width: .9rem; }
+    .tile { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 700; font-size: calc(var(--w, 2.35rem) * .58); color: var(--foreground);
+      border-radius: 6px; background: var(--card); box-shadow: inset 0 -3px 0 var(--tile-line, var(--border)); opacity: 0; transform: scale(.6); }
+    
+    .tile.ok { --tile-line: var(--status-good); }
+    .tile.retry { --tile-line: var(--status-warning); }
+    .brick { position: absolute; inset: 0; border-radius: 6px;
+      background:
+        linear-gradient(90deg, transparent 49%, var(--mortar) 49% 51%, transparent 51%) 0 0 / 100% 50% no-repeat,
+        linear-gradient(90deg, transparent 24%, var(--mortar) 24% 26%, transparent 26% 74%, var(--mortar) 74% 76%, transparent 76%) 0 100% / 100% 50% no-repeat,
+        linear-gradient(transparent 48%, var(--mortar) 48% 52%, transparent 52%),
+        linear-gradient(180deg, var(--brick-hi), var(--brick) 45%, var(--brick-lo));
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.18), inset 0 -3px 0 rgba(0,0,0,.25), 0 2px 0 var(--mortar); }
+    .brick.steel {
+      background:
+        radial-gradient(circle at 18% 20%, var(--rivet) 0 2px, transparent 2.5px),
+        radial-gradient(circle at 82% 20%, var(--rivet) 0 2px, transparent 2.5px),
+        radial-gradient(circle at 18% 80%, var(--rivet) 0 2px, transparent 2.5px),
+        radial-gradient(circle at 82% 80%, var(--rivet) 0 2px, transparent 2.5px),
+        linear-gradient(135deg, var(--steel-hi), var(--steel) 45%, var(--steel-lo));
+      box-shadow: inset 0 2px 0 rgba(255,255,255,.5), inset 0 -3px 0 rgba(0,0,0,.3), 0 2px 0 var(--rivet); overflow: hidden; }
+    .brick.steel::after { content: ""; position: absolute; inset: 0; border-radius: inherit;
+      background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,.55) 45%, transparent 60%); transform: translateX(-120%); animation: sheen 1.6s var(--ease-out) 1; }
+    .brick.cracked { background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 48'><path d='M20 0 L17 14 L24 20 L15 31 L21 48 M24 20 L36 26 M17 14 L6 10' stroke='%23222' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>"),
+        radial-gradient(circle at 18% 20%, var(--rivet) 0 2px, transparent 2.5px), radial-gradient(circle at 82% 80%, var(--rivet) 0 2px, transparent 2.5px),
+        linear-gradient(135deg, var(--steel-hi), var(--steel) 45%, var(--steel-lo)); }
+    .slot.current .brick { outline: 2px solid var(--ring); outline-offset: 2px; animation: bob 1.4s ease-in-out infinite; }
+    @keyframes bob { 50% { transform: translateY(-3px); } }
+    @keyframes sheen { to { transform: translateX(120%); } }
+    .ghost { position: absolute; left: 50%; top: -0.2rem; transform: translateX(-50%); font-weight: 700; color: var(--status-critical); pointer-events: none; }
+    #fx { position: fixed; inset: 0; pointer-events: none; z-index: var(--z-overlay); }
+    .frag { position: fixed; background: linear-gradient(180deg, var(--brick-hi), var(--brick-lo)); will-change: transform, opacity; }
+    .frag.metal { background: linear-gradient(135deg, var(--steel-hi), var(--steel-lo)); }
+    .spark { position: fixed; width: 4px; height: 4px; border-radius: 2px; background: var(--spark); }
+    .legend .slot { --w: 1.6rem; }
+
+    /* custom: mock màn phi thuyền */
+    .space { background: radial-gradient(1px 1px at 12% 18%, var(--space-star), transparent), radial-gradient(1px 1px at 72% 28%, var(--space-star), transparent),
+      radial-gradient(1.5px 1.5px at 38% 62%, var(--space-star), transparent), radial-gradient(1px 1px at 86% 72%, var(--space-star), transparent),
+      radial-gradient(1px 1px at 22% 84%, var(--space-star), transparent), radial-gradient(1.5px 1.5px at 58% 8%, var(--space-star), transparent), var(--space-bg); color: var(--space-text); }
+    .hud { background: var(--hud-bg); border: 1px solid var(--hud-line); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+    .hud-muted { color: var(--hud-muted); }
+    .hud-chip { border: 1px solid var(--hud-line); color: var(--ship-glass); border-radius: 999px; padding: 0 .45rem; font-size: .75rem; font-weight: 600; }
+    .console-btn { background: var(--hud-bg); border: 1px solid var(--hud-line); color: var(--space-text); border-radius: var(--radius); height: 2.75rem; display: grid; place-items: center; }
+    .phone { width: 100%; max-width: 300px; aspect-ratio: 9 / 17; border-radius: 22px; overflow: hidden; border: 1px solid var(--border); }
+    .rock { fill: var(--rock-b); } .rock2 { fill: var(--rock-a); } .hull { fill: var(--ship-hull); } .glass { fill: var(--ship-glass); } .flame { fill: var(--ship-flame); } .wing { fill: var(--primary); }
+    .lane { stroke: var(--space-star); stroke-opacity: .2; stroke-dasharray: 4 5; }
+    .rock-label { fill: var(--space-text); font: 700 11px system-ui, sans-serif; paint-order: stroke; stroke: var(--space-bg); stroke-width: 3px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, ::before, ::after { transition-duration: 150ms !important; animation-duration: 150ms !important; animation-iteration-count: 1 !important; }
+    }
+  </style>
+
+  <!-- 4. Theme init trước khi paint -->
+  <script>
+    (function () { try { var t = localStorage.getItem("theme");
+      if (t === "dark" || (!t && matchMedia("(prefers-color-scheme: dark)").matches)) document.documentElement.classList.add("dark"); } catch (e) {} })();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/basecoat-css@1.0.2/dist/js/all.min.js" defer></script>
+</head>
+<body class="min-h-dvh bg-background text-foreground antialiased">
+  <div id="toaster" class="toaster"></div>
+  <div id="fx" aria-hidden="true"></div>
+
+  <main class="mx-auto max-w-4xl space-y-10 p-4 md:p-8">
+    <header class="flex items-start justify-between gap-3 border-b border-border pb-6">
+      <div>
+        <p class="text-muted-foreground text-sm">TOEIC Vocab Flashcard · bản xem trước 10/10/2026, chưa đưa vào app</p>
+        <h1 class="text-2xl font-semibold tracking-tight">Đổ gạch cho 2 game gõ, nền vũ trụ cho phi thuyền</h1>
+        <p class="text-muted-foreground mt-2">Thử gõ trực tiếp ở mục 2. Chọn phương án ở mục 4 rồi mới đưa vào app.</p>
+      </div>
+      <button class="btn shrink-0" data-variant="ghost" data-size="icon-sm" aria-label="Đổi giao diện sáng tối" id="theme-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
+    </header>
+
+    <!-- ===================== 1. REVIEW ===================== -->
+    <section class="space-y-4" aria-labelledby="s1">
+      <h2 id="s1" class="text-lg font-semibold">1. Review nền, font và tính nhất quán (v1.4.0)</h2>
+      <p class="text-muted-foreground text-sm">Đo bằng Playwright trên Trang chính, Điền câu, Phi thuyền, Từ vựng, Cài đặt ở 1280×860 và 390×844, sáng và tối.</p>
+      <div class="card">
+        <section class="space-y-3 text-sm leading-6">
+          <p><span class="font-medium">Đang ổn.</span> Toàn app dùng một bộ font hệ thống (cùng stack của basecoat), kể cả chữ trên thiên thạch vẽ bằng canvas. Nền trang, card, dark mode đều đi qua token, không có màu hex rời trong markup. Không có cuộn ngang toàn trang ở mọi màn đã đo.</p>
+        </section>
+      </div>
+      <div class="table-container">
+        <table class="table">
+          <thead><tr><th>Mức</th><th>Vấn đề</th><th>Đề xuất</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge" data-variant="destructive">P1</span></td><td>Phi thuyền: câu hỏi nằm trên card nền sáng (trắng ở chế độ sáng) ngay sát cảnh vũ trụ tối. Mắt phải đổi sáng/tối mỗi lần đọc câu rồi nhìn thiên thạch.</td><td>Màn phi thuyền luôn tối; câu hỏi thành bảng HUD trong suốt nổi trên nền sao, nút điều khiển kiểu bảng điều khiển. Xem mục 3.</td></tr>
+            <tr><td><span class="badge" data-variant="secondary">P2</span></td><td>Màn học (mọi chế độ) tràn ngang 24px: thanh tiến độ có lề 2 bên nhưng vẫn rộng 100%, nên mép phải bị cắt.</td><td>Bỏ chiều rộng cố định của thanh tiến độ, để nó co theo lề.</td></tr>
+            <tr><td><span class="badge" data-variant="secondary">P3</span></td><td>Trang chính dùng 6 cỡ chữ (12, 13, 14, 16, 18, 24px), house style quy định 4 mức. Lệch là nút chọn kiểu thiên thạch (13px) và tiêu đề "Trò chơi" (18px).</td><td>Nút chọn về 14px; "Trò chơi" dùng cỡ tiêu đề khối giống tiêu đề card.</td></tr>
+            <tr><td><span class="badge" data-variant="secondary">P3</span></td><td>Chữ trong 3 minh hoạ game (ETS, a b c) khai báo font riêng, có thể khác nét trên Windows.</td><td>Cho kế thừa font của trang.</td></tr>
+            <tr><td><span class="badge" data-variant="secondary">P3</span></td><td>Hai minh hoạ game gõ nền xám, minh hoạ phi thuyền nền vũ trụ tối, nên 3 ô trông như 2 bộ khác nhau.</td><td>Khi đổi sang đổ gạch: minh hoạ 2 game gõ vẽ lại bằng chính viên gạch (cùng màu đất nung), phi thuyền giữ nền vũ trụ. Mỗi game một "thế giới" rõ ràng.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-muted-foreground text-xs">Low priority, không cần sửa: toast nằm đè thanh điều hướng đáy (đúng ý, toast phải nổi trên cùng); dòng câu ví dụ trong phi thuyền bị cắt 2 dòng là cố ý; bảng Từ vựng báo "chưa đo lại" khi đang ở tab Cài đặt là do bảng đang ẩn.</p>
+    </section>
+
+    <!-- ===================== 2. DEMO ĐỔ GẠCH ===================== -->
+    <section class="space-y-4" aria-labelledby="s2">
+      <h2 id="s2" class="text-lg font-semibold">2. Hiệu ứng đổ gạch: gõ thử</h2>
+      <p class="text-muted-foreground text-sm">Mỗi chữ cái là một viên gạch. Gõ đúng chữ tiếp theo: gạch nổ, chữ hiện ra. Gõ sai: gạch hoá thép, rung, chữ gõ sai bật ra màu đỏ, và phải gõ lại đúng chữ đó.</p>
+
+      <div class="card">
+        <header class="flex-row">
+          <h3>Nghe và gõ</h3>
+          <p>Từ mẫu: examine (/ɪɡˈzæmən/). Bấm vào khung gạch rồi gõ, hoặc xem demo tự chạy.</p>
+        </header>
+        <section class="space-y-4">
+          <div class="flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <img src="../assets/choco_idle.svg" alt="" width="56" height="56" class="h-14 w-14" id="choco-a" />
+            <div class="wall" id="wall-a" role="group" aria-label="Khung gạch, 7 chữ cái"></div>
+          </div>
+          <p class="text-center text-sm" id="status-a" aria-live="polite">Gõ chữ đầu tiên.</p>
+          <div class="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+            <input class="input" id="input-a" placeholder="Gõ ở đây" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="Gõ chữ cái" />
+            <button class="btn" data-variant="outline" id="demo-a">Xem demo tự chạy</button>
+            <button class="btn" data-variant="ghost" id="reset-a">Làm lại</button>
+          </div>
+        </section>
+      </div>
+
+      <div class="card">
+        <header>
+          <h3>Điền câu ETS</h3>
+          <p>Gạch nằm ngay trong câu, đúng chỗ trống. Câu mẫu, không lấy từ đề.</p>
+        </header>
+        <section class="space-y-4">
+          <!-- DỮ LIỆU MẪU: câu minh hoạ tự đặt -->
+          <p class="text-lg leading-10" id="sentence-b">Inspectors will <span class="wall inline" id="wall-b" role="group" aria-label="Chỗ trống, 7 chữ cái"></span> the equipment before it is shipped.</p>
+          <p class="text-sm" id="status-b" aria-live="polite">Gõ chữ đầu tiên.</p>
+          <div class="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
+            <input class="input" id="input-b" placeholder="Gõ ở đây" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="Gõ chữ cái" />
+            <button class="btn" data-variant="outline" id="demo-b">Xem demo tự chạy</button>
+            <button class="btn" data-variant="ghost" id="reset-b">Làm lại</button>
+          </div>
+        </section>
+      </div>
+
+      <div class="card" data-size="sm">
+        <section class="flex flex-wrap items-center gap-x-6 gap-y-3">
+          <div role="group" class="field" data-orientation="horizontal">
+            <input id="opt-hard" type="checkbox" role="switch" />
+            <label for="opt-hard">Gạch thép cần 2 lần gõ đúng (lần 1 nứt, lần 2 vỡ)</label>
+          </div>
+          <div role="group" class="field" data-orientation="horizontal">
+            <input id="opt-calm" type="checkbox" role="switch" />
+            <label for="opt-calm">Giảm chuyển động (không mảnh vỡ bay)</label>
+          </div>
+        </section>
+      </div>
+
+      <div class="legend flex flex-wrap items-center gap-x-6 gap-y-3 text-sm" aria-label="Chú thích">
+        <span class="flex items-center gap-2"><span class="slot"><span class="brick"></span></span>Gạch chưa gõ</span>
+        <span class="flex items-center gap-2"><span class="slot"><span class="brick steel"></span></span>Gạch thép, đã gõ sai</span>
+        <span class="flex items-center gap-2"><span class="slot"><span class="tile ok" style="opacity:1;transform:none">a</span></span>Đúng ngay lần đầu</span>
+        <span class="flex items-center gap-2"><span class="slot"><span class="tile retry" style="opacity:1;transform:none">a</span></span>Đúng sau khi sai</span>
+      </div>
+    </section>
+
+    <!-- ===================== 3. PHI THUYỀN ===================== -->
+    <section class="space-y-4" aria-labelledby="s3">
+      <h2 id="s3" class="text-lg font-semibold">3. Phi thuyền: nền câu hỏi hiện tại và đề xuất</h2>
+      <div class="grid gap-6 sm:grid-cols-2">
+        <figure class="space-y-2">
+          <figcaption class="text-muted-foreground text-sm">Hiện tại (chế độ sáng): card trắng đặt trên vũ trụ tối</figcaption>
+          <div class="phone flex flex-col bg-background">
+            <div class="border-b border-border px-3 py-2 text-xs text-muted-foreground">High-frequency 316 · phi thuyền</div>
+            <div class="m-2 rounded-lg border border-border bg-card px-3 py-2">
+              <p class="text-muted-foreground text-[11px]">Lái vào thiên thạch mang từ có nghĩa</p>
+              <p class="text-sm font-medium"><span class="badge me-1" data-variant="secondary">v.</span>guarantee, make certain, secure</p>
+            </div>
+            <div class="space mx-2 flex-1 overflow-hidden rounded-lg"><svg viewBox="0 0 300 420" preserveAspectRatio="xMidYMid slice" class="block h-full w-full" aria-hidden="true">
+  <line x1="100" y1="0" x2="100" y2="420" class="lane"/><line x1="200" y1="0" x2="200" y2="420" class="lane"/>
+  <g transform="translate(50 214)"><path d="M-30 -8l14-20 24-2 20 14 4 22-16 18-26 2-18-14z" class="rock"/><text class="rock-label" text-anchor="middle" y="4">ensure</text></g>
+  <g transform="translate(150 196)"><path d="M-28 -12l18-16 22 4 16 18-2 20-18 16-24-2-14-18z" class="rock2"/><text class="rock-label" text-anchor="middle" y="4">edit</text></g>
+  <g transform="translate(250 220)"><path d="M-30 -6l16-20 22 0 18 16 2 22-18 16-24 0-16-16z" class="rock"/><text class="rock-label" text-anchor="middle" y="4">post</text></g>
+  <g transform="translate(150 360)"><path d="M-6 26l6 16 6-16z" class="flame"/><path d="M0 -30c13 11 15 31 11 52h-22c-4-21-2-41 11-52z" class="hull"/>
+    <path d="M-11 6l-15 18 15-4zM11 6l15 18-15-4z" class="wing"/><circle cx="0" cy="-8" r="8" class="glass"/></g>
+</svg></div>
+            <div class="m-2 grid grid-cols-3 gap-2"><span class="btn" data-variant="outline">‹</span><span class="btn" data-variant="ghost">II</span><span class="btn" data-variant="outline">›</span></div>
+          </div>
+        </figure>
+        <figure class="space-y-2">
+          <figcaption class="text-muted-foreground text-sm">Đề xuất: cả màn là vũ trụ, câu hỏi là bảng HUD trong suốt</figcaption>
+          <div class="phone space flex flex-col">
+            <div class="px-3 py-2 text-xs hud-muted">High-frequency 316 · phi thuyền</div>
+            <div class="relative flex-1">
+              <svg viewBox="0 0 300 420" preserveAspectRatio="xMidYMid slice" class="block h-full w-full" aria-hidden="true">
+  <line x1="100" y1="0" x2="100" y2="420" class="lane"/><line x1="200" y1="0" x2="200" y2="420" class="lane"/>
+  <g transform="translate(50 214)"><path d="M-30 -8l14-20 24-2 20 14 4 22-16 18-26 2-18-14z" class="rock"/><text class="rock-label" text-anchor="middle" y="4">ensure</text></g>
+  <g transform="translate(150 196)"><path d="M-28 -12l18-16 22 4 16 18-2 20-18 16-24-2-14-18z" class="rock2"/><text class="rock-label" text-anchor="middle" y="4">edit</text></g>
+  <g transform="translate(250 220)"><path d="M-30 -6l16-20 22 0 18 16 2 22-18 16-24 0-16-16z" class="rock"/><text class="rock-label" text-anchor="middle" y="4">post</text></g>
+  <g transform="translate(150 360)"><path d="M-6 26l6 16 6-16z" class="flame"/><path d="M0 -30c13 11 15 31 11 52h-22c-4-21-2-41 11-52z" class="hull"/>
+    <path d="M-11 6l-15 18 15-4zM11 6l15 18-15-4z" class="wing"/><circle cx="0" cy="-8" r="8" class="glass"/></g>
+</svg>
+              <div class="hud absolute inset-x-2 top-2 flex items-start gap-2 rounded-lg px-3 py-2">
+                <div class="min-w-0 flex-1">
+                  <p class="hud-muted text-[11px]">Lái vào thiên thạch mang từ có nghĩa</p>
+                  <p class="text-sm font-medium"><span class="hud-chip me-1">v.</span>guarantee, make certain, secure</p>
+                </div>
+                <img src="../assets/choco_idle.svg" alt="" width="36" height="36" class="h-9 w-9" />
+              </div>
+            </div>
+            <div class="m-2 grid grid-cols-3 gap-2"><span class="console-btn">‹</span><span class="console-btn">II</span><span class="console-btn">›</span></div>
+          </div>
+        </figure>
+      </div>
+      <p class="text-muted-foreground text-sm">Màn phi thuyền sẽ tối ở cả chế độ sáng và tối (giống vào một màn chơi), các màn khác của app không đổi. Bảng HUD dùng xanh kính buồng lái làm màu nhấn, cùng tông với phi thuyền.</p>
+    </section>
+
+    <!-- ===================== 4. CÁC VISUALIZE CÓ THỂ XÂY ===================== -->
+    <section class="space-y-4" aria-labelledby="s4">
+      <h2 id="s4" class="text-lg font-semibold">4. Các phần đồ hoạ có thể làm, chọn trước khi đưa vào app</h2>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <div class="card" data-size="sm"><header><h3>A. Gạch nổ theo chữ cái <span class="badge ms-1">Đề xuất</span></h3><p>Như demo ở mục 2. Áp cho cả Điền câu ETS và Nghe và gõ. Gõ cả từ một lúc rồi Enter vẫn được: các viên lần lượt nổ từ trái sang.</p></header></div>
+        <div class="card" data-size="sm"><header><h3>B. Gạch thép khi gõ sai <span class="badge ms-1">Đề xuất</span></h3><p>Chọn 1 trong 2: thép vỡ sau 1 lần gõ đúng (nhanh, mặc định trong demo) hoặc 2 lần (lần 1 nứt). Chữ lộ ra có vạch vàng để biết chữ nào từng sai.</p></header></div>
+        <div class="card" data-size="sm"><header><h3>C. HUD vũ trụ cho phi thuyền <span class="badge ms-1">Đề xuất</span></h3><p>Như mục 3: màn chơi tối toàn phần, câu hỏi trong suốt trên nền sao, nút điều khiển kiểu bảng điều khiển.</p></header></div>
+        <div class="card" data-size="sm"><header><h3>D. Choco phản ứng theo từng chữ</h3><p>Ngạc nhiên khi một viên hoá thép, vui khi cả từ hoàn thành, buồn khi bỏ cuộc. Dùng 4 pose có sẵn trong Visualize/P01-choco.</p></header></div>
+        <div class="card" data-size="sm"><header><h3>E. Chuỗi đúng (combo)</h3><p>Gõ đúng liên tiếp nhiều từ không sai chữ nào thì mảnh vỡ chuyển sang màu vàng và có bộ đếm chuỗi nhỏ. Khích lệ gõ chính xác, không gây xao nhãng.</p></header></div>
+        <div class="card" data-size="sm"><header><h3>F. Âm thanh "bụp" và "keng"</h3><p>Tổng hợp bằng Web Audio, không cần file âm thanh. Tắt mặc định, bật trong Cài đặt. Trên iPhone chỉ kêu sau lần chạm đầu tiên.</p></header></div>
+        <div class="card" data-size="sm"><header><h3>G. Bộ sprite dùng lại trong Visualize</h3><p>Gạch, thép, vết nứt, thiên thạch, phi thuyền lưu thành SVG trong một bộ mới của Visualize, có manifest như các cast hiện có, để project khác gọi lại được.</p></header></div>
+      </div>
+      <p class="text-muted-foreground text-xs">Không đề xuất: rung máy khi gõ sai (iPhone Safari không hỗ trợ rung), hiệu ứng toàn màn hình khi hoàn thành từ (làm chậm nhịp gõ liên tục).</p>
+    </section>
+  </main>
+
+  <script>
+    const ui = {
+      token(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); },
+      toggleTheme() { const d = document.documentElement.classList.toggle("dark"); try { localStorage.setItem("theme", d ? "dark" : "light"); } catch (e) {} },
+    };
+    document.getElementById("theme-btn").addEventListener("click", ui.toggleTheme);
+
+    (() => {
+      "use strict";
+      const CHOCO = { idle: "../assets/choco_idle.svg", happy: "../assets/choco_happy.svg", sad: "../assets/choco_sad.svg", surprised: "../assets/choco_surprised.svg" };
+      const fx = document.getElementById("fx");
+      const opt = { hard: document.getElementById("opt-hard"), calm: document.getElementById("opt-calm") };
+      const reduced = () => opt.calm.checked || matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const rnd = (a, b) => a + Math.random() * (b - a);
+
+      function shatter(brick, metal) {
+        if (reduced()) return;
+        const r = brick.getBoundingClientRect(); const cols = 3, rows = 3;
+        for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
+          const f = document.createElement("div"); f.className = "frag" + (metal ? " metal" : "");
+          const w = r.width / cols, h = r.height / rows;
+          Object.assign(f.style, { left: r.left + i * w + "px", top: r.top + j * h + "px", width: w + "px", height: h + "px",
+            clipPath: `polygon(${rnd(0, 25)}% 0, 100% ${rnd(0, 25)}%, ${rnd(75, 100)}% 100%, 0 ${rnd(70, 100)}%)` });
+          fx.appendChild(f);
+          const dx = (i - 1) * rnd(30, 70) + rnd(-15, 15), up = rnd(40, 90), rot = rnd(-260, 260);
+          f.animate([
+            { transform: "translate(0,0) rotate(0)", opacity: 1 },
+            { transform: `translate(${dx * 0.6}px,${-up}px) rotate(${rot * 0.5}deg)`, opacity: 1, offset: 0.35 },
+            { transform: `translate(${dx}px,${rnd(60, 120)}px) rotate(${rot}deg)`, opacity: 0 },
+          ], { duration: rnd(560, 760), easing: "cubic-bezier(.2,.6,.4,1)" }).finished.then(() => f.remove());
+        }
+        const puff = document.createElement("div");
+        Object.assign(puff.style, { position: "fixed", left: r.left + r.width / 2 - 24 + "px", top: r.top + r.height / 2 - 24 + "px", width: "48px", height: "48px",
+          borderRadius: "50%", background: "radial-gradient(circle, color-mix(in oklab, var(--brick-hi) 55%, transparent), transparent 70%)" });
+        fx.appendChild(puff);
+        puff.animate([{ transform: "scale(.4)", opacity: .9 }, { transform: "scale(1.6)", opacity: 0 }], { duration: 420, easing: "ease-out" }).finished.then(() => puff.remove());
+      }
+      function sparks(brick) {
+        if (reduced()) return;
+        const r = brick.getBoundingClientRect();
+        for (let k = 0; k < 7; k++) {
+          const s = document.createElement("div"); s.className = "spark";
+          Object.assign(s.style, { left: r.left + r.width / 2 + "px", top: r.top + r.height / 2 + "px" }); fx.appendChild(s);
+          const a = rnd(0, Math.PI * 2), v = rnd(25, 55);
+          s.animate([{ transform: "translate(0,0)", opacity: 1 }, { transform: `translate(${Math.cos(a) * v}px,${Math.sin(a) * v}px)`, opacity: 0 }], { duration: 380, easing: "ease-out" }).finished.then(() => s.remove());
+        }
+      }
+
+      function makeGame(key, word) {
+        const wall = document.getElementById("wall-" + key), input = document.getElementById("input-" + key);
+        const status = document.getElementById("status-" + key), choco = document.getElementById("choco-" + key);
+        let slots = [], idx = 0, errors = 0, demoTimer = null;
+        function build() {
+          wall.innerHTML = ""; slots = []; idx = 0; errors = 0;
+          [...word].forEach((ch) => {
+            if (ch === " ") { const g = document.createElement("span"); g.className = "gap"; wall.appendChild(g); return; }
+            const s = document.createElement("span"); s.className = "slot";
+            s.innerHTML = `<span class="tile">${ch}</span><span class="brick"></span>`;
+            wall.appendChild(s); slots.push({ el: s, ch, hp: 1, wrong: false, done: false });
+          });
+          wall.style.setProperty("--n", Math.max(slots.length, 5)); mark(); setStatus("Gõ chữ đầu tiên."); if (choco) choco.src = CHOCO.idle;
+        }
+        function mark() { slots.forEach((s, i) => s.el.classList.toggle("current", i === idx && !s.done)); }
+        function setStatus(t) { status.textContent = t; }
+        function reveal(s) {
+          const brick = s.el.querySelector(".brick"), tile = s.el.querySelector(".tile");
+          shatter(brick, s.wrong);
+          brick.animate([{ transform: "scale(1)", opacity: 1 }, { transform: "scale(1.12)", opacity: 0 }], { duration: reduced() ? 120 : 140, fill: "forwards" });
+          tile.classList.add(s.wrong ? "retry" : "ok");
+          tile.animate([{ opacity: 0, transform: "scale(.6)" }, { opacity: 1, transform: "scale(1.08)", offset: .7 }, { opacity: 1, transform: "scale(1)" }],
+            { duration: reduced() ? 120 : 240, delay: 60, easing: ui.token("--ease-out") || "ease-out", fill: "forwards" });
+          s.done = true;
+        }
+        function harden(s, typed) {
+          const brick = s.el.querySelector(".brick");
+          s.wrong = true; errors++;
+          if (!brick.classList.contains("steel")) { brick.classList.add("steel"); s.hp = opt.hard.checked ? 2 : 1; }
+          brick.animate([{ transform: "translateX(0)" }, { transform: "translateX(-6px)" }, { transform: "translateX(6px)" }, { transform: "translateX(-4px)" }, { transform: "translateX(3px)" }, { transform: "translateX(0)" }],
+            { duration: reduced() ? 1 : 300, easing: "ease-in-out" });
+          sparks(brick);
+          const g = document.createElement("span"); g.className = "ghost"; g.textContent = typed; s.el.appendChild(g);
+          g.animate([{ transform: "translate(-50%,0)", opacity: 1 }, { transform: "translate(-50%,-26px)", opacity: 0 }], { duration: 650, easing: "ease-out" }).finished.then(() => g.remove());
+          if (choco) choco.src = CHOCO.surprised;
+          setStatus(`"${typed}" chưa đúng, viên gạch hoá thép. Gõ lại chữ thứ ${idx + 1}.`);
+        }
+        function press(ch) {
+          if (idx >= slots.length) return;
+          ch = ch.toLowerCase(); const s = slots[idx];
+          if (ch === s.ch) {
+            const brick = s.el.querySelector(".brick");
+            if (brick.classList.contains("steel") && s.hp > 1) {
+              s.hp--; brick.classList.add("cracked"); sparks(brick);
+              brick.animate([{ transform: "scale(1)" }, { transform: "scale(.94)" }, { transform: "scale(1)" }], { duration: 160 });
+              setStatus("Thép đã nứt. Gõ đúng chữ đó thêm một lần."); return;
+            }
+            reveal(s); idx++; mark();
+            if (choco && choco.src !== CHOCO.idle && !s.wrong) choco.src = CHOCO.idle;
+            if (idx >= slots.length) {
+              setStatus(errors ? `Hoàn thành "${word}" với ${errors} lần gõ sai. Thẻ sẽ về hộp 1.` : `Hoàn thành "${word}", không sai chữ nào. Thẻ lên hộp.`);
+              if (choco) choco.src = errors ? CHOCO.sad : CHOCO.happy;
+            } else setStatus(`Đúng. Còn ${slots.length - idx} chữ.`);
+          } else harden(s, ch);
+        }
+        input.addEventListener("input", () => { const v = input.value; input.value = ""; for (const c of v) if (/[a-z]/i.test(c)) press(c); });
+        wall.addEventListener("click", () => input.focus());
+        document.getElementById("reset-" + key).addEventListener("click", () => { clearTimeout(demoTimer); build(); input.focus(); });
+        document.getElementById("demo-" + key).addEventListener("click", () => {
+          clearTimeout(demoTimer); build();
+          const seq = ["e", "x", "z", "a", "m", "m", "i", "n", "e"]; // gõ sai 'z' ở chữ 3, gõ dư 'm' ở chữ 5
+          const hardSeq = opt.hard.checked ? ["e", "x", "z", "a", "a", "m", "m", "i", "i", "n", "e"] : seq;
+          let k = 0; const step = () => { if (k < hardSeq.length) { press(hardSeq[k++]); demoTimer = setTimeout(step, 480); } }; step();
+        });
+        build();
+      }
+      makeGame("a", "examine");
+      makeGame("b", "examine");
+    })();
+  </script>
+</body>
+</html>
