@@ -153,30 +153,93 @@
     .hist-cell[data-lv="3"] { background: color-mix(in oklab, var(--primary) 75%, var(--muted)); }
     .hist-cell[data-lv="4"] { background: var(--primary); }
     .hist-cell.is-today { outline: 2px solid var(--ring); outline-offset: 1px; }
-    :root { --space-bg: #0b1024; --space-star: #e8ecff; --space-text: #ffffff; --rock-a: #b8a18b; --rock-b: #5a4535; --ship-hull: #eef2f8; --ship-glass: #7cc4ff; --ship-flame: #ffb347; }
+    :root { --space-bg: #0b1024; --space-star: #e8ecff; --space-text: #ffffff; --rock-a: #b8a18b; --rock-b: #5a4535; --ship-hull: #eef2f8; --ship-glass: #7cc4ff; --ship-flame: #ffb347;
+      --hud-bg: rgba(20, 30, 66, 0.72); --hud-line: rgba(124, 196, 255, 0.35); --hud-muted: rgba(232, 236, 255, 0.7);
+      --brick: #b5562f; --brick-hi: #db7a4d; --brick-lo: #7c3417; --mortar: #5a2a14;
+      --steel: #8b97a4; --steel-hi: #e1e7ee; --steel-lo: #4f5a66; --rivet: #3d4650; --spark: #ffb347; }
     .game-art svg { display: block; width: 100%; height: 96px; }
     .art-bg { fill: var(--muted); } .art-paper { fill: var(--card); stroke: var(--border); stroke-width: 1.5; }
     .art-line { fill: color-mix(in oklab, var(--muted-foreground) 35%, transparent); }
     .art-blank { fill: color-mix(in oklab, var(--primary) 12%, transparent); stroke: var(--primary); stroke-width: 1.5; stroke-dasharray: 4 3; }
     .art-accent { fill: var(--primary); } .art-c1 { fill: var(--chart-1); } .art-c3 { fill: var(--chart-3); } .art-c4 { fill: var(--chart-4); }
     .art-stroke { fill: none; stroke: var(--chart-1); stroke-width: 7; stroke-linecap: round; }
-    .art-text { fill: var(--foreground); font: 600 12px ui-sans-serif, system-ui, sans-serif; }
+    .art-text { fill: var(--foreground); font-family: inherit; font-weight: 600; font-size: 12px; }
+    .art-brick { fill: var(--brick); } .art-brick-hi { fill: var(--brick-hi); } .art-mortar { fill: none; stroke: var(--mortar); stroke-width: 1.5; }
+    .art-steel { fill: var(--steel); } .art-rivet { fill: var(--rivet); } .art-tile { fill: var(--card); stroke: var(--border); stroke-width: 1.2; }
+    .art-ok { fill: var(--status-good); } .art-warn { fill: var(--status-warning); } .art-spark { fill: var(--spark); }
+    .art-tile-text { fill: var(--foreground); font-family: inherit; font-weight: 700; font-size: 15px; }
     .art-space { fill: var(--space-bg); } .art-star { fill: var(--space-star); } .art-rock { fill: var(--rock-b); } .art-rock2 { fill: var(--rock-a); }
     .art-hull { fill: var(--ship-hull); } .art-glass { fill: var(--ship-glass); } .art-flame { fill: var(--ship-flame); }
     .art-lane { stroke: var(--space-star); stroke-opacity: .22; stroke-dasharray: 4 5; }
     .seg { display: inline-flex; gap: 2px; padding: 2px; border-radius: var(--radius); background: var(--muted); }
-    .seg button { padding: .25rem .55rem; border-radius: calc(var(--radius) - 2px); font-size: .8125rem; color: var(--muted-foreground); }
+    .seg button { padding: .25rem .55rem; border-radius: calc(var(--radius) - 2px); font-size: .875rem; color: var(--muted-foreground); }
     .seg button[aria-checked="true"] { background: var(--card); color: var(--foreground); box-shadow: 0 0 0 1px var(--border); }
-    .ship-q { background: var(--card); border-bottom: 1px solid var(--border); }
+    /* custom: màn phi thuyền luôn tối ở cả 2 theme. Đổi token trong phạm vi màn học, basecoat tự theo */
+    #scr-study.is-space {
+      --background: var(--space-bg); --foreground: var(--space-text); --card: #141c3d; --card-foreground: var(--space-text);
+      --popover: #141c3d; --popover-foreground: var(--space-text);
+      --muted: rgba(124, 196, 255, 0.12); --muted-foreground: var(--hud-muted); --accent: rgba(124, 196, 255, 0.16); --accent-foreground: var(--space-text);
+      --secondary: rgba(124, 196, 255, 0.16); --secondary-foreground: var(--space-text); --border: var(--hud-line); --input: var(--hud-line);
+      --primary: var(--ship-glass); --primary-foreground: var(--space-bg); --ring: var(--ship-glass);
+      --status-good: #4ade80; --status-critical: #f87171;
+      --color-background: var(--background); --color-foreground: var(--foreground); --color-card: var(--card); --color-card-foreground: var(--card-foreground);
+      --color-popover: var(--popover); --color-popover-foreground: var(--popover-foreground);
+      --color-muted: var(--muted); --color-muted-foreground: var(--muted-foreground); --color-accent: var(--accent); --color-accent-foreground: var(--accent-foreground);
+      --color-secondary: var(--secondary); --color-secondary-foreground: var(--secondary-foreground); --color-border: var(--border); --color-input: var(--input);
+      --color-primary: var(--primary); --color-primary-foreground: var(--primary-foreground); --color-ring: var(--ring);
+      color: var(--foreground); color-scheme: dark;
+      background-image: radial-gradient(1px 1px at 12% 18%, var(--space-star), transparent), radial-gradient(1px 1px at 72% 28%, var(--space-star), transparent),
+        radial-gradient(1.5px 1.5px at 38% 62%, var(--space-star), transparent), radial-gradient(1px 1px at 86% 72%, var(--space-star), transparent),
+        radial-gradient(1px 1px at 22% 84%, var(--space-star), transparent), radial-gradient(1.5px 1.5px at 58% 8%, var(--space-star), transparent),
+        radial-gradient(1px 1px at 92% 44%, var(--space-star), transparent), radial-gradient(1px 1px at 6% 52%, var(--space-star), transparent);
+    }
+    .hud { background: var(--hud-bg); border: 1px solid var(--hud-line); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+    .hud-chip { display: inline-block; border: 1px solid var(--hud-line); color: var(--ship-glass); border-radius: 999px; padding: 0 .45rem; font-size: .75rem; font-weight: 600; line-height: 1.25rem; }
+    .btn.console-btn, .btn.console-btn:hover { background: var(--hud-bg); border: 1px solid var(--hud-line); color: var(--space-text); box-shadow: none; }
+    @media (hover: hover) { .btn.console-btn:hover { background: color-mix(in oklab, var(--ship-glass) 18%, var(--hud-bg)); } }
     #ship-canvas { touch-action: none; display: block; }
     .ship-hud { color: var(--space-text); }
     .ship-heart { width: 18px; height: 18px; fill: var(--status-critical); stroke: none; }
     .ship-heart.off { fill: color-mix(in oklab, var(--space-text) 25%, transparent); }
-    .gm-blank { display: inline-block; min-width: 4.5rem; border-bottom: 2px solid var(--primary); color: var(--primary); text-align: center; margin: 0 .2rem; }
+    /* custom: tường gạch chữ cái cho Điền câu và Nghe và gõ. Gõ đúng: gạch nổ; gõ sai: gạch hoá thép */
+    .wall { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: .35rem; --n: 7; cursor: text; }
+    .wall.inline { display: inline-flex; vertical-align: middle; justify-content: flex-start; margin: 0 .2rem; gap: .2rem; max-width: 100%; }
+    .slot { position: relative; flex: none; --w: max(1.4rem, min(2.35rem, calc((min(100vw, 36rem) - 5.5rem) / var(--n) - .35rem))); width: var(--w); height: calc(var(--w) * 1.19); }
+    .wall.inline .slot { --w: max(1.15rem, min(1.6rem, calc((min(100vw, 36rem) - 5.5rem) / var(--n) - .2rem))); }
+    .wall-gap { width: .9rem; flex: none; } .wall.inline .wall-gap { width: .45rem; }
+    .wall-sep { align-self: center; font-weight: 700; }
+    .tile { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 700; font-size: calc(var(--w) * .58); line-height: 1; color: var(--foreground);
+      border-radius: 6px; background: var(--card); box-shadow: inset 0 -3px 0 var(--tile-line, var(--border)); opacity: 0; transform: scale(.6); }
+    .tile.ok, .tile.retry, .tile.miss { opacity: 1; transform: none; }
+    .tile.ok { --tile-line: var(--status-good); }
+    .tile.retry { --tile-line: var(--status-warning); }
+    .tile.miss { --tile-line: var(--status-critical); color: var(--muted-foreground); }
+    .brick { position: absolute; inset: 0; border-radius: 6px;
+      background:
+        linear-gradient(90deg, transparent 49%, var(--mortar) 49% 51%, transparent 51%) 0 0 / 100% 50% no-repeat,
+        linear-gradient(90deg, transparent 24%, var(--mortar) 24% 26%, transparent 26% 74%, var(--mortar) 74% 76%, transparent 76%) 0 100% / 100% 50% no-repeat,
+        linear-gradient(transparent 48%, var(--mortar) 48% 52%, transparent 52%),
+        linear-gradient(180deg, var(--brick-hi), var(--brick) 45%, var(--brick-lo));
+      box-shadow: inset 0 2px 0 rgba(255, 255, 255, .18), inset 0 -3px 0 rgba(0, 0, 0, .25), 0 2px 0 var(--mortar); }
+    .brick.steel { overflow: hidden;
+      background:
+        radial-gradient(circle at 18% 20%, var(--rivet) 0 2px, transparent 2.5px), radial-gradient(circle at 82% 20%, var(--rivet) 0 2px, transparent 2.5px),
+        radial-gradient(circle at 18% 80%, var(--rivet) 0 2px, transparent 2.5px), radial-gradient(circle at 82% 80%, var(--rivet) 0 2px, transparent 2.5px),
+        linear-gradient(135deg, var(--steel-hi), var(--steel) 45%, var(--steel-lo));
+      box-shadow: inset 0 2px 0 rgba(255, 255, 255, .5), inset 0 -3px 0 rgba(0, 0, 0, .3), 0 2px 0 var(--rivet); }
+    .brick.steel::after { content: ""; position: absolute; inset: 0; border-radius: inherit;
+      background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, .55) 45%, transparent 60%); transform: translateX(-120%); animation: sheen 1.6s var(--ease-out) 1; }
+    .slot.broken .brick { opacity: 0; }
+    .slot.current .brick { outline: 2px solid var(--ring); outline-offset: 2px; animation: bob 1.4s ease-in-out infinite; }
+    @keyframes bob { 50% { transform: translateY(-3px); } }
+    @keyframes sheen { to { transform: translateX(120%); } }
+    .ghost { position: absolute; left: 50%; top: -0.2rem; transform: translateX(-50%); font-weight: 700; color: var(--status-critical); pointer-events: none; }
+    #fx { position: fixed; inset: 0; pointer-events: none; z-index: var(--z-toast); }
+    .frag { position: fixed; background: linear-gradient(180deg, var(--brick-hi), var(--brick-lo)); will-change: transform, opacity; }
+    .frag.metal { background: linear-gradient(135deg, var(--steel-hi), var(--steel-lo)); }
+    .spark { position: fixed; width: 4px; height: 4px; border-radius: 2px; background: var(--spark); }
     .gm-ok { color: var(--status-good); }
     .gm-bad { color: var(--status-critical); }
-    .dd-miss { background: color-mix(in oklab, var(--status-critical) 22%, transparent); color: inherit; border-radius: 2px; text-decoration: underline; }
-    .dd-extra { color: var(--status-critical); text-decoration: line-through; }
     mark.fc-hl { background: color-mix(in oklab, var(--primary) 18%, transparent); color: inherit; border-radius: 3px; padding: 0 2px; }
   </style>
 
@@ -198,6 +261,8 @@
 
   <!-- Toast container (basecoat) -->
   <div id="toaster" class="toaster"></div>
+  <!-- lớp hiệu ứng mảnh gạch vỡ (game gõ) -->
+  <div id="fx" aria-hidden="true"></div>
 
   <!-- ===================== LOGIN (L2 form tối giản) ===================== -->
   <main id="scr-login" class="mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-6 p-6 safe-t safe-b" hidden>
@@ -290,7 +355,7 @@
       <section class="space-y-3" id="games" aria-labelledby="games-title">
         <div class="flex items-end justify-between gap-3">
           <div>
-            <h2 class="text-lg font-semibold" id="games-title">Trò chơi</h2>
+            <h2 class="font-semibold" id="games-title">Trò chơi</h2>
             <p class="text-muted-foreground text-sm">Dùng bộ thẻ đang chọn. Kết quả được tính như một lượt ôn Leitner.</p>
           </div>
           <img src="assets/choco_idle.svg" alt="" width="64" height="64" class="h-16 w-16 shrink-0" />
@@ -298,13 +363,17 @@
         <div class="grid gap-3 sm:grid-cols-3">
           <article class="card" data-size="sm">
             <section class="game-art" aria-hidden="true">
-              <svg viewBox="0 0 240 110"><rect width="240" height="110" rx="10" class="art-bg"/><rect x="40" y="14" width="160" height="84" rx="8" class="art-paper"/>
-                <rect x="54" y="28" width="104" height="7" rx="3.5" class="art-line"/><rect x="54" y="45" width="38" height="7" rx="3.5" class="art-line"/>
-                <rect x="97" y="40" width="48" height="16" rx="4" class="art-blank"/><rect x="104" y="43" width="2" height="10" class="art-accent"/>
-                <rect x="150" y="45" width="36" height="7" rx="3.5" class="art-line"/><rect x="54" y="62" width="124" height="7" rx="3.5" class="art-line"/>
-                <rect x="54" y="79" width="72" height="7" rx="3.5" class="art-line"/><text x="166" y="35" class="art-text">ETS</text></svg>
+              <svg viewBox="0 0 240 110"><rect width="240" height="110" rx="10" class="art-bg"/><rect x="30" y="12" width="180" height="88" rx="8" class="art-paper"/>
+                <rect x="44" y="26" width="110" height="7" rx="3.5" class="art-line"/><text x="166" y="33" class="art-text">ETS</text>
+                <rect x="44" y="51" width="30" height="7" rx="3.5" class="art-line"/>
+                <rect x="80" y="42" width="18" height="22" rx="3" class="art-tile"/><rect x="80" y="61" width="18" height="3" class="art-ok"/><text x="84.5" y="58" class="art-tile-text">e</text>
+                <rect x="101" y="42" width="18" height="22" rx="3" class="art-tile"/><rect x="101" y="61" width="18" height="3" class="art-ok"/><text x="105.5" y="58" class="art-tile-text">x</text>
+                <path d="M124 44l7-3 4 6-6 4zM134 58l6-2 2 6-6 1zM122 58l4 5-5 2z" class="art-brick-hi"/><circle cx="131" cy="40" r="1.6" class="art-spark"/><circle cx="140" cy="49" r="1.3" class="art-spark"/>
+                <rect x="143" y="42" width="18" height="22" rx="3" class="art-brick"/><path d="M143 53h18M152 42v11M147 53v11M157 53v11" class="art-mortar"/>
+                <rect x="167" y="51" width="28" height="7" rx="3.5" class="art-line"/>
+                <rect x="44" y="74" width="140" height="7" rx="3.5" class="art-line"/><rect x="44" y="87" width="80" height="7" rx="3.5" class="art-line"/></svg>
             </section>
-            <header><h3>Điền câu ETS</h3><p>Gõ từ còn thiếu trong câu thật của đề. Gợi ý theo bậc.</p></header>
+            <header><h3>Điền câu ETS</h3><p>Gõ từng chữ của từ còn thiếu trong câu đề thật. Gõ đúng thì gạch vỡ, gõ sai thì gạch hoá thép.</p></header>
             <footer class="flex items-center justify-between gap-2">
               <span class="text-muted-foreground text-sm" id="gt-cloze"></span>
               <button class="btn" data-variant="outline" data-size="sm" data-game="cloze">Chơi</button>
@@ -313,13 +382,17 @@
           <article class="card" data-size="sm">
             <section class="game-art" aria-hidden="true">
               <svg viewBox="0 0 240 110"><rect width="240" height="110" rx="10" class="art-bg"/>
-                <path d="M62 66a38 38 0 0 1 76 0" class="art-stroke"/><rect x="52" y="58" width="18" height="30" rx="7" class="art-c1"/><rect x="130" y="58" width="18" height="30" rx="7" class="art-c1"/>
-                <rect x="164" y="48" width="6" height="22" rx="3" class="art-c3"/><rect x="175" y="38" width="6" height="42" rx="3" class="art-c3"/><rect x="186" y="44" width="6" height="30" rx="3" class="art-c3"/><rect x="197" y="52" width="6" height="14" rx="3" class="art-c3"/>
-                <rect x="20" y="16" width="20" height="20" rx="5" class="art-paper"/><text x="26" y="30" class="art-text">a</text>
-                <rect x="44" y="16" width="20" height="20" rx="5" class="art-paper"/><text x="50" y="30" class="art-text">b</text>
-                <rect x="68" y="16" width="20" height="20" rx="5" class="art-paper"/><text x="74" y="30" class="art-text">c</text></svg>
+                <path d="M30 46a26 26 0 0 1 52 0" class="art-stroke"/><rect x="23" y="40" width="14" height="24" rx="6" class="art-c1"/><rect x="75" y="40" width="14" height="24" rx="6" class="art-c1"/>
+                <rect x="98" y="30" width="5" height="16" rx="2.5" class="art-c3"/><rect x="107" y="22" width="5" height="32" rx="2.5" class="art-c3"/><rect x="116" y="27" width="5" height="22" rx="2.5" class="art-c3"/>
+                <rect x="132" y="22" width="22" height="26" rx="4" class="art-tile"/><rect x="132" y="45" width="22" height="3" class="art-ok"/><text x="137.5" y="41" class="art-tile-text">a</text>
+                <rect x="158" y="22" width="22" height="26" rx="4" class="art-tile"/><rect x="158" y="45" width="22" height="3" class="art-warn"/><text x="163.5" y="41" class="art-tile-text">b</text>
+                <rect x="184" y="22" width="22" height="26" rx="4" class="art-steel"/><circle cx="188.5" cy="27" r="1.6" class="art-rivet"/><circle cx="201.5" cy="27" r="1.6" class="art-rivet"/><circle cx="188.5" cy="43" r="1.6" class="art-rivet"/><circle cx="201.5" cy="43" r="1.6" class="art-rivet"/>
+                <rect x="132" y="56" width="22" height="26" rx="4" class="art-brick"/><path d="M132 69h22M143 56v13M138 69v13M149 69v13" class="art-mortar"/>
+                <rect x="158" y="56" width="22" height="26" rx="4" class="art-brick"/><path d="M158 69h22M169 56v13M164 69v13M175 69v13" class="art-mortar"/>
+                <rect x="184" y="56" width="22" height="26" rx="4" class="art-brick"/><path d="M184 69h22M195 56v13M190 69v13M201 69v13" class="art-mortar"/>
+                <rect x="20" y="78" width="96" height="7" rx="3.5" class="art-line"/></svg>
             </section>
-            <header><h3>Nghe và gõ</h3><p>Nghe giọng Mỹ, gõ đúng chính tả. Chấm từng chữ cái.</p></header>
+            <header><h3>Nghe và gõ</h3><p>Nghe giọng Mỹ, gõ từng chữ để phá tường gạch. Chấm từng chữ cái.</p></header>
             <footer class="flex items-center justify-between gap-2">
               <span class="text-muted-foreground text-sm" id="gt-dictation"></span>
               <button class="btn" data-variant="outline" data-size="sm" data-game="dictation">Chơi</button>
@@ -509,7 +582,7 @@
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
       </button>
     </header>
-    <div class="progress mx-3 shrink-0" role="progressbar" aria-label="Tiến độ phiên học" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="study-progress"><span style="width:0%"></span></div>
+    <div class="shrink-0 px-3"><div class="progress" role="progressbar" aria-label="Tiến độ phiên học" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="study-progress"><span style="width:0%"></span></div></div>
 
     <div class="fc-scene mx-auto w-full max-w-xl flex-1 px-3 py-3 min-h-0 md:my-auto md:max-h-[520px]" id="fc-scene">
       <div class="fc-card" id="fc-card" tabindex="0" role="button" aria-label="Thẻ từ vựng, chạm để lật">
@@ -574,9 +647,9 @@
 
     <!-- custom: game Phi thuyền — canvas 2D, câu hỏi ở trên, 3 làn thiên thạch -->
     <div id="ship-panel" class="mx-auto flex w-full max-w-xl flex-1 flex-col min-h-0" hidden>
-      <div class="ship-q mx-3 mt-2 flex items-start gap-2 rounded-lg px-3 py-2">
+      <div class="hud mx-3 mt-2 flex items-start gap-2 rounded-lg px-3 py-2">
         <div id="ship-q" class="min-w-0 flex-1" aria-live="polite"></div>
-        <img id="ship-mascot" src="assets/choco_idle.svg" alt="" width="48" height="48" class="h-12 w-12 shrink-0" />
+        <img id="ship-mascot" src="assets/choco_idle.svg" alt="" width="40" height="40" class="h-10 w-10 shrink-0" />
       </div>
       <div class="relative mx-3 mt-2 flex-1 overflow-hidden rounded-lg min-h-0" id="ship-stage">
         <canvas id="ship-canvas" class="absolute inset-0 h-full w-full" aria-label="Màn chơi phi thuyền: 3 làn thiên thạch, mỗi thiên thạch mang một từ"></canvas>
@@ -595,13 +668,13 @@
         </div>
       </div>
       <div class="mx-3 mt-2 grid grid-cols-[1fr_auto_1fr] gap-2">
-        <button class="btn h-12" data-variant="outline" id="ship-left" aria-label="Sang làn trái">
+        <button class="btn console-btn h-12" id="ship-left" aria-label="Sang làn trái">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
         </button>
-        <button class="btn h-12" data-variant="ghost" id="ship-pause" aria-label="Tạm dừng">
+        <button class="btn console-btn h-12 px-5" id="ship-pause" aria-label="Tạm dừng">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
         </button>
-        <button class="btn h-12" data-variant="outline" id="ship-right" aria-label="Sang làn phải">
+        <button class="btn console-btn h-12" id="ship-right" aria-label="Sang làn phải">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
         </button>
       </div>
@@ -616,17 +689,20 @@
               <span class="badge" data-variant="outline" id="gm-box"></span>
               <p class="text-muted-foreground text-sm" id="gm-title"></p>
             </div>
-            <span class="badge shrink-0" data-variant="secondary"><span id="gm-score" data-num>0</span>&nbsp;điểm</span>
+            <div class="flex shrink-0 items-center gap-2">
+              <span class="badge" data-variant="secondary"><span id="gm-score" data-num>0</span>&nbsp;điểm</span>
+              <img id="gm-mascot" src="assets/choco_idle.svg" alt="" width="44" height="44" class="h-11 w-11" />
+            </div>
           </div>
         </header>
         <section class="space-y-4">
           <div id="gm-prompt"></div>
+          <p id="gm-status" class="text-muted-foreground text-sm" aria-live="polite"></p>
           <div class="flex flex-wrap gap-1" id="gm-pos"></div>
           <p id="gm-hint" class="text-sm" aria-live="polite"></p>
           <form id="gm-form" class="space-y-2" autocomplete="off">
-            <input id="gm-input" class="input w-full" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done" aria-label="Gõ đáp án" />
+            <input id="gm-input" class="input w-full" autocapitalize="none" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="done" aria-label="Gõ từng chữ cái của đáp án" />
             <div class="flex flex-wrap gap-2">
-              <button type="submit" class="btn" id="gm-check">Kiểm tra</button>
               <button type="button" class="btn" data-variant="outline" id="gm-hint-btn">Gợi ý</button>
               <button type="button" class="btn" data-variant="ghost" id="gm-giveup">Không biết</button>
             </div>
@@ -785,7 +861,7 @@
     // ================================================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwBiNwckLC-9o_m0X0TBDE-vjazUJMWD4UlIsySwcsFuUjMyBGBo3mfVQGEhWl47CJ7DA/exec";
     const SCHEMA = 1;
-    const APP_VER = "1.4.0";
+    const APP_VER = "1.5.0";
     const VERSION_URL = "version.json";       // cùng repo; build_vocab.py tự đồng bộ số phiên bản vào file này
     const VERSION_CHECK_MS = 10 * 60 * 1000;
     const NEW_BATCH = 20;                       // "Học thêm 20 thẻ mới"
@@ -1216,6 +1292,7 @@
       $("shell").hidden = true; $("scr-study").hidden = false; $("study-done").hidden = true;
       $("fc-scene").hidden = mode === "quiz" || isGame || mode === "ship"; $("quiz-panel").hidden = mode !== "quiz"; $("game-panel").hidden = !isGame; $("ship-panel").hidden = mode !== "ship";
       $("scr-study").querySelector("footer").hidden = false;
+      $("scr-study").classList.toggle("is-space", mode === "ship");
       window.scrollTo(0, 0);
       if (mode === "ship") shipInit();
       const modeLabel = { card: "", reverse: " · ngược", quiz: " · trắc nghiệm", cloze: " · điền câu", dictation: " · nghe và gõ", ship: " · phi thuyền" }[mode] || "";
@@ -1366,7 +1443,8 @@
 
     // ================================================================
     // GAME: Điền câu ETS (cloze) và Nghe và gõ (dictation)
-    // Leitner: đúng khi dùng tối đa gợi ý 2 = Thuộc; phải xem lựa chọn/IPA, gõ sai hoặc "Không biết" = Quên
+    // Leitner: phá xong tường, sai tối đa 1 chữ (từ từ 5 chữ trở lên), dùng tối đa gợi ý 2 = Thuộc;
+    // phải xem lựa chọn/IPA, gõ sai nhiều chữ, chọn sai hoặc "Không biết" = Quên
     // ================================================================
     const GAME_POINTS = [3, 2, 1, 0.5];
     const fmtPts = (n) => Number(n).toLocaleString("vi-VN", { maximumFractionDigits: 1 });
@@ -1394,67 +1472,150 @@
       if (mode === "ship") return (e) => stripParen(e.word).length <= 22;
       return () => true;
     }
-    function lev(a, b) {
-      const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
-      for (let j = 1; j <= b.length; j++) d[0][j] = j;
-      for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++)
-        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-      return d[a.length][b.length];
-    }
-    // So khớp từng chữ (LCS): chữ đáp án bị thiếu/sai gạch dưới, chữ gõ thừa gạch ngang
-    function diffHtml(typed, answer) {
-      const a = typed.toLowerCase(), b = answer.toLowerCase();
-      const L = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
-      for (let i = a.length - 1; i >= 0; i--) for (let j = b.length - 1; j >= 0; j--)
-        L[i][j] = a[i] === b[j] ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
-      let i = 0, j = 0, outT = "", outA = "";
-      while (i < a.length && j < b.length) {
-        if (a[i] === b[j]) { outT += escapeHtml(typed[i]); outA += escapeHtml(answer[j]); i++; j++; }
-        else if (L[i + 1][j] >= L[i][j + 1]) { outT += `<span class="dd-extra">${escapeHtml(typed[i])}</span>`; i++; }
-        else { outA += `<mark class="dd-miss">${escapeHtml(answer[j])}</mark>`; j++; }
+    // ---- Tường gạch: mỗi chữ cái một viên. Gõ đúng: gạch nổ, lộ chữ (vạch xanh). Gõ sai: gạch hoá thép,
+    // gõ đúng chữ đó thì thép vỡ, chữ lộ ra có vạch vàng. Mở bằng gợi ý: vạch vàng. Bỏ cuộc: vạch đỏ.
+    const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    const foldCh = (c) => String(c).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    function shatter(brick, metal) {
+      if (reducedMotion()) return;
+      const fx = $("fx"); const r = brick.getBoundingClientRect(); const cols = 3, rows = 3;
+      for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
+        const f = document.createElement("div"); f.className = "frag" + (metal ? " metal" : "");
+        const w = r.width / cols, h = r.height / rows;
+        Object.assign(f.style, { left: r.left + i * w + "px", top: r.top + j * h + "px", width: w + "px", height: h + "px",
+          clipPath: `polygon(${rnd(0, 25)}% 0, 100% ${rnd(0, 25)}%, ${rnd(75, 100)}% 100%, 0 ${rnd(70, 100)}%)` });
+        fx.appendChild(f);
+        const dx = (i - 1) * rnd(30, 70) + rnd(-15, 15), up = rnd(40, 90), rot = rnd(-260, 260);
+        f.animate([
+          { transform: "translate(0,0) rotate(0)", opacity: 1 },
+          { transform: `translate(${dx * 0.6}px,${-up}px) rotate(${rot * 0.5}deg)`, opacity: 1, offset: 0.35 },
+          { transform: `translate(${dx}px,${rnd(60, 120)}px) rotate(${rot}deg)`, opacity: 0 },
+        ], { duration: rnd(560, 760), easing: "cubic-bezier(.2,.6,.4,1)" }).finished.then(() => f.remove(), () => f.remove());
       }
-      while (i < a.length) { outT += `<span class="dd-extra">${escapeHtml(typed[i])}</span>`; i++; }
-      while (j < b.length) { outA += `<mark class="dd-miss">${escapeHtml(answer[j])}</mark>`; j++; }
-      return { typed: outT, answer: outA };
+      const puff = document.createElement("div");
+      Object.assign(puff.style, { position: "fixed", left: r.left + r.width / 2 - 24 + "px", top: r.top + r.height / 2 - 24 + "px", width: "48px", height: "48px",
+        borderRadius: "50%", background: `radial-gradient(circle, color-mix(in oklab, var(${metal ? "--steel-hi" : "--brick-hi"}) 55%, transparent), transparent 70%)` });
+      fx.appendChild(puff);
+      puff.animate([{ transform: "scale(.4)", opacity: .9 }, { transform: "scale(1.6)", opacity: 0 }], { duration: 420, easing: "ease-out" }).finished.then(() => puff.remove(), () => puff.remove());
     }
-    function gameAnswer(e) { return state.session.mode === "cloze" ? state.session.game.token : dictAnswers(e)[0]; }
+    function sparks(brick) {
+      if (reducedMotion()) return;
+      const fx = $("fx"); const r = brick.getBoundingClientRect();
+      for (let k = 0; k < 7; k++) {
+        const sp = document.createElement("div"); sp.className = "spark";
+        Object.assign(sp.style, { left: r.left + r.width / 2 + "px", top: r.top + r.height / 2 + "px" }); fx.appendChild(sp);
+        const a = rnd(0, Math.PI * 2), v = rnd(25, 55);
+        sp.animate([{ transform: "translate(0,0)", opacity: 1 }, { transform: `translate(${Math.cos(a) * v}px,${Math.sin(a) * v}px)`, opacity: 0 }], { duration: 380, easing: "ease-out" })
+          .finished.then(() => sp.remove(), () => sp.remove());
+      }
+    }
+    function buildWall(ans, inline) {
+      const wall = document.createElement("span"); wall.className = "wall" + (inline ? " inline" : ""); wall.setAttribute("aria-hidden", "true");
+      const slots = [];
+      for (const ch of ans) {
+        if (/\s/.test(ch)) { const gp = document.createElement("span"); gp.className = "wall-gap"; wall.appendChild(gp); continue; }
+        const key = foldCh(ch);
+        if (!/^[a-z0-9]$/.test(key)) { const sp = document.createElement("span"); sp.className = "wall-sep"; sp.textContent = ch; wall.appendChild(sp); continue; }
+        const el = document.createElement("span"); el.className = "slot";
+        const tile = document.createElement("span"); tile.className = "tile"; tile.textContent = ch;
+        const brick = document.createElement("span"); brick.className = "brick";
+        el.append(tile, brick); wall.appendChild(el);
+        slots.push({ el, tile, brick, ch: key, wrong: false, helped: false, done: false });
+      }
+      wall.style.setProperty("--n", Math.max(slots.length, 5));
+      wall.addEventListener("click", () => { if (!$("gm-input").disabled) $("gm-input").focus(); });
+      return { wall, slots };
+    }
+    const setMascot = (pose) => { const m = $("gm-mascot"); const src = `assets/choco_${pose}.svg`; if (m.getAttribute("src") !== src) m.setAttribute("src", src); };
+    const gameStatus = (t) => { $("gm-status").textContent = t; };
+    function wallMark() { const g = state.session.game; g.slots.forEach((sl, i) => sl.el.classList.toggle("current", i === g.idx && !g.answered)); }
+    function wallReveal(sl, kind, delay) {
+      if (sl.done) return; sl.done = true;
+      const quiet = reducedMotion(); const metal = sl.brick.classList.contains("steel");
+      const run = () => {
+        shatter(sl.brick, metal);
+        sl.el.classList.add("broken"); sl.tile.classList.add(kind);
+        if (quiet) return;
+        sl.brick.animate([{ transform: "scale(1)", opacity: 1 }, { transform: "scale(1.12)", opacity: 0 }], { duration: 140, easing: "ease-out" });
+        sl.tile.animate([{ opacity: 0, transform: "scale(.6)" }, { opacity: 1, transform: "scale(1.08)", offset: .7 }, { opacity: 1, transform: "scale(1)" }],
+          { duration: 240, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
+      };
+      if (delay && !quiet) setTimeout(run, delay); else run();
+    }
+    function wallHarden(sl, typed) {
+      const g = state.session.game; g.keyErr++;
+      if (!sl.wrong) { sl.wrong = true; g.wrongSlots++; sl.brick.classList.add("steel"); }
+      setMascot("surprised");
+      gameStatus(`"${typed}" chưa đúng, viên gạch hoá thép. Gõ lại chữ thứ ${g.idx + 1}.`);
+      if (reducedMotion()) return;
+      sl.brick.animate([{ transform: "translateX(0)" }, { transform: "translateX(-6px)" }, { transform: "translateX(6px)" }, { transform: "translateX(-4px)" }, { transform: "translateX(3px)" }, { transform: "translateX(0)" }],
+        { duration: 300, easing: "ease-in-out" });
+      sparks(sl.brick);
+      const gh = document.createElement("span"); gh.className = "ghost"; gh.textContent = typed; sl.el.appendChild(gh);
+      gh.animate([{ transform: "translate(-50%,0)", opacity: 1 }, { transform: "translate(-50%,-26px)", opacity: 0 }], { duration: 650, easing: "ease-out" })
+        .finished.then(() => gh.remove(), () => gh.remove());
+    }
+    function gamePress(raw) {
+      const s = state.session; const g = s && s.game; if (!g || g.answered || !g.slots) return;
+      const ch = foldCh(raw); if (!/^[a-z0-9]$/.test(ch)) return;
+      const sl = g.slots[g.idx]; if (!sl) return;
+      if (ch !== sl.ch) { wallHarden(sl, ch); return; }
+      wallReveal(sl, sl.wrong || sl.helped ? "retry" : "ok"); g.idx++; wallMark();
+      if (!sl.wrong) setMascot("idle");
+      if (g.idx >= g.slots.length) gameFinish("done");
+      else gameStatus(`Đúng. Còn ${g.slots.length - g.idx} chữ.`);
+    }
+    function gameAnswer() { return state.session.game.token; }
     function renderGame() {
       const s = state.session; const id = currentId(); const e = BY_ID.get(id); const cs = cardState(id);
-      s.flipped = false; s.game = { level: 0, answered: false, correct: false, pts: 0, token: null };
+      s.flipped = false;
+      const ans = s.mode === "cloze" ? findToken(e.example, e.word).token : dictAnswers(e)[0];
+      s.game = { level: 0, answered: false, correct: false, pts: 0, token: ans, slots: [], idx: 0, wrongSlots: 0, keyErr: 0 };
       $("gm-box").textContent = boxLabel(cs) + (s.again.has(id) ? " · ôn lại" : "");
       $("gm-score").textContent = fmtPts(sumPts(s.gameLog));
       $("gm-pos").innerHTML = posChipsHtml(e);
       $("gm-hint").textContent = ""; $("gm-options").hidden = true; $("gm-options").innerHTML = "";
       $("gm-result").hidden = true; $("gm-result").innerHTML = "";
       const inp = $("gm-input"); inp.value = ""; inp.disabled = false;
-      ["gm-check", "gm-hint-btn", "gm-giveup"].forEach((k) => { $(k).disabled = false; });
+      ["gm-hint-btn", "gm-giveup"].forEach((k) => { $(k).disabled = false; });
+      const { wall, slots } = buildWall(ans, s.mode === "cloze"); s.game.slots = slots;
+      const prompt = $("gm-prompt"); prompt.innerHTML = "";
       if (s.mode === "cloze") {
-        const t = findToken(e.example, e.word); s.game.token = t.token;
+        const t = findToken(e.example, e.word);
         $("gm-title").textContent = "Điền từ còn thiếu vào câu trong đề ETS";
-        $("gm-prompt").innerHTML = `<p class="text-lg leading-8">${escapeHtml(t.before)}<span class="gm-blank" aria-label="chỗ trống">＿＿＿</span>${escapeHtml(t.after)}</p>`;
-        inp.placeholder = "Gõ từ còn thiếu";
+        const para = document.createElement("p"); para.className = "text-lg leading-10";
+        para.append(document.createTextNode(t.before), wall, document.createTextNode(t.after));
+        prompt.appendChild(para);
+        inp.placeholder = "Chạm vào đây rồi gõ từng chữ";
       } else {
         $("gm-title").textContent = "Nghe rồi gõ lại đúng chính tả";
-        $("gm-prompt").innerHTML = `<div class="flex flex-wrap items-center gap-2"><button type="button" class="btn" data-size="lg" id="gm-play">${ICON_SPK}Nghe lại</button><button type="button" class="btn" data-variant="outline" id="gm-slow">Nghe chậm</button></div>`;
-        $("gm-play").addEventListener("click", () => speak(dictAnswers(e)[0]));
-        $("gm-slow").addEventListener("click", () => speak(dictAnswers(e)[0], { rate: 0.7 }));
-        inp.placeholder = "Gõ từ vừa nghe";
-        speak(dictAnswers(e)[0]);
+        prompt.innerHTML = `<div class="flex flex-wrap items-center gap-2"><button type="button" class="btn" data-size="lg" id="gm-play">${ICON_SPK}Nghe lại</button><button type="button" class="btn" data-variant="outline" id="gm-slow">Nghe chậm</button></div>`;
+        const holder = document.createElement("div"); holder.className = "pt-4"; holder.appendChild(wall); prompt.appendChild(holder);
+        $("gm-play").addEventListener("click", () => speak(ans));
+        $("gm-slow").addEventListener("click", () => speak(ans, { rate: 0.7 }));
+        inp.placeholder = "Chạm vào đây rồi gõ từ vừa nghe";
+        speak(ans);
       }
+      const words = ans.trim().split(/\s+/).length;
+      gameStatus(`${slots.length} chữ cái${words > 1 ? `, ${words} từ` : ""}. Gõ từng chữ: đúng thì gạch vỡ, sai thì gạch hoá thép.`);
+      setMascot("idle"); wallMark();
       renderProgressBar(s);
       $("study-actions-front").hidden = true; $("study-actions-back").hidden = true; $("study-actions-quiz").hidden = true;
       $("study-actions-game").hidden = false; $("btn-game-next").hidden = true; $("study-known").hidden = true;
-      $("study-hint").textContent = "Enter: kiểm tra · Gợi ý càng nhiều, điểm càng ít · U: hoàn tác · Esc: kết thúc";
+      $("study-hint").textContent = "Gõ từng chữ cái · Gợi ý càng nhiều, điểm càng ít · Esc: kết thúc";
       $("game-panel").scrollTop = 0;
       inp.focus();
     }
     function gameHint() {
       const s = state.session; if (!s || !s.game || s.game.answered) return;
-      const e = BY_ID.get(currentId()); const g = s.game; const ans = gameAnswer(e);
+      const e = BY_ID.get(currentId()); const g = s.game; const ans = gameAnswer();
       g.level = Math.min(3, g.level + 1);
       const parts = [];
-      const letters = ans.replace(/[\s'-]/g, "").length; const words = ans.trim().split(/\s+/).length;
-      parts.push(`Bắt đầu bằng "${ans[0]}", ${letters} chữ cái${words > 1 ? `, ${words} từ` : ""}`);
+      if (g.level === 1) {
+        const sl = g.slots[g.idx];
+        if (sl) { sl.helped = true; parts.push(`Mở giúp chữ "${sl.tile.textContent}"`); gamePress(sl.ch); if (g.answered) return; }
+      } else parts.push(`Bắt đầu bằng "${ans[0]}"`);
       if (g.level >= 2) parts.push("Nghĩa: " + sensesOf(e).map((x) => (POS_LABEL[x.pos] || x.pos) + " " + x.syn).join("; "));
       if (g.level >= 3 && s.mode === "dictation") parts.push("IPA: " + e.ipa);
       $("gm-hint").textContent = parts.join(" · ");
@@ -1471,49 +1632,51 @@
       const box = $("gm-options"); box.innerHTML = "";
       opts.forEach((o) => {
         const b = document.createElement("button"); b.type = "button"; b.className = "btn"; b.dataset.variant = "outline"; b.textContent = o;
-        b.addEventListener("click", () => { $("gm-input").value = o; gameCheck(false); });
+        b.addEventListener("click", () => {
+          const g = state.session.game; if (g.answered) return;
+          if (normAns(o) === normAns(ans)) {
+            g.slots.slice(g.idx).forEach((sl, k) => { sl.helped = true; wallReveal(sl, "retry", k * 70); });
+            g.idx = g.slots.length; gameFinish("done");
+          } else { b.classList.add("text-destructive"); gameFinish("wrong"); }
+        });
         box.appendChild(b);
       });
       box.hidden = false;
     }
-    function gameCheck(giveUp) {
-      const s = state.session; if (!s || !s.game || s.game.answered) return;
-      const e = BY_ID.get(currentId()); const g = s.game; const typed = $("gm-input").value.trim();
-      if (!giveUp && !normAns(typed)) { $("gm-input").focus(); return; }
-      const t = normAns(typed); let correct = false, near = false;
-      if (!giveUp) {
-        if (s.mode === "cloze") {
-          const accept = [g.token, stripParen(e.word)].map(normAns);
-          correct = accept.includes(t);
-          if (!correct && t.length >= 5 && accept.some((a) => lev(a, t) <= 1)) { correct = true; near = true; }
-        } else {
-          correct = dictAnswers(e).map(normAns).includes(t);
-        }
-      }
-      g.answered = true; g.pts = correct ? GAME_POINTS[g.level] : 0; g.correct = correct && g.level <= 2;
-      $("gm-input").disabled = true; ["gm-check", "gm-hint-btn", "gm-giveup"].forEach((k) => { $(k).disabled = true; });
+    // kind: "done" (phá hết gạch) | "giveup" (Không biết) | "wrong" (chọn sai đáp án gợi ý)
+    function gameFinish(kind) {
+      const s = state.session; const g = s && s.game; if (!g || g.answered) return;
+      const e = BY_ID.get(currentId());
+      const completed = kind === "done";
+      const tolerance = g.slots.length >= 5 ? 1 : 0; // từ từ 5 chữ trở lên: cho phép sai 1 chữ (giống luật cũ: sai chính tả nhẹ)
+      const clean = completed && g.wrongSlots <= tolerance;
+      const near = clean && g.wrongSlots > 0;
+      g.answered = true;
+      g.pts = !completed ? 0 : clean ? GAME_POINTS[g.level] : GAME_POINTS[3];
+      g.correct = clean && g.level <= 2;
+      if (!completed) g.slots.slice(g.idx).forEach((sl, k) => wallReveal(sl, "miss", k * 60));
+      wallMark();
+      $("gm-input").disabled = true; ["gm-hint-btn", "gm-giveup"].forEach((k) => { $(k).disabled = true; });
       $("gm-options").querySelectorAll("button").forEach((b) => { b.disabled = true; });
       $("gm-score").textContent = fmtPts(sumPts(s.gameLog) + g.pts);
+      setMascot(g.correct ? "happy" : "sad");
       const cs = cardState(e.id); const nextBox = Math.min(5, (cs ? cs.box : 1) + 1);
+      const back = "thẻ về hộp 1 và quay lại cuối phiên.";
       const verdict = g.correct
-        ? `<p class="gm-ok font-medium">Đúng${near ? " (sai chính tả nhẹ)" : ""}. +${fmtPts(g.pts)} điểm, thẻ lên hộp ${nextBox}.</p>`
-        : correct
-          ? `<p class="gm-bad font-medium">Đúng nhưng phải xem ${s.mode === "cloze" ? "lựa chọn" : "IPA"}. +${fmtPts(g.pts)} điểm, thẻ về hộp 1 và quay lại cuối phiên.</p>`
-          : `<p class="gm-bad font-medium">${giveUp ? "Chưa nhớ" : "Chưa đúng"}. Thẻ về hộp 1 và quay lại cuối phiên.</p>`;
-      const ans = gameAnswer(e);
-      let detail = "";
-      if (s.mode === "dictation" && typed && !correct) {
-        const d = diffHtml(typed, ans);
-        detail = `<p class="text-sm">Bạn gõ: <span class="font-mono">${d.typed}</span></p><p class="text-sm">Đáp án: <span class="font-mono">${d.answer}</span></p>`;
-      }
+        ? `<p class="gm-ok font-medium">Đúng${near ? " (gõ sai 1 chữ, vạch vàng)" : ""}. +${fmtPts(g.pts)} điểm, thẻ lên hộp ${nextBox}.</p>`
+        : clean
+          ? `<p class="gm-bad font-medium">Đúng nhưng phải xem ${s.mode === "cloze" ? "lựa chọn" : "IPA"}. +${fmtPts(g.pts)} điểm, ${back}</p>`
+          : completed
+            ? `<p class="gm-bad font-medium">Phá xong tường nhưng gõ sai ${g.wrongSlots} chữ (vạch vàng). +${fmtPts(g.pts)} điểm, ${back}</p>`
+            : `<p class="gm-bad font-medium">${kind === "giveup" ? "Chưa nhớ" : "Chọn chưa đúng"}. Thẻ về hộp 1 và quay lại cuối phiên.</p>`;
+      gameStatus(completed ? (g.wrongSlots ? `Hoàn thành, ${g.keyErr} lần gõ sai.` : "Hoàn thành, không sai chữ nào.") : "Đã mở các chữ còn lại (vạch đỏ).");
       const sentence = e.example ? `<p class="text-muted-foreground italic leading-6">${highlight(e.example, e.word)}</p>` : "";
-      $("gm-result").innerHTML = mascotHtml(g.correct) + verdict + detail +
+      $("gm-result").innerHTML = verdict +
         `<div class="flex items-center justify-between gap-2"><div class="min-w-0"><p class="text-xl font-semibold">${escapeHtml(e.word)}</p><p class="text-muted-foreground">${escapeHtml(e.ipa)}</p></div>` +
         `<button type="button" class="btn shrink-0" data-variant="outline" data-size="icon-sm" aria-label="Phát âm" id="gm-speak-ans">${ICON_SPK}</button></div>` +
         sensesHtml(e) + sentence;
       $("gm-result").hidden = false;
       $("gm-speak-ans").addEventListener("click", () => speak(dictAnswers(e) ? dictAnswers(e)[0] : e.word));
-      if (s.mode === "cloze") { const bl = document.querySelector("#gm-prompt .gm-blank"); if (bl) bl.textContent = g.token; }
       $("btn-game-next").hidden = false; $("btn-game-next").focus();
       if (state.progress.settings.autoSpeak) speak(stripParen(e.word));
     }
@@ -1521,9 +1684,12 @@
       const s = state.session; if (!s || !s.game || !s.game.answered) return;
       s.gameLog.push(s.game.pts); s.flipped = true; rate(s.game.correct);
     }
-    $("gm-form").addEventListener("submit", (ev) => { ev.preventDefault(); gameCheck(false); });
+    const gmFeed = () => { const inp = $("gm-input"); const v = inp.value; inp.value = ""; for (const c of v) gamePress(c); };
+    $("gm-input").addEventListener("input", (ev) => { if (!ev.isComposing) gmFeed(); });
+    $("gm-input").addEventListener("compositionend", gmFeed);
+    $("gm-form").addEventListener("submit", (ev) => { ev.preventDefault(); $("gm-input").focus(); });
     $("gm-hint-btn").addEventListener("click", gameHint);
-    $("gm-giveup").addEventListener("click", () => gameCheck(true));
+    $("gm-giveup").addEventListener("click", () => gameFinish("giveup"));
     $("btn-game-next").addEventListener("click", gameNext);
 
     // ================================================================
@@ -1531,7 +1697,6 @@
     // ================================================================
     const CHOCO = {};
     ["idle", "happy", "sad", "surprised"].forEach((n) => { const i = new Image(); i.src = `assets/choco_${n}.svg`; CHOCO[n] = i; });
-    const mascotHtml = (ok) => `<img src="assets/choco_${ok ? "happy" : "sad"}.svg" alt="" width="64" height="64" class="float-right ms-2 h-16 w-16">`;
     function renderGameTiles() {
       for (const m of ["cloze", "dictation", "ship"]) {
         const st = deckStats(state.deck, m); const el = $("gt-" + m); const btn = document.querySelector(`[data-game="${m}"]`);
@@ -1611,7 +1776,7 @@
       if (!verdict) {
         const ex = e.example ? `<p class="text-muted-foreground mt-1 line-clamp-2 text-sm italic">${maskExample(e.example, e.word)}</p>` : "";
         $("ship-q").innerHTML = `<p class="text-muted-foreground text-xs">Lái vào thiên thạch mang từ có nghĩa</p>
-          <p class="font-medium leading-6"><span class="badge me-1" data-variant="secondary">${POS_LABEL[sense.pos] || sense.pos}</span>${escapeHtml(sense.syn)}</p>${ex}`;
+          <p class="font-medium leading-6"><span class="hud-chip me-1">${POS_LABEL[sense.pos] || sense.pos}</span>${escapeHtml(sense.syn)}</p>${ex}`;
       } else {
         $("ship-q").innerHTML = `<p class="${verdict.ok ? "gm-ok" : "gm-bad"} text-sm font-medium">${verdict.ok ? `Đúng, +${verdict.pts} điểm` : "Chưa đúng. Thẻ về hộp 1 và quay lại cuối phiên"}</p>
           <p class="leading-6"><span class="text-lg font-semibold">${escapeHtml(stripParen(e.word))}</span> <span class="text-muted-foreground">${escapeHtml(e.ipa)}</span></p>
@@ -1859,7 +2024,7 @@
     function finishSession() {
       const s = state.session; if (!s) return;
       $("fc-scene").hidden = true; $("quiz-panel").hidden = true; $("game-panel").hidden = true; $("ship-panel").hidden = true; $("scr-study").querySelector("footer").hidden = true;
-      const done = $("study-done"); done.hidden = false;
+      const done = $("study-done"); done.hidden = false; $("scr-study").classList.remove("is-space");
       const total = s.known + s.forgot;
       $("done-total").textContent = ui.fmt(total); $("done-known").textContent = ui.fmt(s.known); $("done-forgot").textContent = ui.fmt(s.forgot);
       const st = deckStats(s.deckId);
@@ -1874,7 +2039,7 @@
     function exitStudy() {
       shipStop();
       const s = state.session; state.session = null;
-      $("scr-study").hidden = true; $("shell").hidden = false;
+      $("scr-study").hidden = true; $("scr-study").classList.remove("is-space"); $("shell").hidden = false;
       if (s) state.deck = s.deckId;
       show("home"); renderAll();
     }
@@ -1928,6 +2093,10 @@
       if ($("scr-study").hidden || !state.session) return;
       if (e.target.matches("input, select, textarea") || document.querySelector("dialog[open]")) return;
       if (state.session.mode === "ship") { shipKey(e); return; }
+      const gg = state.session.game;
+      if ((state.session.mode === "cloze" || state.session.mode === "dictation") && gg && !gg.answered && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && /^[a-z0-9]$/i.test(foldCh(e.key))) {
+        e.preventDefault(); $("gm-input").focus(); gamePress(e.key); return;
+      }
       if (e.key === "u" || e.key === "U") { undo(); return; }
       if (e.key === "Escape") { exitStudy(); return; }
       if (state.session.mode === "cloze" || state.session.mode === "dictation") return;
