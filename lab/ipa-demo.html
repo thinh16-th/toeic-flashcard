@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Khẩu hình IPA · bản thử</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/basecoat-css@1.0.2/dist/basecoat.cdn.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style type="text/tailwindcss">
+    @custom-variant dark (&:where(.dark, .dark *));
+    @theme { --color-background: var(--background); --color-foreground: var(--foreground); --color-card: var(--card); --color-muted: var(--muted); --color-muted-foreground: var(--muted-foreground); --color-border: var(--border); --color-primary: var(--primary); }
+  </style>
+  <style>
+    :root { --primary: #2F3E66; --primary-foreground: #FFF6E6; --ring: #4EA8F5; --p04-sun: #FFC93C; }
+    html.dark { --primary: #4EA8F5; --primary-foreground: #14203a; }
+    body { background-image: radial-gradient(40rem 26rem at 0% -10%, color-mix(in oklab, #4EA8F5 14%, transparent), transparent 70%), radial-gradient(36rem 24rem at 100% 0%, color-mix(in oklab, #3CCB9A 12%, transparent), transparent 70%); background-attachment: fixed; }
+    .panel { background: var(--card); border: 1px solid var(--border); border-radius: 1rem; padding: .5rem; }
+    .panel svg { display: block; width: 100%; height: auto; }
+    .ph { min-width: 2.6rem; height: 2.6rem; padding: 0 .55rem; border-radius: .75rem; border: 1px solid var(--border); background: var(--card); font-size: 1.35rem; font-weight: 600; line-height: 1; touch-action: manipulation; transition: background 160ms linear, border-color 160ms linear, transform 160ms ease; }
+    .ph[aria-pressed="true"] { background: color-mix(in oklab, var(--p04-sun) 45%, var(--card)); border-color: #d9a400; transform: translateY(-2px); }
+    .seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--muted); }
+    .seg button { padding: .35rem .9rem; border-radius: 999px; font-size: .95rem; color: var(--muted-foreground); }
+    .seg button[aria-checked="true"] { background: var(--card); color: var(--foreground); font-weight: 500; box-shadow: 0 1px 4px rgba(20, 30, 60, .15); }
+    .actions { position: sticky; bottom: 0; padding-bottom: max(.75rem, env(safe-area-inset-bottom)); }
+    @media (prefers-reduced-motion: reduce) { .ph { transition: none; } }
+  </style>
+  <script>(function () { try { var t = localStorage.getItem("theme"); if (t === "dark" || (!t && matchMedia("(prefers-color-scheme: dark)").matches)) document.documentElement.classList.add("dark"); } catch (e) {} })();</script>
+</head>
+<body class="min-h-dvh bg-background text-foreground antialiased">
+  <main class="mx-auto flex min-h-dvh max-w-3xl flex-col gap-4 p-4 md:p-6">
+    <header class="space-y-1">
+      <p class="text-muted-foreground text-sm">Bản thử · mức 2 (đọc chậm, dừng ở từng âm)</p>
+      <h1 class="text-2xl font-semibold tracking-tight">Khẩu hình IPA</h1>
+    </header>
+
+    <div class="seg self-start" role="radiogroup" aria-label="Chọn từ" id="words"></div>
+
+    <section class="card"><section class="space-y-3">
+      <div class="flex flex-wrap items-end justify-between gap-2">
+        <div><p class="text-3xl font-semibold tracking-tight" id="w"></p><p class="text-muted-foreground" id="ipa"></p></div>
+        <p class="text-muted-foreground text-xs">Chạm từng âm để xem khẩu hình</p>
+      </div>
+      <div class="flex flex-wrap gap-2" id="chips" role="group" aria-label="Các âm trong từ"></div>
+      <p class="min-h-12 leading-6" id="tip" aria-live="polite"></p>
+    </section></section>
+
+    <div class="grid grid-cols-2 gap-3">
+      <figure class="panel"><div id="front"></div><figcaption class="text-muted-foreground pb-1 text-center text-xs">Môi (nhìn thẳng)</figcaption></figure>
+      <figure class="panel"><div id="side"></div><figcaption class="text-muted-foreground pb-1 text-center text-xs">Lưỡi, răng (mặt cắt) · chấm vàng: điểm chạm</figcaption></figure>
+    </div>
+
+    <div class="actions mt-auto grid grid-cols-2 gap-2 pt-2">
+      <button class="btn" data-size="lg" id="play">Từng âm + đọc chậm</button>
+      <button class="btn" data-variant="outline" data-size="lg" id="say">Nghe thường</button>
+      <p class="text-muted-foreground col-span-2 hidden text-center text-xs md:block">Phím ← →: đổi âm · Space: chạy từng âm · Enter: nghe thường</p>
+    </div>
+  </main>
+
+  <script src="ipa-mouth.js"></script>
+  <script>
+    const WORDS = [{ w: "think", ipa: "/θɪŋk/" }, { w: "share", ipa: "/ʃɛr/" }, { w: "red", ipa: "/rɛd/" }];
+    const TIP = {
+      "θ": "Đặt đầu lưỡi giữa hai hàm răng, thổi hơi nhẹ qua kẽ. Không rung cổ họng. Không đọc thành “t” hay “th” tiếng Việt.",
+      "ɪ": "Miệng hơi mở, môi thả lỏng. Âm “i” ngắn và lỏng hơn “i” tiếng Việt.",
+      "ŋ": "Lưng lưỡi chạm vòm mềm phía sau, hơi thoát ra mũi, giống “ng”.",
+      "k": "Lưng lưỡi chặn ở vòm mềm rồi bật hơi mạnh.",
+      "ʃ": "Chu môi tròn ra trước, đầu lưỡi gần lợi trên (không chạm), thổi hơi “sh”.",
+      "ɛ": "Mở miệng vừa, môi dẹt, gần “e” tiếng Việt.",
+      "r": "Cong đầu lưỡi lên phía sau nhưng không chạm vòm, môi hơi tròn. Không rung lưỡi.",
+      "d": "Đầu lưỡi chạm lợi ngay sau răng trên rồi bật ra, có rung cổ họng.",
+    };
+    const $ = (id) => document.getElementById(id);
+    const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const mouth = IPAMouth.mount($("front"), $("side"));
+    const st = { word: 0, phs: [], i: -1, run: 0 };
+    const params = (ph) => IPAMouth.PHON[ph] || IPAMouth.PHON.rest;
+
+    // ---- phát âm (giống app: mở khoá ở lần chạm đầu, chỉ cancel khi đang đọc)
+    let unlocked = false;
+    document.addEventListener("pointerdown", () => { if (unlocked || !("speechSynthesis" in window)) return; unlocked = true; try { const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } catch (e) {} }, { capture: true });
+    function speak(text, rate, onstart, onend) {
+      if (!("speechSynthesis" in window)) { onend && onend(); return; }
+      const go = () => {
+        const u = new SpeechSynthesisUtterance(text); u.lang = "en-US"; u.rate = rate;
+        const v = speechSynthesis.getVoices().find((x) => /en[-_]US/i.test(x.lang)); if (v) u.voice = v;
+        u.onstart = () => onstart && onstart(); u.onend = () => onend && onend(); u.onerror = () => onend && onend();
+        if (speechSynthesis.paused) speechSynthesis.resume(); speechSynthesis.speak(u);
+      };
+      if (speechSynthesis.speaking || speechSynthesis.pending) { speechSynthesis.cancel(); setTimeout(go, 60); } else go();
+    }
+
+    function renderWords() {
+      $("words").innerHTML = "";
+      WORDS.forEach((x, k) => { const b = document.createElement("button"); b.type = "button"; b.setAttribute("role", "radio"); b.setAttribute("aria-checked", String(k === st.word)); b.textContent = x.w; b.addEventListener("click", () => pickWord(k)); $("words").appendChild(b); });
+    }
+    function pickWord(k) {
+      st.word = k; st.run++; const x = WORDS[k]; st.phs = IPAMouth.split(x.ipa);
+      $("w").textContent = x.w; $("ipa").textContent = x.ipa; renderWords();
+      $("chips").innerHTML = "";
+      st.phs.forEach((ph, i) => { const b = document.createElement("button"); b.type = "button"; b.className = "ph"; b.textContent = ph; b.setAttribute("aria-label", "Âm " + ph); b.addEventListener("click", () => { st.run++; showPh(i, 260); }); $("chips").appendChild(b); });
+      st.i = -1; $("tip").textContent = "Chạm “Từng âm + đọc chậm”, hoặc chạm một âm."; mouth.to(IPAMouth.PHON.rest, 200);
+      [...$("chips").children].forEach((c) => c.setAttribute("aria-pressed", "false"));
+    }
+    function showPh(i, ms) {
+      st.i = i; const ph = st.phs[i];
+      [...$("chips").children].forEach((c, k) => c.setAttribute("aria-pressed", String(k === i)));
+      $("tip").textContent = `/${ph}/ · ${TIP[ph] || ""}`;
+      return mouth.to(params(ph), reduced() ? 0 : ms);
+    }
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    // mức 2: dừng ở từng âm (~0,6 giây), rồi đọc cả từ chậm; trong lúc đọc, môi chạy lại các âm theo thời lượng ước tính
+    async function play() {
+      const run = ++st.run;
+      for (let i = 0; i < st.phs.length; i++) { if (run !== st.run) return; await showPh(i, 220); await wait(600); }
+      if (run !== st.run) return;
+      await mouth.to(IPAMouth.PHON.rest, 200); await wait(250);
+      sayWord(0.6, run);
+    }
+    function sayWord(rate, run) {
+      run = run || ++st.run;
+      const n = st.phs.length, dur = (0.32 + 0.12 * n) / rate * 1000; // ước tính thời lượng đọc
+      const vowel = (p) => /[aeiouæɑɔəɛɪʊʌɝɚ]/.test(p);
+      const w = st.phs.map((p) => (vowel(p) ? 1.6 : 1)), tot = w.reduce((a, b) => a + b, 0);
+      let began = false;
+      const anim = async () => {
+        if (began) return; began = true;
+        for (let i = 0; i < n; i++) { if (run !== st.run) return; const ms = dur * w[i] / tot; showPh(i, Math.min(160, ms * .5)); await wait(ms); }
+        if (run === st.run) { mouth.to(IPAMouth.PHON.rest, 220); [...$("chips").children].forEach((c) => c.setAttribute("aria-pressed", "false")); }
+      };
+      speak(WORDS[st.word].w, rate, anim);
+      setTimeout(anim, 450);   // máy chưa báo bắt đầu đọc (hoặc không có tiếng): vẫn chạy khẩu hình
+    }
+    $("play").addEventListener("click", play);
+    $("say").addEventListener("click", () => sayWord(0.95));
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") { st.run++; showPh(Math.min(st.phs.length - 1, st.i + 1), 260); }
+      else if (e.key === "ArrowLeft") { st.run++; showPh(Math.max(0, st.i - 1), 260); }
+      else if (e.key === " ") { e.preventDefault(); play(); } else if (e.key === "Enter") sayWord(0.95);
+    });
+    pickWord(0);
+  </script>
+</body>
+</html>
