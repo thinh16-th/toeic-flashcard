@@ -277,5 +277,9 @@
  "`+${r.to - r.from} lông`": "`+${r.to - r.from} feather${r.to - r.from > 1 ? \"s\" : \"\"}`",
  "\"Rơi hũ\"": "\"Dropped\"",
  "\"Giữ hũ\"": "\"Same jar\"",
- "`<div class=\"min-w-0 flex-1\"><p class=\"truncate font-medium\">${escapeHtml(BY_ID.get(r.id).word)}</p><p class=\"text-muted-foreground text-xs\">${jarName(r.from)} → ${jarName(r.to)} · ${ui.fmt(r.score)} điểm</p></div>`": "`<div class=\"min-w-0 flex-1\"><p class=\"truncate font-medium\">${escapeHtml(BY_ID.get(r.id).word)}</p><p class=\"text-muted-foreground text-xs\">${jarName(r.from)} → ${jarName(r.to)} · ${ui.fmt(r.score)} points</p></div>`"
+ "`<div class=\"min-w-0 flex-1\"><p class=\"truncate font-medium\">${escapeHtml(BY_ID.get(r.id).word)}</p><p class=\"text-muted-foreground text-xs\">${jarName(r.from)} → ${jarName(r.to)} · ${ui.fmt(r.score)} điểm</p></div>`": "`<div class=\"min-w-0 flex-1\"><p class=\"truncate font-medium\">${escapeHtml(BY_ID.get(r.id).word)}</p><p class=\"text-muted-foreground text-xs\">${jarName(r.from)} → ${jarName(r.to)} · ${ui.fmt(r.score)} points</p></div>`",
+ "`${ui.fmt(prac)} từ đã tính điểm hôm nay hoặc đã ở Hũ vàng: học lại không cộng điểm nhớ, chỉ nhận vàng.`": "`${ui.fmt(prac)} words already scored today or in the Gold jar: studying them again adds no memory points, only coins.`",
+ "`${ui.fmt(prac.length)} / ${ui.fmt(queue.length)} từ đã tính điểm nhớ hôm nay hoặc đã ở Hũ vàng. Học lại không đổi điểm nhớ; mỗi lần nhớ đúng được +${gain} vàng. Vàng dùng để mua vật phẩm ở phiên bản sau.`": "`${ui.fmt(prac.length)} / ${ui.fmt(queue.length)} words already scored today or are in the Gold jar. Studying them again won't change memory points; each correct answer earns +${gain} coins. Coins will buy items in the next version.`",
+ "`+${coin} vàng`": "`+${coin} coins`",
+ "` +${ui.fmt(s.coins)} vàng (còn ${ui.fmt(coinsLeft())}).`": "` +${ui.fmt(s.coins)} coins (balance ${ui.fmt(coinsLeft())}).`"
 }
