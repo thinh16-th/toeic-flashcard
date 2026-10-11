@@ -29,7 +29,7 @@
 <body class="min-h-dvh bg-background text-foreground antialiased">
   <main class="mx-auto flex min-h-dvh max-w-3xl flex-col gap-4 p-4 md:p-6">
     <header class="space-y-1">
-      <p class="text-muted-foreground text-sm">Bản thử · mức 2 (đọc chậm, dừng ở từng âm)</p>
+      <p class="text-muted-foreground text-sm">Bản thử · mức 2 (phát từng âm, rồi đọc chậm cả từ)</p>
       <h1 class="text-2xl font-semibold tracking-tight">Khẩu hình IPA</h1>
     </header>
 
@@ -38,10 +38,11 @@
     <section class="card"><section class="space-y-3">
       <div class="flex flex-wrap items-end justify-between gap-2">
         <div><p class="text-3xl font-semibold tracking-tight" id="w"></p><p class="text-muted-foreground" id="ipa"></p></div>
-        <p class="text-muted-foreground text-xs">Chạm từng âm để xem khẩu hình</p>
+        <p class="text-muted-foreground text-xs">Chạm từng âm để nghe và xem khẩu hình</p>
       </div>
       <div class="flex flex-wrap gap-2" id="chips" role="group" aria-label="Các âm trong từ"></div>
       <p class="min-h-12 leading-6" id="tip" aria-live="polite"></p>
+      <p class="text-muted-foreground text-xs">Âm mẫu: bản ghi của các nhà ngữ âm học trên <a class="underline" href="https://commons.wikimedia.org/wiki/Category:General_phonetics" target="_blank" rel="noopener">Wikimedia Commons</a> (CC BY-SA 3.0; Peter Isotalo, Erutuon, Denelson83 và cộng sự). Phụ âm được đọc kèm nguyên âm a, ví dụ [θa · aθa]. <a class="underline" id="src" href="#" target="_blank" rel="noopener">Nguồn âm này</a></p>
     </section></section>
 
     <div class="grid grid-cols-2 gap-3">
@@ -70,6 +71,30 @@
       "d": "Đầu lưỡi chạm lợi ngay sau răng trên rồi bật ra, có rung cổ họng.",
     };
     const $ = (id) => document.getElementById(id);
+    // âm mẫu từng âm IPA: file mp3 Wikimedia tự chuyển từ bản ghi .ogg (chạy được trên iPhone); [thư mục băm, tên file]
+    const AUD = { p: "5/51 Voiceless_bilabial_plosive", b: "2/2c Voiced_bilabial_plosive", t: "0/02 Voiceless_alveolar_plosive", d: "0/01 Voiced_alveolar_plosive",
+      k: "e/e3 Voiceless_velar_plosive", "ɡ": "1/12 Voiced_velar_plosive_02", f: "3/33 Voiceless_labiodental_fricative", v: "8/85 Voiced_labiodental_fricative",
+      "θ": "8/80 Voiceless_dental_fricative", "ð": "6/6a Voiced_dental_fricative", s: "a/ac Voiceless_alveolar_sibilant", z: "c/c0 Voiced_alveolar_sibilant",
+      "ʃ": "c/cc Voiceless_palato-alveolar_sibilant", "ʒ": "3/30 Voiced_palato-alveolar_sibilant", h: "d/da Voiceless_glottal_fricative",
+      "tʃ": "9/97 Voiceless_palato-alveolar_affricate", "dʒ": "e/e6 Voiced_palato-alveolar_affricate", m: "a/a9 Bilabial_nasal", n: "2/29 Alveolar_nasal",
+      "ŋ": "3/39 Velar_nasal", l: "b/bc Alveolar_lateral_approximant", r: "1/1f Alveolar_approximant", w: "f/f2 Voiced_labio-velar_approximant", j: "e/e8 Palatal_approximant",
+      i: "9/91 Close_front_unrounded_vowel", "ɪ": "4/4c Near-close_near-front_unrounded_vowel", "ɛ": "7/71 Open-mid_front_unrounded_vowel", "æ": "c/c9 Near-open_front_unrounded_vowel",
+      "ɑ": "e/e5 Open_back_unrounded_vowel", "ɔ": "0/02 Open-mid_back_rounded_vowel", "ʊ": "d/d5 Near-close_near-back_rounded_vowel", u: "5/5d Close_back_rounded_vowel",
+      "ʌ": "9/92 Open-mid_back_unrounded_vowel", "ə": "d/d9 Mid-central_vowel", e: "6/6c Close-mid_front_unrounded_vowel", o: "8/84 Close-mid_back_rounded_vowel" };
+    const audUrl = (ph) => { const a = AUD[ph]; if (!a) return ""; const [h, f] = a.split(" "); return `https://upload.wikimedia.org/wikipedia/commons/transcoded/${h}/${f}.ogg/${f}.ogg.mp3`; };
+    const audPage = (ph) => (AUD[ph] ? `https://commons.wikimedia.org/wiki/File:${AUD[ph].split(" ")[1]}.ogg` : "https://commons.wikimedia.org/");
+    // một thẻ audio dùng lại cho mọi âm
+    const player = new Audio(); player.preload = "auto";   // lần phát đầu nằm ngay trong cú chạm nên iPhone cho phát tiếp các âm sau
+    function playPh(ph) {
+      return new Promise((res) => {
+        const u = audUrl(ph); if (!u) { res(false); return; }
+        let done = false; const fin = (ok) => { if (done) return; done = true; clearTimeout(tm); player.onended = player.onerror = null; res(ok); };
+        const tm = setTimeout(() => fin(true), 3200);
+        player.onended = () => fin(true); player.onerror = () => fin(false);
+        try { player.src = u; player.currentTime = 0; const pr = player.play(); if (pr && pr.catch) pr.catch(() => fin(false)); } catch (e) { fin(false); }
+      });
+    }
+    const preload = (phs) => phs.forEach((ph) => { const u = audUrl(ph); if (u) { const a = new Audio(); a.preload = "auto"; a.src = u; } });
     const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
     const mouth = IPAMouth.mount($("front"), $("side"));
     const st = { word: 0, phs: [], i: -1, run: 0 };
@@ -97,21 +122,23 @@
       st.word = k; st.run++; const x = WORDS[k]; st.phs = IPAMouth.split(x.ipa);
       $("w").textContent = x.w; $("ipa").textContent = x.ipa; renderWords();
       $("chips").innerHTML = "";
-      st.phs.forEach((ph, i) => { const b = document.createElement("button"); b.type = "button"; b.className = "ph"; b.textContent = ph; b.setAttribute("aria-label", "Âm " + ph); b.addEventListener("click", () => { st.run++; showPh(i, 260); }); $("chips").appendChild(b); });
+      st.phs.forEach((ph, i) => { const b = document.createElement("button"); b.type = "button"; b.className = "ph"; b.textContent = ph; b.setAttribute("aria-label", "Âm " + ph); b.addEventListener("click", () => { st.run++; showPh(i, 260); playPh(ph); }); $("chips").appendChild(b); });
+      preload(st.phs);
       st.i = -1; $("tip").textContent = "Chạm “Từng âm + đọc chậm”, hoặc chạm một âm."; mouth.to(IPAMouth.PHON.rest, 200);
       [...$("chips").children].forEach((c) => c.setAttribute("aria-pressed", "false"));
     }
     function showPh(i, ms) {
       st.i = i; const ph = st.phs[i];
       [...$("chips").children].forEach((c, k) => c.setAttribute("aria-pressed", String(k === i)));
-      $("tip").textContent = `/${ph}/ · ${TIP[ph] || ""}`;
+      $("tip").textContent = `/${ph}/ · ${TIP[ph] || ""}`; $("src").href = audPage(ph);
       return mouth.to(params(ph), reduced() ? 0 : ms);
     }
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     // mức 2: dừng ở từng âm (~0,6 giây), rồi đọc cả từ chậm; trong lúc đọc, môi chạy lại các âm theo thời lượng ước tính
     async function play() {
       const run = ++st.run;
-      for (let i = 0; i < st.phs.length; i++) { if (run !== st.run) return; await showPh(i, 220); await wait(600); }
+      // từng âm: hiện khẩu hình + phát âm mẫu (chờ phát xong), nghỉ ngắn rồi sang âm kế
+      for (let i = 0; i < st.phs.length; i++) { if (run !== st.run) return; showPh(i, 220); const ok = await playPh(st.phs[i]); if (!ok) await wait(600); await wait(250); }
       if (run !== st.run) return;
       await mouth.to(IPAMouth.PHON.rest, 200); await wait(250);
       sayWord(0.6, run);
