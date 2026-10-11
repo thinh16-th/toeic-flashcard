@@ -655,6 +655,7 @@
               <h2 class="text-2xl font-semibold tracking-tight md:text-3xl" id="qz-word"></h2>
               <p class="text-muted-foreground" id="qz-ipa"></p>
               <div class="mt-1 flex flex-wrap gap-1" id="qz-pos"></div>
+              <p class="text-muted-foreground mt-2 italic leading-6" id="qz-ex" hidden></p>
             </div>
             <button class="btn shrink-0" data-variant="outline" data-size="icon" aria-label="Phát âm" id="qz-speak">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
@@ -721,6 +722,7 @@
         </header>
         <section class="space-y-4">
           <div id="gm-prompt"></div>
+          <div id="gm-bank" class="flex flex-wrap gap-2" role="list" aria-label="4 lựa chọn, gõ từ đúng vào chỗ trống" hidden></div>
           <p id="gm-status" class="text-muted-foreground text-sm" aria-live="polite"></p>
           <div class="flex flex-wrap gap-1" id="gm-pos"></div>
           <p id="gm-hint" class="text-sm" aria-live="polite"></p>
@@ -907,7 +909,7 @@
     // ================================================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwBiNwckLC-9o_m0X0TBDE-vjazUJMWD4UlIsySwcsFuUjMyBGBo3mfVQGEhWl47CJ7DA/exec";
     const SCHEMA = 1;
-    const APP_VER = "1.6.0";
+    const APP_VER = "1.6.1";
     const VERSION_URL = "version.json";       // cùng repo; build_vocab.py tự đồng bộ số phiên bản vào file này
     const VERSION_CHECK_MS = 10 * 60 * 1000;
     const NEW_BATCH = 20;                       // "Học thêm 20 thẻ mới"
@@ -1604,6 +1606,7 @@
       s.flipped = false; s.quiz = buildQuiz(id);
       $("qz-box").textContent = boxLabel(cs);
       $("qz-word").textContent = e.word; $("qz-ipa").textContent = e.ipa; $("qz-pos").innerHTML = posChipsHtml(e);
+      $("qz-ex").hidden = !e.example; $("qz-ex").innerHTML = e.example ? highlight(e.example, e.word) : "";
       const box = $("qz-options"); box.innerHTML = "";
       s.quiz.options.forEach((o, i) => {
         const b = document.createElement("button"); b.type = "button"; b.className = "btn qz-opt w-full"; b.dataset.variant = "outline"; b.dataset.i = i;
@@ -1777,13 +1780,14 @@
       ["gm-hint-btn", "gm-giveup"].forEach((k) => { $(k).disabled = false; });
       const { wall, slots } = buildWall(ans, s.mode === "cloze"); s.game.slots = slots;
       const prompt = $("gm-prompt"); prompt.innerHTML = "";
+      renderBank(s.mode === "cloze" ? clozeOptions(e, ans) : []);
       if (s.mode === "cloze") {
         const t = findToken(e.example, e.word);
         $("gm-title").textContent = "Điền từ còn thiếu vào câu trong đề ETS";
         const para = document.createElement("p"); para.className = "text-lg leading-10";
         para.append(document.createTextNode(t.before), wall, document.createTextNode(t.after));
         prompt.appendChild(para);
-        inp.placeholder = "Chạm vào đây rồi gõ từng chữ";
+        inp.placeholder = "Chọn 1 trong 4 từ bên trên rồi gõ từng chữ";
       } else {
         $("gm-title").textContent = "Nghe rồi gõ lại đúng chính tả";
         prompt.innerHTML = `<div class="flex flex-wrap items-center gap-2"><button type="button" class="btn" data-size="lg" id="gm-play">${ICON_SPK}Nghe lại</button><button type="button" class="btn" data-variant="outline" id="gm-slow">Nghe chậm</button></div>`;
@@ -1815,29 +1819,46 @@
       if (g.level >= 2) parts.push("Nghĩa: " + sensesOf(e).map((x) => (POS_LABEL[x.pos] || x.pos) + " " + x.syn).join("; "));
       if (g.level >= 3 && s.mode === "dictation") parts.push("IPA: " + e.ipa);
       $("gm-hint").textContent = parts.join(" · ");
-      if (g.level >= 3 && s.mode === "cloze") showGameOptions(e, ans);
+      if (g.level >= 3 && s.mode === "cloze") { strikeTwo(); parts.push("Đã gạch bỏ 2 lựa chọn sai"); $("gm-hint").textContent = parts.join(" · "); }
       if (g.level >= 3 && s.mode === "dictation") speak(ans, { rate: 0.7 });
       $("gm-hint-btn").disabled = g.level >= 3;
       $("gm-input").focus();
     }
-    function showGameOptions(e, ans) {
-      const mpos = posOf(e)[0]; const wl = normAns(stripParen(e.word));
-      let pool = deckCards(state.session.deckId).filter((c) => c.id !== e.id && posOf(c)[0] === mpos && normAns(stripParen(c.word)) !== wl);
-      if (pool.length < 3) pool = VOCAB.filter((c) => c.id !== e.id && posOf(c)[0] === mpos && normAns(stripParen(c.word)) !== wl);
-      const opts = shuffle([ans, ...shuffle(pool.slice()).slice(0, 3).map((c) => stripParen(c.word))]);
-      const box = $("gm-options"); box.innerHTML = "";
+    // chia từ gây nhiễu theo cùng đuôi với đáp án trong câu (examined → considered), để dạng từ không làm lộ đáp án
+    function inflectLike(word, token, base) {
+      const lastOf = (x) => x.trim().toLowerCase().split(/\s+/).pop();
+      const t = lastOf(token), b = lastOf(base);
+      const parts = word.toLowerCase().split(/\s+/); let w = parts.pop();
+      if (t === b) return [...parts, w].join(" ");
+      const cons = (c) => !!c && !"aeiou".includes(c);
+      if (/ing$/.test(t)) w = /ie$/.test(w) ? w.slice(0, -2) + "ying" : /[^e]e$/.test(w) ? w.slice(0, -1) + "ing" : w + "ing";
+      else if (/d$/.test(t)) w = /e$/.test(w) ? w + "d" : /y$/.test(w) && cons(w[w.length - 2]) ? w.slice(0, -1) + "ied" : w + "ed";
+      else if (/s$/.test(t)) w = /(s|x|z|ch|sh)$/.test(w) ? w + "es" : /y$/.test(w) && cons(w[w.length - 2]) ? w.slice(0, -1) + "ies" : w + "s";
+      return [...parts, w].join(" ");
+    }
+    function clozeOptions(e, ans) {
+      const mpos = posOf(e)[0]; const wl = normAns(stripParen(e.word)); const al = normAns(ans);
+      const ok = (c) => c.id !== e.id && posOf(c)[0] === mpos && normAns(stripParen(c.word)) !== wl && stripParen(c.word).length <= 24;
+      let pool = deckCards(state.session.deckId).filter(ok); if (pool.length < 3) pool = VOCAB.filter(ok);
+      const seen = new Set([al]); const wrong = [];
+      for (const c of shuffle(pool.slice())) {
+        const w = inflectLike(stripParen(c.word), ans, stripParen(e.word)); const k = normAns(w);
+        if (!seen.has(k)) { seen.add(k); wrong.push(w); } if (wrong.length === 3) break;
+      }
+      return shuffle([{ text: ans.toLowerCase(), ok: true }, ...wrong.map((w) => ({ text: w, ok: false }))]);
+    }
+    function renderBank(opts) {
+      const bank = $("gm-bank"); bank.innerHTML = "";
       opts.forEach((o) => {
-        const b = document.createElement("button"); b.type = "button"; b.className = "btn"; b.dataset.variant = "outline"; b.textContent = o;
-        b.addEventListener("click", () => {
-          const g = state.session.game; if (g.answered) return;
-          if (normAns(o) === normAns(ans)) {
-            g.slots.slice(g.idx).forEach((sl, k) => { sl.helped = true; wallReveal(sl, "retry", k * 70); });
-            g.idx = g.slots.length; gameFinish("done");
-          } else { b.classList.add("text-destructive"); gameFinish("wrong"); }
-        });
-        box.appendChild(b);
+        const c = document.createElement("span"); c.className = "badge h-auto py-0.5 text-sm leading-5"; c.dataset.variant = "outline"; c.setAttribute("role", "listitem");
+        c.textContent = o.text; c.dataset.ok = o.ok ? "1" : "0"; bank.appendChild(c);
       });
-      box.hidden = false;
+      bank.hidden = !opts.length;
+    }
+    // gợi ý 3 của Điền câu: gạch bỏ 2 lựa chọn sai
+    function strikeTwo() {
+      const wrong = shuffle([...$("gm-bank").querySelectorAll('[data-ok="0"]')]).slice(0, 2);
+      wrong.forEach((c) => { c.classList.add("line-through", "opacity-50"); c.setAttribute("aria-label", c.textContent + ", đã loại"); });
     }
     // kind: "done" (phá hết gạch) | "giveup" (Không biết) | "wrong" (chọn sai đáp án gợi ý)
     function gameFinish(kind) {
@@ -1860,7 +1881,7 @@
       const verdict = g.correct
         ? `<p class="gm-ok font-medium">Đúng${near ? " (gõ sai 1 chữ, vạch vàng)" : ""}. +${fmtPts(g.pts)} điểm game. ${mem}</p>`
         : clean
-          ? `<p class="gm-bad font-medium">Đúng nhưng phải xem ${s.mode === "cloze" ? "lựa chọn" : "IPA"}, +${fmtPts(g.pts)} điểm game, tính là quên. ${mem}</p>`
+          ? `<p class="gm-bad font-medium">Đúng nhưng phải dùng ${s.mode === "cloze" ? "gợi ý loại 2 lựa chọn" : "IPA"}, +${fmtPts(g.pts)} điểm game, tính là quên. ${mem}</p>`
           : completed
             ? `<p class="gm-bad font-medium">Phá xong tường nhưng gõ sai ${g.wrongSlots} chữ (vạch vàng), +${fmtPts(g.pts)} điểm game, tính là quên. ${mem}</p>`
             : `<p class="gm-bad font-medium">${kind === "giveup" ? "Chưa nhớ" : "Chọn chưa đúng"}. ${mem}</p>`;
