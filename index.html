@@ -168,7 +168,7 @@
     .seg button { padding: .25rem .55rem; border-radius: calc(var(--radius) - 2px); font-size: .875rem; color: var(--muted-foreground); }
     .seg button[aria-checked="true"] { background: var(--card); color: var(--foreground); box-shadow: 0 0 0 1px var(--border); }
     /* custom: màn phi thuyền luôn tối ở cả 2 theme. Đổi token trong phạm vi màn học, basecoat tự theo */
-    #scr-study.is-space {
+    #scr-study.is-space, #scr-meme {
       --background: var(--space-bg); --foreground: var(--space-text); --card: #141c3d; --card-foreground: var(--space-text);
       --popover: #141c3d; --popover-foreground: var(--space-text);
       --muted: rgba(124, 196, 255, 0.12); --muted-foreground: var(--hud-muted); --accent: rgba(124, 196, 255, 0.16); --accent-foreground: var(--space-text);
@@ -251,6 +251,13 @@
     .pick-jar:disabled { opacity: .45; }
     .jar-cell img { height: auto; width: 100%; max-width: 3.5rem; margin-inline: auto; }
     #ship-panel, #ship-panel button { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+    /* custom: Meme loop */
+    #mm-stage { background: rgba(255, 255, 255, .03); }
+    .mm-word { max-width: 85%; }
+    .mm-tile { aspect-ratio: 1; padding: .25rem; }
+    .mm-tile img { height: 100%; width: 100%; object-fit: contain; }
+    .mm-row { display: flex; align-items: baseline; gap: .5rem; padding: .5rem .75rem; border-bottom: 1px solid var(--border); }
+    .mm-row:last-child { border-bottom: 0; }
     .gm-ok { color: var(--status-good); }
     .gm-bad { color: var(--status-critical); }
     mark.fc-hl { background: color-mix(in oklab, var(--primary) 18%, transparent); color: inherit; border-radius: 3px; padding: 0 2px; }
@@ -374,7 +381,7 @@
           </div>
           <img src="assets/choco_idle.svg" alt="" width="64" height="64" class="h-16 w-16 shrink-0" />
         </div>
-        <div class="grid gap-3 sm:grid-cols-3">
+        <div class="grid gap-3 sm:grid-cols-2">
           <article class="card" data-size="sm">
             <section class="game-art" aria-hidden="true">
               <svg viewBox="0 0 240 110"><rect width="240" height="110" rx="10" class="art-bg"/><rect x="30" y="12" width="180" height="88" rx="8" class="art-paper"/>
@@ -433,6 +440,22 @@
             <footer class="flex items-center justify-between gap-2">
               <span class="text-muted-foreground text-sm" id="gt-ship"></span>
               <button class="btn" data-variant="outline" data-size="sm" data-game="ship">Chơi</button>
+            </footer>
+          </article>
+          <article class="card" data-size="sm">
+            <section class="game-art" aria-hidden="true">
+              <svg viewBox="0 0 240 110"><rect width="240" height="110" rx="10" class="art-space"/>
+                <circle cx="30" cy="20" r="1.3" class="art-star"/><circle cx="210" cy="90" r="1.4" class="art-star"/><circle cx="196" cy="16" r="1.1" class="art-star"/>
+                <rect x="70" y="16" width="100" height="78" rx="8" fill="none" class="art-lane" stroke-width="2"/>
+                <path d="M110 40v30l26-15z" class="art-accent"/>
+                <rect x="16" y="62" width="58" height="22" rx="6" class="art-paper"/><text x="25" y="77" class="art-text">word</text>
+                <rect x="160" y="26" width="64" height="22" rx="6" class="art-paper"/><text x="168" y="41" class="art-text">nghĩa</text>
+                <path d="M188 70q8 8 0 16M196 64q14 14 0 28" fill="none" stroke-width="3" stroke-linecap="round" class="art-stroke"/></svg>
+            </section>
+            <header><h3>Meme loop</h3><p>Meme lặp liên tục, đọc 5 từ bạn chọn, nghĩa hiện cùng lúc đọc. Nghe thụ động, không tính điểm nhớ.</p></header>
+            <footer class="flex items-center justify-between gap-2">
+              <span class="text-muted-foreground text-sm" id="gt-meme">Chưa nạp clip</span>
+              <button class="btn" data-variant="outline" data-size="sm" id="btn-meme">Chơi</button>
             </footer>
           </article>
         </div>
@@ -773,6 +796,36 @@
     </section>
   </main>
 
+  <!-- ===================== MEME LOOP (toàn màn hình, nền tối như phi thuyền) ===================== -->
+  <main id="scr-meme" class="fixed inset-0 z-40 flex h-dvh flex-col overflow-hidden bg-background safe-t" hidden>
+    <header class="flex h-14 shrink-0 items-center gap-2 px-3">
+      <button class="btn" data-variant="ghost" data-size="icon" aria-label="Dừng, về trang chính" id="mm-back">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+      </button>
+      <div class="min-w-0 flex-1"><p class="truncate text-sm font-medium">Meme loop</p><p class="text-muted-foreground truncate text-xs" id="mm-sub"></p></div>
+      <span class="hud-chip" data-num id="mm-left">15 giây</span>
+    </header>
+    <div class="shrink-0 px-3"><div class="progress" role="progressbar" aria-label="Thời gian còn lại của loop" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="mm-progress"><span style="width:0%"></span></div></div>
+    <div class="relative mx-3 my-3 min-h-0 flex-1 overflow-hidden rounded-lg" id="mm-stage">
+      <video id="mm-video" class="absolute inset-0 h-full w-full object-contain" playsinline loop preload="auto" aria-label="Clip meme đang lặp"></video>
+      <div id="mm-word" class="mm-word hud absolute rounded-lg px-4 py-2 text-center" aria-live="polite" hidden>
+        <p class="text-3xl font-semibold tracking-tight" id="mm-w"></p>
+        <p class="text-muted-foreground" id="mm-m"></p>
+      </div>
+      <div id="mm-end" class="absolute inset-0 flex items-center justify-center p-4" hidden>
+        <div class="card w-full max-w-sm">
+          <header><h3>Hết loop</h3><p id="mm-end-desc"></p></header>
+          <footer class="flex flex-wrap gap-2">
+            <button class="btn" id="mm-again">Chạy lại</button>
+            <button class="btn" data-variant="outline" id="mm-other">Đổi meme</button>
+            <button class="btn" data-variant="ghost" id="mm-setup">Chọn lại</button>
+          </footer>
+        </div>
+      </div>
+    </div>
+    <footer class="shrink-0 px-3 pb-2 safe-b"><p class="text-muted-foreground text-center text-xs" id="mm-hint">Esc hoặc nút mũi tên: dừng</p></footer>
+  </main>
+
   <!-- ===================== DIALOGS ===================== -->
   <dialog id="dlg-card" class="dialog" aria-labelledby="dlg-card-title">
     <div>
@@ -827,6 +880,52 @@
       <footer>
         <button class="btn" data-variant="outline" onclick="this.closest('dialog').close()">Huỷ</button>
         <button class="btn" id="pick-go">Bắt đầu</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <dialog id="dlg-meme" class="dialog" aria-labelledby="dlg-meme-title">
+    <div>
+      <header><h2 id="dlg-meme-title">Meme loop</h2><p>Chọn meme, tối đa 5 từ, tốc độ đọc và thời gian loop. Tiếng meme bằng một nửa tiếng đọc.</p></header>
+      <section class="space-y-4">
+        <div class="space-y-2">
+          <div class="flex items-center justify-between gap-2"><h3 class="text-sm font-medium">1. Meme</h3><span class="text-muted-foreground text-xs" id="mm-clip-count"></span></div>
+          <p class="text-muted-foreground text-sm" id="mm-load-hint">Chọn thư mục <span class="font-medium">REQ-20261011-cat-meme-clips-keyed-for-web\out</span> (hoặc các file .webm trong out\clips). Clip chỉ lưu trong trình duyệt của thiết bị này, không tải lên mạng.</p>
+          <div class="flex flex-wrap gap-2">
+            <label class="btn" data-variant="outline" data-size="sm" for="mm-dir">Chọn thư mục</label>
+            <input id="mm-dir" type="file" webkitdirectory multiple class="sr-only" />
+            <label class="btn" data-variant="outline" data-size="sm" for="mm-files">Chọn file</label>
+            <input id="mm-files" type="file" accept=".webm,.webp,video/webm,image/webp" multiple class="sr-only" />
+            <button id="mm-clear" class="btn" data-variant="ghost" data-size="sm" type="button" hidden>Xoá clip đã nạp</button>
+          </div>
+          <div id="mm-grid" class="grid max-h-48 grid-cols-4 gap-2 overflow-auto sm:grid-cols-6" role="group" aria-label="Chọn một meme"></div>
+        </div>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between gap-2"><h3 class="text-sm font-medium">2. Từ vựng</h3><span class="text-muted-foreground text-xs" id="mm-word-count" aria-live="polite">0/5 từ</span></div>
+          <div class="flex gap-2">
+            <div class="input-group flex-1"><input id="mm-q" placeholder="Tìm trong bộ thẻ đang chọn" aria-label="Tìm từ để tick" /></div>
+            <button id="mm-rand" type="button" class="btn" data-variant="outline">Ngẫu nhiên 5</button>
+          </div>
+          <div id="mm-words" class="max-h-48 overflow-auto rounded-lg border border-border" role="group" aria-label="Tick tối đa 5 từ"></div>
+        </div>
+        <div class="grid gap-3">
+          <div class="space-y-1">
+            <h3 class="text-sm font-medium" id="mm-rate-l">3. Tốc độ đọc</h3>
+            <div class="seg" role="radiogroup" aria-labelledby="mm-rate-l">
+              <button type="button" role="radio" data-mmrate="0.7">Chậm</button><button type="button" role="radio" data-mmrate="0.85">Vừa</button><button type="button" role="radio" data-mmrate="1">Nhanh</button><button type="button" role="radio" data-mmrate="1.15">Rất nhanh</button>
+            </div>
+          </div>
+          <div class="space-y-1">
+            <h3 class="text-sm font-medium" id="mm-time-l">4. Thời gian loop</h3>
+            <div class="seg" role="radiogroup" aria-labelledby="mm-time-l">
+              <button type="button" role="radio" data-mmsecs="15">15 giây</button><button type="button" role="radio" data-mmsecs="30">30 giây</button><button type="button" role="radio" data-mmsecs="45">45 giây</button><button type="button" role="radio" data-mmsecs="60">60 giây</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <footer>
+        <button class="btn" data-variant="outline" onclick="this.closest('dialog').close()">Huỷ</button>
+        <button class="btn" id="mm-go" disabled>Bắt đầu</button>
       </footer>
     </div>
   </dialog>
@@ -909,7 +1008,7 @@
     // ================================================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwBiNwckLC-9o_m0X0TBDE-vjazUJMWD4UlIsySwcsFuUjMyBGBo3mfVQGEhWl47CJ7DA/exec";
     const SCHEMA = 1;
-    const APP_VER = "1.6.1";
+    const APP_VER = "1.7.0";
     const VERSION_URL = "version.json";       // cùng repo; build_vocab.py tự đồng bộ số phiên bản vào file này
     const VERSION_CHECK_MS = 10 * 60 * 1000;
     const NEW_BATCH = 20;                       // "Học thêm 20 thẻ mới"
@@ -1031,7 +1130,7 @@
       session: null, table: null, voices: [],
     };
 
-    const SETTINGS_DEFAULT = { newPerDay: 20, voice: "", autoSpeak: true, speakFront: false, speakExample: false, rate: 0.95, mode: "card", shipSpeed: "normal" };
+    const SETTINGS_DEFAULT = { newPerDay: 20, voice: "", autoSpeak: true, speakFront: false, speakExample: false, rate: 0.95, mode: "card", shipSpeed: "normal", memeRate: 0.85, memeSecs: 15 };
     const HISTORY_DAYS = 90;
     /** bù trường thiếu cho tiến độ cũ (schema cũ hơn) */
     function normalizeProgress(p) {
@@ -1914,6 +2013,7 @@
     const CHOCO = {};
     ["idle", "happy", "sad", "surprised"].forEach((n) => { const i = new Image(); i.src = `assets/choco_${n}.svg`; CHOCO[n] = i; });
     function renderGameTiles() {
+      if (typeof mmLoad === "function" && !renderGameTiles.mm) { renderGameTiles.mm = true; mmLoad(); }
       for (const m of ["cloze", "dictation", "ship"]) {
         const st = deckStats(state.deck, m); const el = $("gt-" + m); const btn = document.querySelector(`[data-game="${m}"]`);
         el.textContent = st.total === 0 ? "Bộ này không có từ phù hợp" : st.due + st.newLeft > 0 ? `${ui.fmt(st.due)} đến hạn, ${ui.fmt(st.newLeft)} mới` : st.fresh > 0 ? "Xong hôm nay, chơi thêm thẻ mới" : "Đã học hết bộ này";
@@ -2330,9 +2430,171 @@
         const st = state.progress ? state.progress.settings : SETTINGS_DEFAULT;
         const v = state.voices.find((x) => x.voiceURI === st.voice) || state.voices.find((x) => /en[-_]US/i.test(x.lang)) || state.voices[0];
         if (v) u.voice = v; u.lang = v ? v.lang : "en-US"; u.rate = (opts && opts.rate) || Number(st.rate) || 0.95;
+        if (opts && opts.onend) { u.onend = opts.onend; u.onerror = opts.onend; }
         speechSynthesis.speak(u);
       } catch (e) {}
     }
+
+    // ================================================================
+    // MEME LOOP: clip meme lặp + đọc tối đa 5 từ, mỗi lần đọc từ và nghĩa hiện ở vị trí ngẫu nhiên (nghĩa không đọc).
+    // Clip nạp từ máy người dùng, lưu IndexedDB trên thiết bị. Clip của bên thứ ba: chỉ dùng nội bộ, không đưa lên repo.
+    // ================================================================
+    const MM_DB = "ets-fc-meme", MM_MAX = 5, MM_GAIN = 0.5;
+    const mm = { clips: [], urls: new Map(), sel: "random", words: [], cur: null, running: false, t0: 0, raf: 0, step: 0, ac: null, gain: null, gap: 0, fb: 0 };
+    function mmDb() {
+      return new Promise((res, rej) => {
+        const r = indexedDB.open(MM_DB, 1);
+        r.onupgradeneeded = () => r.result.createObjectStore("clips", { keyPath: "id" });
+        r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+      });
+    }
+    async function mmLoad() {
+      try {
+        const db = await mmDb();
+        mm.clips = await new Promise((res, rej) => { const q = db.transaction("clips").objectStore("clips").getAll(); q.onsuccess = () => res(q.result.sort((a, b) => a.id.localeCompare(b.id))); q.onerror = () => rej(q.error); });
+      } catch (e) { mm.clips = []; }
+      $("gt-meme").textContent = mm.clips.length ? `${ui.fmt(mm.clips.length)} clip trên thiết bị này` : "Chưa nạp clip";
+      return mm.clips;
+    }
+    async function mmSave(files) {
+      const vids = new Map(), posters = new Map();
+      for (const f of files) { const m = f.name.match(/^(.+)\.(webm|webp)$/i); if (m) (m[2].toLowerCase() === "webm" ? vids : posters).set(m[1], f); }
+      if (!vids.size) { ui.toast("Không thấy clip .webm", "Chọn thư mục out (hoặc out\\clips) của request meme.", "warning"); return; }
+      try {
+        const db = await mmDb(); const tx = db.transaction("clips", "readwrite"); const st = tx.objectStore("clips");
+        for (const [id, v] of vids) st.put({ id, video: v, poster: posters.get(id) || null });
+        await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error); });
+        try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+      } catch (e) { ui.toast("Không lưu được clip", "Bộ nhớ trình duyệt đầy hoặc bị chặn (chế độ riêng tư).", "warning"); return; }
+      await mmLoad(); mmRenderClips(); mmReady();
+      ui.toast(`Đã nạp ${ui.fmt(vids.size)} clip`, "Clip lưu trong trình duyệt của thiết bị này, không tải lên mạng.", "success");
+    }
+    async function mmClear() {
+      try { const db = await mmDb(); const tx = db.transaction("clips", "readwrite"); tx.objectStore("clips").clear(); await new Promise((res) => { tx.oncomplete = res; tx.onerror = res; }); } catch (e) {}
+      for (const u of mm.urls.values()) URL.revokeObjectURL(u); mm.urls.clear(); mm.sel = "random";
+      await mmLoad(); mmRenderClips(); mmReady();
+    }
+    const mmUrl = (clip, kind) => { const k = clip.id + ":" + kind; if (!mm.urls.has(k)) mm.urls.set(k, URL.createObjectURL(kind === "v" ? clip.video : clip.poster)); return mm.urls.get(k); };
+    const ICON_SHUFFLE = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/></svg>';
+    function mmRenderClips() {
+      const g = $("mm-grid"); g.innerHTML = "";
+      $("mm-clip-count").textContent = mm.clips.length ? `${ui.fmt(mm.clips.length)} clip` : "chưa nạp";
+      $("mm-clear").hidden = !mm.clips.length;
+      if (!mm.clips.length) return;
+      const tile = (id, inner, label) => {
+        const b = document.createElement("button"); b.type = "button"; b.className = "pick-jar mm-tile"; b.dataset.clip = id;
+        b.setAttribute("aria-pressed", String(mm.sel === id)); b.setAttribute("aria-label", label); b.innerHTML = inner;
+        b.addEventListener("click", () => { mm.sel = id; g.querySelectorAll("[data-clip]").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.clip === id))); });
+        g.appendChild(b);
+      };
+      tile("random", ICON_SHUFFLE + '<span class="text-xs">Ngẫu nhiên</span>', "Meme ngẫu nhiên");
+      for (const c of mm.clips) tile(c.id, c.poster ? `<img src="${mmUrl(c, "p")}" alt="" loading="lazy" width="64" height="64">` : `<span class="text-sm" data-num>${escapeHtml(c.id)}</span>`, "Meme " + c.id);
+    }
+    function mmRenderWords() {
+      const q = $("mm-q").value.trim().toLowerCase(); const list = $("mm-words"); list.innerHTML = "";
+      const cards = deckCards(state.deck); const pickedFirst = mm.words.map((id) => BY_ID.get(id));
+      const rest = cards.filter((e) => !mm.words.includes(e.id) && (!q || e.word.toLowerCase().includes(q) || e.def.toLowerCase().includes(q)));
+      const rows = [...pickedFirst, ...rest.slice(0, 200)];
+      for (const e of rows) {
+        const lab = document.createElement("label"); lab.className = "mm-row text-sm";
+        const cb = document.createElement("input"); cb.type = "checkbox"; cb.className = "input shrink-0"; cb.checked = mm.words.includes(e.id);
+        cb.addEventListener("change", () => {
+          if (cb.checked && mm.words.length >= MM_MAX) { cb.checked = false; ui.toast("Tối đa 5 từ", "Bỏ tick một từ trước khi chọn từ khác.", "info"); return; }
+          mm.words = cb.checked ? [...mm.words, e.id] : mm.words.filter((x) => x !== e.id); mmReady();
+        });
+        const w = document.createElement("span"); w.className = "font-medium"; w.textContent = e.word;
+        const d = document.createElement("span"); d.className = "text-muted-foreground min-w-0 truncate"; d.textContent = sensesOf(e)[0].syn;
+        lab.append(cb, w, d); list.appendChild(lab);
+      }
+      if (rest.length > 200) { const more = document.createElement("p"); more.className = "text-muted-foreground px-3 py-2 text-xs"; more.textContent = `Còn ${ui.fmt(rest.length - 200)} từ, gõ để tìm.`; list.appendChild(more); }
+      mmReady();
+    }
+    function mmReady() {
+      $("mm-word-count").textContent = `${mm.words.length}/${MM_MAX} từ`;
+      $("mm-go").disabled = !mm.clips.length || !mm.words.length;
+      const st = state.progress.settings;
+      document.querySelectorAll("[data-mmrate]").forEach((b) => b.setAttribute("aria-checked", String(Number(b.dataset.mmrate) === Number(st.memeRate))));
+      document.querySelectorAll("[data-mmsecs]").forEach((b) => b.setAttribute("aria-checked", String(Number(b.dataset.mmsecs) === Number(st.memeSecs))));
+    }
+    async function mmOpen() {
+      if (!("speechSynthesis" in window)) { ui.toast("Không chạy được Meme loop", "Trình duyệt này không đọc được văn bản. Thử Safari hoặc Chrome.", "warning"); return; }
+      await mmLoad(); mm.words = mm.words.filter((id) => BY_ID.has(id));
+      $("mm-q").value = ""; mmRenderClips(); mmRenderWords();
+      $("dlg-meme").showModal();
+    }
+    // tiếng meme = 50% tiếng đọc: đi qua Web Audio (iPhone Safari không cho đổi video.volume)
+    function mmAudio() {
+      const v = $("mm-video");
+      try {
+        if (!mm.ac) { const AC = window.AudioContext || window.webkitAudioContext; mm.ac = new AC(); const src = mm.ac.createMediaElementSource(v); mm.gain = mm.ac.createGain(); src.connect(mm.gain); mm.gain.connect(mm.ac.destination); }
+        mm.gain.gain.value = MM_GAIN; if (mm.ac.state !== "running") mm.ac.resume();
+      } catch (e) { try { v.volume = MM_GAIN; } catch (er) {} }
+    }
+    function mmShowWord(e) {
+      const box = $("mm-word"), st = $("mm-stage");
+      $("mm-w").textContent = e.word; $("mm-m").textContent = sensesOf(e).map((x) => (POS_LABEL[x.pos] || x.pos) + " " + x.syn).join("; ");
+      box.hidden = false; box.style.left = "0px"; box.style.top = "0px";
+      const W = st.clientWidth, H = st.clientHeight, w = box.offsetWidth, h = box.offsetHeight;
+      box.style.left = Math.round(8 + Math.random() * Math.max(0, W - w - 16)) + "px";
+      box.style.top = Math.round(8 + Math.random() * Math.max(0, H - h - 16)) + "px";
+      if (!reducedMotion()) box.animate([{ opacity: 0, transform: "scale(.96)" }, { opacity: 1, transform: "scale(1)" }], { duration: 200, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
+    }
+    function mmNext() {
+      if (!mm.running) return;
+      const e = BY_ID.get(mm.words[mm.step % mm.words.length]); mm.step++;
+      mmShowWord(e);
+      let done = false;
+      const go = () => { if (done) return; done = true; clearTimeout(mm.fb); if (mm.running) mm.gap = setTimeout(mmNext, 450); };
+      mm.fb = setTimeout(go, (900 + stripParen(e.word).length * 120) / Number(state.progress.settings.memeRate || 0.85));
+      speak(e.word, { rate: Number(state.progress.settings.memeRate) || 0.85, onend: go });
+    }
+    function mmTick() {
+      if (!mm.running) return;
+      const secs = Number(state.progress.settings.memeSecs) || 15; const el = (performance.now() - mm.t0) / 1000;
+      const pct = Math.min(100, (el / secs) * 100); const pb = $("mm-progress"); pb.setAttribute("aria-valuenow", Math.round(pct)); pb.querySelector("span").style.width = pct + "%";
+      $("mm-left").textContent = `${Math.max(0, Math.ceil(secs - el))} giây`;
+      if (el >= secs) { mmEnd(); return; }
+      mm.raf = requestAnimationFrame(mmTick);
+    }
+    function mmHalt() {
+      mm.running = false; cancelAnimationFrame(mm.raf); clearTimeout(mm.gap); clearTimeout(mm.fb);
+      try { speechSynthesis.cancel(); } catch (e) {}
+      const v = $("mm-video"); try { v.pause(); } catch (e) {}
+    }
+    function mmEnd() {
+      mmHalt(); $("mm-word").hidden = true;
+      $("mm-end-desc").textContent = `Đã đọc ${ui.fmt(mm.step)} lượt cho ${ui.fmt(mm.words.length)} từ trong ${ui.fmt(Number(state.progress.settings.memeSecs) || 15)} giây.`;
+      $("mm-end").hidden = false; $("mm-again").focus();
+    }
+    function mmStart(clipId) {
+      if (!mm.clips.length || !mm.words.length) return;
+      const pool = mm.clips.filter((c) => c.id !== mm.cur);
+      const clip = clipId && clipId !== "random" ? mm.clips.find((c) => c.id === clipId) || mm.clips[0] : (pool.length ? pool : mm.clips)[Math.floor(Math.random() * (pool.length || mm.clips.length))];
+      mm.cur = clip.id;
+      $("shell").hidden = true; $("scr-meme").hidden = false; $("mm-end").hidden = true; $("mm-word").hidden = true;
+      $("mm-sub").textContent = `Meme ${clip.id} · ${mm.words.length} từ · ${Number(state.progress.settings.memeSecs) || 15} giây`;
+      const v = $("mm-video"); if (v.dataset.clip !== clip.id) { v.src = mmUrl(clip, "v"); v.dataset.clip = clip.id; }
+      try { v.currentTime = 0; } catch (e) {}
+      mmAudio(); const pr = v.play(); if (pr && pr.catch) pr.catch(() => {});
+      mm.running = true; mm.step = 0; mm.t0 = performance.now();
+      mmNext(); mm.raf = requestAnimationFrame(mmTick);
+    }
+    function mmExit() { mmHalt(); $("scr-meme").hidden = true; $("shell").hidden = false; show("home"); renderAll(); }
+    $("btn-meme").addEventListener("click", mmOpen);
+    $("mm-dir").addEventListener("change", (e) => { mmSave([...e.target.files]); e.target.value = ""; });
+    $("mm-files").addEventListener("change", (e) => { mmSave([...e.target.files]); e.target.value = ""; });
+    $("mm-clear").addEventListener("click", mmClear);
+    $("mm-q").addEventListener("input", () => mmRenderWords());
+    $("mm-rand").addEventListener("click", () => { mm.words = shuffle(deckCards(state.deck).map((e) => e.id)).slice(0, MM_MAX); $("mm-q").value = ""; mmRenderWords(); });
+    document.querySelectorAll("[data-mmrate]").forEach((b) => b.addEventListener("click", () => { state.progress.settings.memeRate = Number(b.dataset.mmrate); markDirty(); mmReady(); }));
+    document.querySelectorAll("[data-mmsecs]").forEach((b) => b.addEventListener("click", () => { state.progress.settings.memeSecs = Number(b.dataset.mmsecs); markDirty(); mmReady(); }));
+    $("mm-go").addEventListener("click", () => { $("dlg-meme").close(); mmStart(mm.sel); });
+    $("mm-again").addEventListener("click", () => mmStart(mm.cur));
+    $("mm-other").addEventListener("click", () => mmStart("random"));
+    $("mm-setup").addEventListener("click", () => { mmHalt(); $("scr-meme").hidden = true; $("shell").hidden = false; mmOpen(); });
+    $("mm-back").addEventListener("click", mmExit);
+    document.addEventListener("keydown", (e) => { if (!$("scr-meme").hidden && e.key === "Escape" && !document.querySelector("dialog[open]")) mmExit(); });
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && mm.running) mmEnd(); });
 
     // ================================================================
     // BROWSE (Tabulator)
