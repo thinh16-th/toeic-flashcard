@@ -1019,7 +1019,7 @@
     // ================================================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwBiNwckLC-9o_m0X0TBDE-vjazUJMWD4UlIsySwcsFuUjMyBGBo3mfVQGEhWl47CJ7DA/exec";
     const SCHEMA = 1;
-    const APP_VER = "1.8.0";
+    const APP_VER = "1.8.1";
     const VERSION_URL = "version.json";       // cùng repo; build_vocab.py tự đồng bộ số phiên bản vào file này
     const VERSION_CHECK_MS = 10 * 60 * 1000;
     const NEW_BATCH = 20;                       // "Học thêm 20 thẻ mới"
@@ -2497,10 +2497,10 @@
     const mmUrl = (clip, kind) => { const b = kind === "v" ? mmBlob(clip) : clip.poster; const k = clip.id + ":" + kind + ":" + (b && b.size); if (!mm.urls.has(k)) mm.urls.set(k, URL.createObjectURL(b)); return mm.urls.get(k); };
     // ---- Nguồn cloud: Apps Script meme riêng (không đụng script tiến độ), chỉ đọc thư mục Drive
     const mmCloudOn = () => !!(state.progress.settings.memeApi && state.progress.settings.memeKey);
-    async function mmApi(params) {
+    async function mmApi(params, timeoutMs) {
       const st = state.progress.settings; const u = new URL(st.memeApi);
       u.searchParams.set("key", st.memeKey); for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
-      const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), FETCH_TIMEOUT_MS);
+      const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), timeoutMs || FETCH_TIMEOUT_MS);
       try { const r = await fetch(u.toString(), { signal: ctl.signal }); const j = await r.json(); if (!j.ok) throw new Error(j.error || "lỗi"); return j; }
       finally { clearTimeout(tm); }
     }
@@ -2516,7 +2516,8 @@
         const list = (await mmApi({ action: "list" })).clips || [];
         const have = new Map(mm.clips.map((c) => [c.id, c]));
         const needPosters = list.some((c) => c.poster && !(have.get(c.id) || {}).poster);
-        const posters = needPosters ? (await mmApi({ action: "posters" })).posters || {} : {};
+        let posters = {};
+        if (needPosters) { $("mm-cloud-state").textContent = "· đang tải ảnh meme…"; try { posters = (await mmApi({ action: "posters" }, 120000)).posters || {}; } catch (e) { posters = {}; } }
         await mmPut(list.map((c) => { const o = have.get(c.id) || { id: c.id, video: null, mp4: null, poster: null };
           return { ...o, cloud: { webm: !!c.webm, mp4: !!c.mp4 }, poster: o.poster || (posters[c.id] ? b64Blob(posters[c.id], "image/webp") : null) }; }));
         await mmLoad(); mmRenderClips(); mmReady();

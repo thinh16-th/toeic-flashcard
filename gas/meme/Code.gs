@@ -8,7 +8,7 @@
  *
  * GET ?key=KEY&action=ping                       → {ok:true}
  * GET ?key=KEY&action=list                       → {ok:true, clips:[{id, webm, mp4, poster}]}
- * GET ?key=KEY&action=posters                    → {ok:true, posters:{id: base64 webp}}
+ * GET ?key=KEY&action=posters                    → {ok:true, posters:{id: base64 webp}}  (đọc posters.json nếu có)
  * GET ?key=KEY&action=clip&id=001&fmt=mp4|webm   → {ok:true, id, mime, b64}
  *
  * Clip là của bên thứ ba (Catmeme Club), chỉ dùng nội bộ: thư mục Drive để riêng tư, không chia sẻ công khai.
@@ -67,6 +67,9 @@ function list_(root) {
   return rows;
 }
 function posters_(root) {
+  // nhanh: một file posters.json (gộp sẵn {id: base64}) ở gốc thư mục; đọc từng ảnh mất ~2 phút cho 88 file
+  var packed = root.getFilesByName("posters.json");
+  if (packed.hasNext()) return JSON.parse(packed.next().getBlob().getDataAsString());
   var dir = sub_(root, "poster"), outp = {};
   if (!dir) return outp;
   var it = dir.getFiles();
