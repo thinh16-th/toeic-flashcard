@@ -1,31 +1,105 @@
 // IPA mouth rig (G02 khẩu hình IPA) — 2 hình tham số hoá: môi chính diện + mặt cắt miệng nhìn nghiêng.
 // Mỗi âm là một bộ số (PHON[sym]); chuyển âm = nội suy số → hình chạy mượt, file nhẹ, không cần video.
-// usage: const m = IPAMouth.mount(frontHost, sideHost); m.set(IPAMouth.PHON["θ"]); m.to(params, ms)
+// Đủ 41 âm General American: 12 nguyên âm đơn, 5 nguyên âm đôi (lướt từ hình đầu sang hình cuối), 24 phụ âm
+// (tʃ, dʒ lướt từ t/d sang ʃ/ʒ). Dấu hiệu phụ: rung cổ họng (âm hữu thanh), luồng hơi qua mũi (m, n, ŋ).
+// usage: const m = IPAMouth.mount(frontHost, sideHost); m.say("aɪ", 260) → chạy cả phần lướt; m.to(IPAMouth.PHON["θ"], ms)
 (function (g) {
   const NS = "http://www.w3.org/2000/svg";
-  const C = { ink: "#3A2B4A", skin: "#FFDCC2", lip: "#FF8A8A", lipD: "#E06A6A", teeth: "#FFFFFF", tongue: "#FF9EAA", mouth: "#5B2A3A", sun: "#FFC93C" };
+  const C = { ink: "#3A2B4A", skin: "#FFDCC2", lip: "#FF8A8A", lipD: "#E06A6A", teeth: "#FFFFFF", tongue: "#FF9EAA", mouth: "#5B2A3A", sun: "#FFC93C", air: "#4EA8F5" };
   // fw, fh: nửa bề ngang / độ mở miệng · rnd: chu tròn môi · teeth: độ lộ răng trên · tout: thò lưỡi · bite: môi dưới chạm răng trên
   // jaw: mở hàm · lip: chu môi (nhìn nghiêng) · tx,ty: đầu lưỡi · bx,by: lưng lưỡi cao nhất · curl: cong đầu lưỡi (âm r)
-  const P = (fw, fh, rnd, teeth, jaw, lip, tx, ty, bx, by, ext) => Object.assign({ fw, fh, rnd, teeth, tout: 0, bite: 0, jaw, lip, tx, ty, bx, by, curl: 0 }, ext || {});
+  // shut: hai môi khép (p, b, m) · voice: rung cổ họng · nasal: hơi ra mũi
+  const P = (fw, fh, rnd, teeth, jaw, lip, tx, ty, bx, by, ext) => Object.assign({ fw, fh, rnd, teeth, tout: 0, bite: 0, jaw, lip, tx, ty, bx, by, curl: 0, shut: 0, voice: 0, nasal: 0 }, ext || {});
   const PHON = {
     rest: P(26, 4, 0, 0, .05, 0, 168, 120, 130, 104),
+    // --- nguyên âm đơn (lưỡi: trước/sau theo bx, cao/thấp theo by; hàm mở theo jaw)
+    i: P(38, 8, 0, 1, .1, 0, 170, 112, 150, 92), "ɪ": P(32, 12, 0, .8, .2, 0, 170, 114, 148, 96),
+    "ɛ": P(32, 20, 0, .7, .55, 0, 170, 124, 140, 106), "æ": P(34, 30, 0, .7, 1, 0, 172, 130, 132, 118),
+    u: P(13, 13, 1, 0, .25, 1, 158, 120, 110, 90), "ʊ": P(17, 14, .75, .1, .3, .7, 160, 122, 112, 95),
+    "ə": P(26, 14, 0, .4, .35, 0, 166, 124, 128, 104), "ʌ": P(28, 20, 0, .4, .55, 0, 166, 126, 124, 106),
+    "ɑ": P(30, 32, 0, .3, 1, 0, 164, 132, 110, 116), "ɔ": P(20, 26, .6, .2, .75, .5, 162, 130, 108, 108),
+    "ɝ": P(20, 16, .45, .35, .35, .4, 150, 98, 120, 104, { curl: 1 }), "ɚ": P(22, 14, .35, .35, .3, .3, 152, 100, 122, 106, { curl: .8 }),
+    // điểm đầu của nguyên âm đôi
+    e: P(32, 16, 0, .8, .4, 0, 170, 118, 144, 100), a: P(32, 32, 0, .3, 1, 0, 168, 132, 124, 118), o: P(16, 20, .8, .1, .45, .7, 160, 126, 110, 98),
+    // --- phụ âm
+    p: P(26, 0, 0, 0, .05, 0, 168, 120, 130, 104, { shut: 1 }), b: P(26, 0, 0, 0, .05, 0, 168, 120, 130, 104, { shut: 1 }),
+    m: P(26, 0, 0, 0, .05, 0, 168, 120, 130, 104, { shut: 1, nasal: 1 }),
+    f: P(30, 6, 0, 1, .15, 0, 168, 116, 130, 108, { bite: 1 }), v: P(30, 6, 0, 1, .15, 0, 168, 116, 130, 108, { bite: 1 }),
     "θ": P(30, 16, 0, 1, .3, 0, 192, 109, 130, 106, { tout: 1 }), "ð": P(30, 16, 0, 1, .3, 0, 192, 109, 130, 106, { tout: 1 }),
+    t: P(28, 8, 0, .8, .15, 0, 180, 96, 140, 104), d: P(28, 8, 0, .8, .15, 0, 180, 96, 140, 104),
+    n: P(28, 8, 0, .8, .15, 0, 180, 96, 140, 104, { nasal: 1 }), l: P(28, 12, 0, .7, .25, 0, 181, 95, 136, 110),
+    s: P(32, 6, 0, 1, .1, 0, 178, 101, 142, 100), z: P(32, 6, 0, 1, .1, 0, 178, 101, 142, 100),
     "ʃ": P(18, 14, .8, .6, .15, .8, 160, 100, 130, 96), "ʒ": P(18, 14, .8, .6, .15, .8, 160, 100, 130, 96),
-    "æ": P(34, 30, 0, .7, 1, 0, 172, 130, 132, 118), "i": P(38, 8, 0, 1, .1, 0, 170, 112, 150, 92),
-    "u": P(13, 13, 1, 0, .25, 1, 158, 120, 110, 90), "r": P(20, 14, .6, .3, .3, .55, 150, 96, 120, 104, { curl: 1 }),
-    "f": P(30, 6, 0, 1, .15, 0, 168, 116, 130, 108, { bite: 1 }), "v": P(30, 6, 0, 1, .15, 0, 168, 116, 130, 108, { bite: 1 }),
-    "ɪ": P(32, 12, 0, .8, .2, 0, 170, 114, 148, 96), "ɛ": P(32, 20, 0, .7, .55, 0, 170, 124, 140, 106),
-    "ŋ": P(28, 10, 0, .6, .2, 0, 165, 120, 100, 84), "k": P(28, 10, 0, .6, .2, 0, 165, 122, 96, 84), "ɡ": P(28, 10, 0, .6, .2, 0, 165, 122, 96, 84),
-    "d": P(28, 8, 0, .8, .15, 0, 180, 96, 140, 104), "t": P(28, 8, 0, .8, .15, 0, 180, 96, 140, 104),
+    "tʃ": P(18, 10, .8, .6, .12, .8, 175, 96, 132, 98), "dʒ": P(18, 10, .8, .6, .12, .8, 175, 96, 132, 98),
+    k: P(28, 10, 0, .6, .2, 0, 165, 122, 96, 84), "ɡ": P(28, 10, 0, .6, .2, 0, 165, 122, 96, 84), "ŋ": P(28, 10, 0, .6, .2, 0, 165, 120, 100, 84, { nasal: 1 }),
+    h: P(26, 18, 0, .5, .4, 0, 166, 124, 128, 106),
+    r: P(20, 14, .6, .3, .3, .55, 150, 96, 120, 104, { curl: 1 }),
+    w: P(12, 10, 1, 0, .2, 1, 156, 122, 108, 89), j: P(36, 8, 0, .9, .1, 0, 168, 116, 152, 90),
   };
+  const VOICELESS = new Set(["rest", "p", "t", "k", "f", "θ", "s", "ʃ", "h", "tʃ"]);
+  for (const k in PHON) if (!VOICELESS.has(k)) PHON[k].voice = 1;
+  // âm lướt: nguyên âm đôi và âm tắc xát chạy từ hình đầu sang hình cuối
+  const GLIDE = { "eɪ": ["e", "ɪ"], "aɪ": ["a", "ɪ"], "ɔɪ": ["ɔ", "ɪ"], "aʊ": ["a", "ʊ"], "oʊ": ["o", "ʊ"], "tʃ": ["t", "ʃ"], "dʒ": ["d", "ʒ"] };
+  for (const k in GLIDE) if (!PHON[k]) PHON[k] = Object.assign({}, PHON[GLIDE[k][0]]);
+  for (const k of ["eɪ", "aɪ", "ɔɪ", "aʊ", "oʊ"]) PHON[k].voice = 1;
+
+  // từ mẫu và gợi ý cách đọc (dùng chung cho trang lab và app)
+  const KW = { i: "see", "ɪ": "sit", "ʊ": "book", u: "food", "ɛ": "bed", "ə": "about", "ɚ": "teacher", "ɝ": "bird", "æ": "cat", "ʌ": "cup", "ɑ": "father", "ɔ": "law",
+    "eɪ": "say", "aɪ": "my", "ɔɪ": "boy", "aʊ": "now", "oʊ": "go",
+    p: "pen", b: "bad", t: "tea", d: "do", "tʃ": "chair", "dʒ": "job", k: "key", "ɡ": "get", f: "fan", v: "van", "θ": "think", "ð": "this", s: "sun", z: "zoo", "ʃ": "she", "ʒ": "vision",
+    m: "man", n: "no", "ŋ": "sing", h: "hat", l: "leg", r: "red", w: "we", j: "yes" };
+  const TIP = {
+    i: "Kéo môi sang hai bên như cười, lưỡi nâng cao phía trước, âm dài và căng: see, eat.",
+    "ɪ": "Miệng hơi mở, môi thả lỏng. Âm “i” ngắn và lỏng hơn “i” tiếng Việt.",
+    "ɛ": "Mở miệng vừa, môi dẹt, gần “e” tiếng Việt.",
+    "æ": "Mở miệng rộng, kéo môi sang hai bên, giữa “e” và “a”. Rộng hơn /ɛ/ (bed).",
+    u: "Chu tròn môi nhỏ, lưỡi lùi sau và nâng cao, âm dài: food, true.",
+    "ʊ": "Môi hơi tròn và lỏng, âm ngắn hơn /u/: book, put.",
+    "ə": "Âm “ơ” rất nhẹ, ngắn, miệng và lưỡi thả lỏng; chỉ có ở âm tiết không nhấn: about, sofa.",
+    "ʌ": "Miệng mở vừa, lưỡi để giữa, giống “â/ă” tiếng Việt nhưng dài hơn; không tròn môi.",
+    "ɑ": "Mở miệng rộng, hạ hàm, lưỡi thấp và lùi sau, giống “a” tiếng Việt kéo dài: father, hot.",
+    "ɔ": "Môi hơi tròn, miệng mở rộng hơn “o” tiếng Việt; nhiều người Mỹ đọc gần như /ɑ/.",
+    "ɝ": "Âm “ơ” có cong lưỡi (như /r/), nhấn và kéo dài: bird, work.",
+    "ɚ": "Như /ɝ/ nhưng nhẹ, không nhấn, thường ở cuối từ: teacher, offer.",
+    "eɪ": "Bắt đầu ở /e/ rồi lướt lên /ɪ/: say, make. Không đọc thành “ê” đơn.",
+    "aɪ": "Mở rộng ở /a/ rồi lướt lên /ɪ/: my, time.",
+    "ɔɪ": "Bắt đầu ở /ɔ/ môi tròn rồi lướt sang /ɪ/ môi dẹt: boy, join.",
+    "aʊ": "Mở rộng ở /a/ rồi chu môi lướt sang /ʊ/: now, out.",
+    "oʊ": "Bắt đầu ở /o/ môi tròn rồi chu thêm sang /ʊ/: go, home. Không đọc thành “ô” đơn.",
+    p: "Mím môi rồi bật. Đầu từ: bật mạnh luồng hơi (tờ giấy trước miệng phải rung), không thì nghe thành “b”. Sau s và cuối từ hơi yếu hơn.",
+    b: "Mím môi rồi bật, rung cổ họng, không bật hơi mạnh như /p/.",
+    t: "Đầu lưỡi chạm lợi trên rồi bật mạnh hơi ở đầu từ (không thì nghe thành “đ”). Giữa hai nguyên âm người Mỹ hay đọc lướt gần “đ” nhẹ (water, better).",
+    d: "Đầu lưỡi chạm lợi ngay sau răng trên rồi bật ra, có rung cổ họng.",
+    k: "Lưng lưỡi chặn ở vòm mềm rồi bật hơi mạnh.",
+    "ɡ": "Lưng lưỡi chặn ở vòm mềm rồi bật ra, rung cổ họng, không bật hơi mạnh như /k/.",
+    f: "Răng trên chạm nhẹ môi dưới, thổi hơi qua kẽ. Không rung cổ họng.",
+    v: "Răng trên chạm môi dưới, thổi hơi và rung cổ họng. Không đọc thành “d” hay “b”.",
+    "θ": "Đặt đầu lưỡi giữa hai hàm răng, thổi hơi nhẹ qua kẽ. Không rung cổ họng. Không đọc thành “t” hay “th” tiếng Việt.",
+    "ð": "Như /θ/ (lưỡi giữa hai răng) nhưng rung cổ họng. Không đọc thành “d” hay “đ”.",
+    s: "Hai hàm răng gần khít, đầu lưỡi gần lợi trên (không chạm), thổi hơi rít “sss”.",
+    z: "Như /s/ nhưng rung cổ họng (tiếng “zzz” của ong).",
+    "ʃ": "Mặt lưỡi nâng sát phần sau của lợi trên (lùi sau chỗ của /s/), môi chu tròn, thổi hơi “sh”.",
+    "ʒ": "Như /ʃ/ nhưng rung cổ họng: vision, measure.",
+    "tʃ": "Bắt đầu như /t/ rồi bật ra /ʃ/, môi hơi chu. Mạnh hơn “ch” tiếng Việt.",
+    "dʒ": "Như /tʃ/ nhưng rung cổ họng: job, page.",
+    m: "Mím môi, hơi ra đường mũi, rung cổ họng. Cuối từ phải mím môi lại.",
+    n: "Đầu lưỡi chạm lợi trên, hơi ra đường mũi. Cuối từ giữ lưỡi ở lợi, không đọc thành “ng”.",
+    "ŋ": "Lưng lưỡi chạm vòm mềm phía sau, hơi thoát ra mũi, giống “ng”.",
+    h: "Mở miệng, đẩy hơi nhẹ từ cổ họng như thở ra; không phát âm cứng như “h” tiếng Việt.",
+    l: "Đầu lưỡi chạm lợi trên, hơi thoát hai bên lưỡi. Cuối từ vẫn phải chạm lưỡi (feel, call).",
+    r: "Cong đầu lưỡi lên phía sau nhưng không chạm vòm, môi hơi tròn. Không rung lưỡi.",
+    w: "Chu tròn môi như /u/ rồi mở ra nhanh: we, work. Không đọc thành “qu” hay “v”.",
+    j: "Lưỡi nâng cao như /i/ rồi lướt nhanh sang nguyên âm sau: yes, you.",
+  };
+
   const KEYS = Object.keys(PHON.rest);
   const mix = (a, b, k) => { const o = {}; for (const n of KEYS) o[n] = a[n] + (b[n] - a[n]) * k; return o; };
   const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
   let uid = 0;
 
   function frontD(p) {
-    const cx = 80, cy = 66, rnd = p.rnd, ow = p.fw * (1 - .35 * rnd), oh = Math.max(4, p.fh);
-    const LW = ow + 14 + 6 * (1 - rnd), LH = oh / 2 + 9 + 5 * rnd, k = .55 + .35 * rnd;
+    const cx = 80, cy = 66, rnd = p.rnd, ow = p.fw * (1 - .35 * rnd), oh = Math.max(4, p.fh) * (1 - .92 * p.shut);
+    const LW = ow + 14 + 6 * (1 - rnd), LH = oh / 2 + 9 + 5 * rnd + 2 * p.shut, k = .55 + .35 * rnd;
     return {
       outer: `M${cx - LW},${cy} C${cx - LW + 6},${cy - LH} ${cx - 10},${cy - LH - 4} ${cx},${cy - LH + 3} C${cx + 10},${cy - LH - 4} ${cx + LW - 6},${cy - LH} ${cx + LW},${cy} C${cx + LW - 8},${cy + LH + 6} ${cx - LW + 8},${cy + LH + 6} ${cx - LW},${cy} Z`,
       inner: `M${cx - ow},${cy} C${cx - ow},${cy - oh / 2 * k * 1.6} ${cx + ow},${cy - oh / 2 * k * 1.6} ${cx + ow},${cy} C${cx + ow},${cy + oh / 2 * k * 1.7} ${cx - ow},${cy + oh / 2 * k * 1.7} ${cx - ow},${cy} Z`,
@@ -38,6 +112,7 @@
   }
   function sideD(p) {
     const dy = 26 * p.jaw, lip = p.lip, tx = p.tx, ty = p.ty, bx = p.bx, by = p.by, cu = p.curl;
+    const up = (107 - (112 + dy)) * p.shut;   // môi dưới nâng lên chạm môi trên khi mím
     const tipIn = `C${bx + 20},${by - 2} ${tx - 14 + 8 * cu},${ty - 6 + 22 * cu} ${tx - 2 * cu},${ty + 6 * cu} C${tx - 10 * cu},${ty - 6 * cu} ${tx + 6 * cu},${ty - 10 * cu} ${tx},${ty} `;
     return {
       face: `M40,30 C120,10 190,30 206,64 L222,80 L206,88 C${210 + 6 * lip},94 ${214 + 8 * lip},100 ${204 + 8 * lip},106 L${204 + 8 * lip},${112 + dy} C${214 + 8 * lip},${116 + dy} ${208 + 6 * lip},${128 + dy} 198,${132 + dy} C200,${150 + dy} 186,${166 + dy} 150,${170 + dy} L60,190 L40,190 Z`,
@@ -45,7 +120,7 @@
       tongue: `M70,170 C66,140 ${bx - 40},${by + 6} ${bx},${by} ` + tipIn + `C${tx + 2},${ty + 8} ${tx - 20},${ty + 18} ${tx - 40},${140 + dy * .8} C120,${160 + dy * .6} 90,${170 + dy * .4} 70,170 Z`,
       loTeeth: `M172,${116 + dy} L182,${116 + dy} L184,${106 + dy * .9} L176,${104 + dy * .9} Z`,
       upLip: `M190,94 C${204 + 10 * lip},90 ${214 + 10 * lip},98 ${207 + 10 * lip},108 L190,106 Z`,
-      loLip: `M190,${112 + dy} L${205 + 9 * lip},${112 + dy} C${214 + 9 * lip},${118 + dy} ${208 + 8 * lip},${128 + dy} 192,${126 + dy} Z`,
+      loLip: `M190,${112 + dy + up} L${205 + 9 * lip},${112 + dy + up} C${214 + 9 * lip},${118 + dy + up} ${208 + 8 * lip},${128 + dy + up} 192,${126 + dy + up} Z`,
       dot: [tx, ty],
     };
   }
@@ -80,8 +155,11 @@
     S.loLip = el("path", { fill: C.lip, stroke: C.ink, "stroke-width": 3, "stroke-linejoin": "round" }, s);
     S.bite = el("path", { d: "M190,106 C198,104 204,108 200,116", fill: "none", stroke: C.lipD, "stroke-width": 7, "stroke-linecap": "round" }, s);
     S.dot = el("circle", { r: 6, fill: C.sun, stroke: C.ink, "stroke-width": 2.5 }, s);
+    // hơi ra mũi (m, n, ŋ) và rung cổ họng (âm hữu thanh)
+    S.nose = el("path", { d: "M222,84 q5,3 11,0 M225,91 q5,3 11,0 M222,98 q5,3 11,0", fill: "none", stroke: C.air, "stroke-width": 3, "stroke-linecap": "round" }, s);
+    S.voice = el("path", { d: "M84,188 l5,-6 l5,6 l5,-6 l5,6 l5,-6 l5,6 M84,196 l5,-6 l5,6 l5,-6 l5,6 l5,-6 l5,6", fill: "none", stroke: C.sun, "stroke-width": 3, "stroke-linecap": "round", "stroke-linejoin": "round" }, s);
 
-    let cur = Object.assign({}, PHON.rest), raf = 0;
+    let cur = Object.assign({}, PHON.rest), raf = 0, seq = 0;
     function draw(p) {
       const a = frontD(p);
       F.outer.setAttribute("d", a.outer); F.clip.setAttribute("d", a.inner); F.hole.setAttribute("d", a.inner); F.line.setAttribute("d", a.inner);
@@ -94,6 +172,7 @@
       S.face.setAttribute("d", b.face); S.oral.setAttribute("d", b.oral); S.tongue.setAttribute("d", b.tongue); S.loTeeth.setAttribute("d", b.loTeeth);
       S.upLip.setAttribute("d", b.upLip); S.loLip.setAttribute("d", b.loLip); S.bite.setAttribute("opacity", p.bite);
       S.dot.setAttribute("cx", b.dot[0]); S.dot.setAttribute("cy", b.dot[1]);
+      S.nose.setAttribute("opacity", p.nasal); S.voice.setAttribute("opacity", p.voice * .9);
     }
     const ease = (k) => (k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
     function to(target, ms) {
@@ -107,15 +186,23 @@
         if (!ms) { cur = Object.assign({}, target); draw(cur); res(); } else raf = requestAnimationFrame(step);
       });
     }
+    // say(ph, ms): hiện khẩu hình một âm; âm lướt (nguyên âm đôi, tʃ, dʒ) chạy từ hình đầu sang hình cuối
+    async function say(ph, ms) {
+      const my = ++seq, gl = GLIDE[ph];
+      if (!gl || !ms) return to(PHON[ph] || PHON.rest, ms);
+      await to(PHON[gl[0]], ms); if (my !== seq) return;
+      await new Promise((r) => setTimeout(r, Math.max(60, ms * .4))); if (my !== seq) return;
+      return to(PHON[gl[1]], ms * 1.3);
+    }
     draw(cur);
-    return { set: (p) => to(p, 0), to, front: f, side: s };
+    return { set: (p) => to(p, 0), to: (p, ms) => { seq++; return to(p, ms); }, say, front: f, side: s };
   }
-  // tách IPA thành âm (nguyên âm đôi, tʃ dʒ, ɝ ɚ là một âm); bỏ dấu nhấn ˈ ˌ và dấu chấm
+  // tách IPA thành âm (nguyên âm đôi, tʃ dʒ, ɝ ɚ là một âm); bỏ dấu nhấn ˈ ˌ, dấu chấm, gạch nối; g thường → ɡ
   const MULTI = ["aɪ", "aʊ", "ɔɪ", "eɪ", "oʊ", "tʃ", "dʒ"];
   function split(ipa) {
-    const s = ipa.replace(/[\/ˈˌ.\s]/g, ""); const out = [];
+    const s = String(ipa || "").replace(/[\/ˈˌ.\s()\-ː]/g, "").replace(/g/g, "ɡ"); const out = [];
     for (let i = 0; i < s.length;) { const m = MULTI.find((x) => s.startsWith(x, i)); if (m) { out.push(m); i += m.length; } else { out.push(s[i]); i++; } }
     return out;
   }
-  g.IPAMouth = { mount, PHON, split, mix };
+  g.IPAMouth = { mount, PHON, GLIDE, KW, TIP, split, mix };
 })(window);

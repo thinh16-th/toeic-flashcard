@@ -103,7 +103,7 @@
       </div>
       <div class="space-y-1"><h2 class="text-sm font-medium">Phụ âm <span class="text-muted-foreground text-xs font-normal">· từng cặp: vô thanh (không rung cổ) | hữu thanh (rung cổ)</span></h2><div class="ipa-grid chart-con" id="chart-con" role="group" aria-label="Phụ âm"></div></div>
       <p class="min-h-12 leading-6" id="ctip" aria-live="polite"></p>
-      <p class="text-muted-foreground text-xs">Bảng General American (giọng Mỹ, cùng ký hiệu với phiên âm trong app). Chạm một âm để nghe bản ghi gốc; phụ âm được đọc kèm a, ví dụ /θ/ nghe là [θa · aθa]. Âm chưa có bản ghi riêng (ɚ, ɝ, nguyên âm đôi) thì đọc chậm từ mẫu. Ô viền nét đứt: khẩu hình đang vẽ. Bản ghi: <a class="underline" href="https://commons.wikimedia.org/wiki/Category:General_phonetics" target="_blank" rel="noopener">Wikimedia Commons</a> (CC BY-SA 3.0; Peter Isotalo, Erutuon, Denelson83 và cộng sự). <a class="underline" id="src" href="#" target="_blank" rel="noopener">Nguồn âm này</a></p>
+      <p class="text-muted-foreground text-xs">Bảng General American (giọng Mỹ, cùng ký hiệu với phiên âm trong app). Chạm một âm để nghe bản ghi gốc; phụ âm được đọc kèm a, ví dụ /θ/ nghe là [θa · aθa]. Âm chưa có bản ghi riêng (ɚ, ɝ, nguyên âm đôi) thì đọc chậm từ mẫu. Đủ khẩu hình cho 41 âm; nguyên âm đôi, tʃ, dʒ chạy từ hình đầu sang hình cuối; sóng vàng dưới cằm: rung cổ họng (hữu thanh); sóng xanh ở mũi: hơi ra mũi (m, n, ŋ). Bản ghi: <a class="underline" href="https://commons.wikimedia.org/wiki/Category:General_phonetics" target="_blank" rel="noopener">Wikimedia Commons</a> (CC BY-SA 3.0; Peter Isotalo, Erutuon, Denelson83 và cộng sự). <a class="underline" id="src" href="#" target="_blank" rel="noopener">Nguồn âm này</a></p>
     </section></section>
 
     <section class="card" id="view-ctrl" hidden><section class="space-y-3">
@@ -133,7 +133,7 @@
     // TỰ CẬP NHẬT (trang lab): GitHub Pages giữ bản cũ trong cache ~10 phút. Mỗi lần mở / quay lại tab, so LAB_VER với lab/version.json
     // (luôn tải mới); khác thì tải lại trang bằng URL ?v=<bản mới> (URL mới nên bỏ qua cache), mỗi bản chỉ thử 1 lần.
     // Sửa trang này thì tăng LAB_VER và version.json cùng lúc.
-    const LAB_VER = "2026.10.12-5";
+    const LAB_VER = "2026.10.12-6";
     (function () {
       if (location.protocol === "file:") return;
       let last = 0;
@@ -153,31 +153,10 @@
     })();
   </script>
   <script id="ipa-ctrl" type="application/json">{"ex":{"i":{"dau":[["eager","/ˈiɡɚ/",0],["easy","/ˈizi/",0]],"giua":[["feature","/ˈfitʃɚ/",0],["complete","/kəmˈplit/",0]],"cuoi":[["fee","/fi/",0],["degree","/dɪˈɡri/",0]]},"ɪ":{"dau":[["interview","/ˈɪntɚvju/",0],["issue","/ˈɪʃu/",0]],"giua":[["submit","/səbˈmɪt/",0],["ship","/ʃɪp/",0]],"cuoi":[],"note":"Nguyên âm ngắn: giọng Mỹ không kết thúc từ bằng /ɪ/ (đuôi -y đọc /i/)."},"ʊ":{"dau":[],"giua":[["book","/bʊk/",0],["footwear","/ˈfʊtwɛr/",0]],"cuoi":[],"note":"/ʊ/ không đứng đầu hay cuối từ tiếng Anh."},"u":{"dau":[],"giua":[["remove","/riˈmuv/",0],["smooth","/smuð/",0]],"cuoi":[["review","/riˈvju/",0],["crew","/kru/",0]],"note":"/u/ đầu từ chỉ có trong vài từ hiếm (ooze, oops)."},"ɛ":{"dau":[["edit","/ˈɛdət/",0],["expert","/ˈɛkspɚt/",0]],"giua":[["recommend","/ˌrɛkəˈmɛnd/",0],["trend","/trɛnd/",0]],"cuoi":[],"note":"Nguyên âm ngắn: giọng Mỹ không kết thúc từ bằng /ɛ/."},"ə":{"dau":[["announce","/əˈnaʊns/",0],["attend","/əˈtɛnd/",0]],"giua":[["purchase","/ˈpɝtʃəs/",0],["benefit","/ˈbɛnəfɪt/",0]],"cuoi":[["data","/ˈdeɪtə/",0],["extra","/ˈɛkstrə/",0]]},"ɚ":{"dau":[],"giua":[["perform","/pɚˈfɔrm/",0],["oversee","/ˈoʊvɚsi/",0]],"cuoi":[["feature","/ˈfitʃɚ/",0],["offer","/ˈɔfɚ/",0]],"note":"/ɚ/ không nhấn gần như không đứng đầu từ (có nhấn thì là /ɝ/: urge)."},"ɝ":{"dau":[["urge","/ɝdʒ/",0],["urban","/ˈɝbən/",0]],"giua":[["purchase","/ˈpɝtʃəs/",0],["survey","/ˈsɝveɪ/",0]],"cuoi":[["prefer","/prəˈfɝ/",0],["incur","/ɪnˈkɝ/",0]]},"æ":{"dau":[["access","/ˈæksɛs/",0],["applicant","/ˈæplɪkənt/",0]],"giua":[["expand","/ɪkˈspænd/",0],["draft","/dræft/",0]],"cuoi":[],"note":"Nguyên âm ngắn: giọng Mỹ không kết thúc từ bằng /æ/."},"ʌ":{"dau":[["upcoming","/ˈʌpkʌmɪŋ/",0],["upload","/ˈʌploʊd/",0]],"giua":[["budget","/ˈbʌdʒɪt/",0],["refund","/rɪˈfʌnd/",0]],"cuoi":[],"note":"/ʌ/ không đứng cuối từ (trừ thán từ uh, duh)."},"ɑ":{"dau":[["option","/ˈɑpʃən/",0],["ongoing","/ˈɑnɡoʊɪŋ/",0]],"giua":[["contact","/ˈkɑntækt/",0],["promptly","/ˈprɑmptli/",0]],"cuoi":[["spa","/spɑ/",1]],"note":"Ít từ kết thúc bằng /ɑ/; bộ từ vựng không có, dùng từ ngoài."},"ɔ":{"dau":[["offer","/ˈɔfɚ/",0],["author","/ˈɔθɚ/",0]],"giua":[["launch","/lɔntʃ/",0],["install","/ɪnˈstɔl/",0]],"cuoi":[["flaw","/flɔ/",0],["draw","/drɔ/",0]]},"eɪ":{"dau":[["agent","/ˈeɪdʒənt/",0],["acre","/ˈeɪkɚ/",0]],"giua":[["location","/loʊˈkeɪʃən/",0],["available","/əˈveɪləbəl/",0]],"cuoi":[["delay","/dɪˈleɪ/",0],["display","/dɪˈspleɪ/",0]]},"aɪ":{"dau":[["identify","/aɪˈdɛntəfaɪ/",0],["item","/ˈaɪtəm/",0]],"giua":[["highlight","/ˈhaɪlaɪt/",0],["despite","/dɪˈspaɪt/",0]],"cuoi":[["supply","/səˈplaɪ/",0],["imply","/ɪmˈplaɪ/",0]]},"ɔɪ":{"dau":[["oil","/ɔɪl/",0],["oyster","/ˈɔɪstɚ/",1]],"giua":[["appointment","/əˈpɔɪntmənt/",0],["join","/dʒɔɪn/",0]],"cuoi":[["employ","/ɛmˈplɔɪ/",0],["enjoy","/ɪnˈdʒɔɪ/",1]]},"aʊ":{"dau":[["outstanding","/ˌaʊtˈstændɪŋ/",0],["outcome","/ˈaʊtkʌm/",0]],"giua":[["announce","/əˈnaʊns/",0],["warehouse","/ˈwɛrhaʊs/",0]],"cuoi":[["allow","/əˈlaʊ/",0],["now","/naʊ/",1]]},"oʊ":{"dau":[["oversee","/ˈoʊvɚsi/",0],["own","/oʊn/",0]],"giua":[["host","/hoʊst/",0],["notify","/ˈnoʊtəfaɪ/",0]],"cuoi":[["logo","/ˈloʊɡoʊ/",0],["memo","/ˈmɛmoʊ/",0]]},"p":{"dau":[["purchase","/ˈpɝtʃəs/",0],["post","/poʊst/",0]],"giua":[["repair","/rɪˈpɛr/",0],["supply","/səˈplaɪ/",0]],"cuoi":[["ship","/ʃɪp/",0],["workshop","/ˈwɝkʃɑp/",0]]},"b":{"dau":[["benefit","/ˈbɛnəfɪt/",0],["budget","/ˈbʌdʒɪt/",0]],"giua":[["exhibit","/ɪɡˈzɪbɪt/",0],["lobby","/ˈlɑbi/",0]],"cuoi":[["hub","/hʌb/",0],["subscribe","/səbˈskraɪb/",0]]},"t":{"dau":[["technician","/tɛkˈnɪʃən/",0],["tip","/tɪp/",0]],"giua":[["attend","/əˈtɛnd/",0],["obtain","/əbˈteɪn/",0]],"cuoi":[["submit","/səbˈmɪt/",0],["host","/hoʊst/",0]]},"d":{"dau":[["deliver","/dɪˈlɪvɚ/",0],["despite","/dɪˈspaɪt/",0]],"giua":[["update","/əpˈdeɪt/",0],["conduct","/kɑnˈdʌkt/",0]],"cuoi":[["recommend","/ˌrɛkəˈmɛnd/",0],["provide","/prəˈvaɪd/",0]]},"tʃ":{"dau":[["charge","/tʃɑrdʒ/",0],["check","/tʃɛk/",0]],"giua":[["feature","/ˈfitʃɚ/",0],["purchase","/ˈpɝtʃəs/",0]],"cuoi":[["launch","/lɔntʃ/",0],["attach","/əˈtætʃ/",0]]},"dʒ":{"dau":[["join","/dʒɔɪn/",0],["just","/dʒʌst/",0]],"giua":[["budget","/ˈbʌdʒɪt/",0],["merger","/ˈmɝdʒɚ/",0]],"cuoi":[["range","/reɪndʒ/",0],["challenge","/ˈtʃæləndʒ/",0]]},"k":{"dau":[["contact","/ˈkɑntækt/",0],["crew","/kru/",0]],"giua":[["recommend","/ˌrɛkəˈmɛnd/",0],["location","/loʊˈkeɪʃən/",0]],"cuoi":[["feedback","/ˈfidbæk/",0],["unique","/juˈnik/",0]]},"ɡ":{"dau":[["guarantee","/ˌɡɛrənˈti/",0],["guidance","/ˈɡaɪdəns/",0]],"giua":[["logo","/ˈloʊɡoʊ/",0],["eager","/ˈiɡɚ/",0]],"cuoi":[["colleague","/ˈkɑliɡ/",0],["league","/liɡ/",0]]},"f":{"dau":[["feature","/ˈfitʃɚ/",0],["fee","/fi/",0]],"giua":[["benefit","/ˈbɛnəfɪt/",0],["refund","/rɪˈfʌnd/",0]],"cuoi":[["staff","/stæf/",0],["photograph","/ˈfoʊtəɡræf/",0]]},"v":{"dau":[["venue","/ˈvɛnju/",0],["vacation","/veɪˈkeɪʃən/",0]],"giua":[["deliver","/dɪˈlɪvɚ/",0],["provide","/prəˈvaɪd/",0]],"cuoi":[["receive","/rəˈsiv/",0],["approve","/əˈpruv/",0]]},"θ":{"dau":[["thrilled","/θrɪld/",0],["thorough","/ˈθɝoʊ/",0]],"giua":[["monthly","/ˈmʌnθli/",0],["enthusiasm","/ɪnˈθuziæzəm/",0]],"cuoi":[["depth","/dɛpθ/",0],["booth","/buθ/",0]]},"ð":{"dau":[["though","/ðoʊ/",0],["there","/ðɛr/",0]],"giua":[["although","/ɔlˈðoʊ/",0],["gathering","/ˈɡæðɚɪŋ/",0]],"cuoi":[["smooth","/smuð/",0],["breathe","/brið/",1]]},"s":{"dau":[["submit","/səbˈmɪt/",0],["seek","/sik/",0]],"giua":[["assistance","/əˈsɪstəns/",0],["host","/hoʊst/",0]],"cuoi":[["announce","/əˈnaʊns/",0],["purchase","/ˈpɝtʃəs/",0]]},"z":{"dau":[["zoom","/zum/",0],["zone","/zoʊn/",1]],"giua":[["resident","/ˈrɛzɪdənt/",0],["proposal","/prəˈpoʊzəl/",0]],"cuoi":[["praise","/preɪz/",0],["finalize","/ˈfaɪnəlaɪz/",0]],"note":"/z/ đầu từ có (zone, zero) nhưng bộ từ vựng chỉ có “zoom in”."},"ʃ":{"dau":[["ship","/ʃɪp/",0],["share","/ʃɛr/",0]],"giua":[["ensure","/ɛnˈʃʊr/",0],["location","/loʊˈkeɪʃən/",0]],"cuoi":[["dish","/dɪʃ/",0],["finish","/ˈfɪnɪʃ/",0]]},"ʒ":{"dau":[],"giua":[["vision","/ˈvɪʒən/",0],["measure","/ˈmɛʒɚ/",0]],"cuoi":[["collage","/kəˈlɑʒ/",0],["garage","/ɡəˈrɑʒ/",0]],"note":"/ʒ/ đầu từ chỉ có trong từ mượn tiếng Pháp (genre)."},"m":{"dau":[["memo","/ˈmɛmoʊ/",0],["match","/mætʃ/",0]],"giua":[["recommend","/ˌrɛkəˈmɛnd/",0],["promote","/prəˈmoʊt/",0]],"cuoi":[["welcome","/ˈwɛlkəm/",0],["perform","/pɚˈfɔrm/",0]]},"n":{"dau":[["notify","/ˈnoʊtəfaɪ/",0],["newsletter","/ˈnuzlɛtɚ/",0]],"giua":[["announce","/əˈnaʊns/",0],["venue","/ˈvɛnju/",0]],"cuoi":[["obtain","/əbˈteɪn/",0],["concern","/kənˈsɝn/",0]]},"ŋ":{"dau":[],"giua":[["functional","/ˈfʌŋkʃənəl/",0],["mingle","/ˈmɪŋɡəl/",0]],"cuoi":[["upcoming","/ˈʌpkʌmɪŋ/",0],["among","/əˈmʌŋ/",0]],"note":"/ŋ/ không bao giờ đứng đầu từ tiếng Anh."},"h":{"dau":[["host","/hoʊst/",0],["highlight","/ˈhaɪlaɪt/",0]],"giua":[["warehouse","/ˈwɛrhaʊs/",0],["enhance","/ɛnˈhæns/",0]],"cuoi":[],"note":"/h/ không bao giờ được đọc ở cuối từ."},"l":{"dau":[["launch","/lɔntʃ/",0],["location","/loʊˈkeɪʃən/",0]],"giua":[["deliver","/dɪˈlɪvɚ/",0],["colleague","/ˈkɑliɡ/",0]],"cuoi":[["install","/ɪnˈstɔl/",0],["proposal","/prəˈpoʊzəl/",0]]},"r":{"dau":[["recommend","/ˌrɛkəˈmɛnd/",0],["review","/riˈvju/",0]],"giua":[["crew","/kru/",0],["provide","/prəˈvaɪd/",0]],"cuoi":[["repair","/rɪˈpɛr/",0],["ensure","/ɛnˈʃʊr/",0]]},"w":{"dau":[["warehouse","/ˈwɛrhaʊs/",0],["welcome","/ˈwɛlkəm/",0]],"giua":[["award","/əˈwɔrd/",0],["equipment","/ɪˈkwɪpmənt/",0]],"cuoi":[],"note":"Cuối từ, /w/ chỉ là phần lướt của nguyên âm đôi (-ow = /oʊ/, /aʊ/)."},"j":{"dau":[["unique","/juˈnik/",0],["usual","/ˈjuʒəwəl/",0]],"giua":[["review","/riˈvju/",0],["venue","/ˈvɛnju/",0]],"cuoi":[],"note":"Cuối từ, /j/ chỉ là phần lướt của nguyên âm đôi."}},"fix":[["arise","/ɚˈaɪz/","/əˈraɪz/"],["arrange","/ɚˈeɪndʒ/","/əˈreɪndʒ/"],["arrange an exchange","/ɚˈeɪndʒ æn ɪksˈtʃeɪndʒ/","/əˈreɪndʒ æn ɪksˈtʃeɪndʒ/"],["arrangement","/ɚˈeɪndʒmənt/","/əˈreɪndʒmənt/"],["array","/ɚˈeɪ/","/əˈreɪ/"],["arrive","/ɚˈaɪv/","/əˈraɪv/"],["arrive late","/ɚˈaɪv leɪt/","/əˈraɪv leɪt/"],["art director","/ɑrt dɚˈɛktɚ/","/ɑrt dəˈrɛktɚ/"],["associate director","/əˈsoʊsiət dɚˈɛktɚ/","/əˈsoʊsiət dəˈrɛktɚ/"],["Board of Directors","/bɔrd ʌv dɚˈɛktɚz/","/bɔrd ʌv dəˈrɛktɚz/"],["career path","/kɚˈɪr pæθ/","/kəˈrɪr pæθ/"],["ceramic","/sɚˈæmɪk/","/səˈræmɪk/"],["collaboration","/kəˌlæbɚˈeɪʃən/","/kəˌlæbəˈreɪʃən/"],["consideration","/kənˌsɪdɚˈeɪʃən/","/kənˌsɪdəˈreɪʃən/"],["cooperation","/ˌkwɑpɚˈeɪʃən/","/ˌkwɑpəˈreɪʃən/"],["corporation","/ˌkɔrpɚˈeɪʃən/","/ˌkɔrpəˈreɪʃən/"],["correct","/kɚˈɛkt/","/kəˈrɛkt/"],["decoration","/ˌdɛkɚˈeɪʃən/","/ˌdɛkəˈreɪʃən/"],["direct","/dɚˈɛkt/","/dəˈrɛkt/"],["direct deposit","/dɚˈɛkt dəˈpɑzɪt/","/dəˈrɛkt dəˈpɑzɪt/"],["direct flight","/dɚˈɛkt flaɪt/","/dəˈrɛkt flaɪt/"],["direction","/dɚˈɛkʃən/","/dəˈrɛkʃən/"],["directions","/dɚˈɛkʃənz/","/dəˈrɛkʃənz/"],["directly","/dɚˈɛktli/","/dəˈrɛktli/"],["director","/dɚˈɛktɚ/","/dəˈrɛktɚ/"],["durability","/dɚəˈbɪlɪti/","/ˌdʊrəˈbɪləti/"],["effective","/ˈifɛktɪv/","/ɪˈfɛktɪv/"],["effective immediately","/ɪˈfɛktɪv ˌɪˈmidiətli/","/ɪˈfɛktɪv ɪˈmidiətli/"],["effectively","/ˈifɛktɪvli/","/ɪˈfɛktɪvli/"],["extraterrestrial","/ˌɛkstrətɚˈɛstriəl/","/ˌɛkstrətəˈrɛstriəl/"],["floral arrangement","/ˈflɔrəl ɚˈeɪndʒmənt/","/ˈflɔrəl əˈreɪndʒmənt/"],["garage","/ɡɚˈɑʒ/","/ɡəˈrɑʒ/"],["generation","/ˌdʒɛnɚˈeɪʃən/","/ˌdʒɛnəˈreɪʃən/"],["incorrectly","/ˌɪnkɚˈɛktli/","/ˌɪnkəˈrɛktli/"],["inquiry","/ɪnkwɚri/","/ˈɪnkwɚi/"],["inventory","/ˌɪnvənˈtɔri/","/ˈɪnvənˌtɔri/"],["lead","/lɛd/","/lid/"],["legroom","/ləˈɡrum/","/ˈlɛɡrum/"],["moderation","/ˌmɑdɚˈeɪʃən/","/ˌmɑdəˈreɪʃən/"],["name (v.) someone director","/neɪm ˈsʌmwʌn dɚˈɛktɚ/","/neɪm ˈsʌmwʌn dəˈrɛktɚ/"],["office operations","/ˈɔfɪs ˌɑpɚˈeɪʃənz/","/ˈɔfɪs ˌɑpəˈreɪʃənz/"],["operation","/ˌɑpɚˈeɪʃən/","/ˌɑpəˈreɪʃən/"],["operational","/ˌɑpɚˈeɪʃənəl/","/ˌɑpəˈreɪʃənəl/"],["operational costs","/ˌɑpɚˈeɪʃənəl kɑsts/","/ˌɑpəˈreɪʃənəl kɑsts/"],["operations","/ˌɑpɚˈeɪʃənz/","/ˌɑpəˈreɪʃənz/"],["original (first)","/ɚˈɪdʒənəl/","/əˈrɪdʒənəl/"],["original certification","/ɚˈɪdʒənəl ˌsɝtəfəˈkeɪʃən/","/əˈrɪdʒənəl ˌsɝtəfəˈkeɪʃən/"],["originally","/ɚˈɪdʒənəli/","/əˈrɪdʒənəli/"],["parade","/pɚˈeɪd/","/pəˈreɪd/"],["perimeter","/pɚˈɪmətɚ/","/pəˈrɪmətɚ/"],["preparation","/ˌprɛpɚˈeɪʃən/","/ˌprɛpəˈreɪʃən/"],["proceeds","/prəˈsidz/","/ˈproʊsidz/"],["public relations director","/ˈpʌblɪk riˈleɪʃənz dɚˈɛktɚ/","/ˈpʌblɪk riˈleɪʃənz dəˈrɛktɚ/"],["rearrange","/ˌriɚˈeɪndʒ/","/ˌriəˈreɪndʒ/"],["require","/ˌriˈkwaɪɚ/","/rɪˈkwaɪɚ/"],["restoration","/ˌrɛstɚˈeɪʃən/","/ˌrɛstəˈreɪʃən/"],["roll around","/roʊl ɚˈaʊnd/","/roʊl əˈraʊnd/"],["rough terrain","/rʌf tɚˈeɪn/","/rʌf təˈreɪn/"],["sales director","/seɪlz dɚˈɛktɚ/","/seɪlz dəˈrɛktɚ/"],["snow-removal operation","/snoʊ-rɪˈmuvəl ˌɑpɚˈeɪʃən/","/snoʊ-rɪˈmuvəl ˌɑpəˈreɪʃən/"],["staff directory","/stæf dɚˈɛktɚi/","/stæf dəˈrɛktɚi/"],["surrounding","/sɚˈaʊndɪŋ/","/səˈraʊndɪŋ/"],["surroundings","/sɚˈaʊndɪŋz/","/səˈraʊndɪŋz/"],["tax preparation","/tæks ˌprɛpɚˈeɪʃən/","/tæks ˌprɛpəˈreɪʃən/"],["temporarily","/ˌtɛmpɚˈɛrəli/","/ˌtɛmpəˈrɛrəli/"],["tenant directory","/ˈtɛnənt dɚˈɛktɚi/","/ˈtɛnənt dəˈrɛktɚi/"],["to go around","/tu ɡoʊ ɚˈaʊnd/","/tu ɡoʊ əˈraʊnd/"],["unearthing","/əˈnɝθɪŋ/","/ʌnˈɝθɪŋ/"],["variety","/vɚˈaɪəti/","/vəˈraɪəti/"]]}</script>
-  <script src="ipa-mouth.js?v=2026.10.12-5"></script>
+  <script src="ipa-mouth.js?v=2026.10.12-6"></script>
   <script>
     const WORDS = [{ w: "think", ipa: "/θɪŋk/" }, { w: "share", ipa: "/ʃɛr/" }, { w: "red", ipa: "/rɛd/" }];
-    const TIP = {
-      "θ": "Đặt đầu lưỡi giữa hai hàm răng, thổi hơi nhẹ qua kẽ. Không rung cổ họng. Không đọc thành “t” hay “th” tiếng Việt.",
-      "ɪ": "Miệng hơi mở, môi thả lỏng. Âm “i” ngắn và lỏng hơn “i” tiếng Việt.",
-      "ŋ": "Lưng lưỡi chạm vòm mềm phía sau, hơi thoát ra mũi, giống “ng”.",
-      "k": "Lưng lưỡi chặn ở vòm mềm rồi bật hơi mạnh.",
-      "ʃ": "Mặt lưỡi nâng sát phần sau của lợi trên (lùi sau chỗ của /s/), môi chu tròn, thổi hơi “sh”.",
-      "ɛ": "Mở miệng vừa, môi dẹt, gần “e” tiếng Việt.",
-      "r": "Cong đầu lưỡi lên phía sau nhưng không chạm vòm, môi hơi tròn. Không rung lưỡi.",
-      "d": "Đầu lưỡi chạm lợi ngay sau răng trên rồi bật ra, có rung cổ họng.",
-      p: "Mím môi rồi bật. Đầu từ: bật mạnh luồng hơi (tờ giấy trước miệng phải rung), không thì nghe thành “b”. Sau s và cuối từ hơi yếu hơn.",
-      t: "Đầu lưỡi chạm lợi trên rồi bật mạnh hơi ở đầu từ (không thì nghe thành “đ”). Giữa hai nguyên âm người Mỹ hay đọc lướt gần “đ” nhẹ (water, better).",
-      "ʌ": "Miệng mở vừa, lưỡi để giữa, giống “â/ă” tiếng Việt nhưng dài hơn; không tròn môi.",
-      "ɔ": "Môi hơi tròn, miệng mở rộng hơn “o” tiếng Việt; nhiều người Mỹ đọc gần như /ɑ/.",
-      "æ": "Mở miệng rộng, kéo môi sang hai bên, giữa “e” và “a”. Rộng hơn /ɛ/ (bed).",
-      "ɝ": "Âm “ơ” có cong lưỡi (như /r/), nhấn và kéo dài: bird, work.",
-      "ɚ": "Như /ɝ/ nhưng nhẹ, không nhấn, thường ở cuối từ: teacher, offer.",
-      z: "Như /s/ nhưng rung cổ họng (tiếng “zzz” của ong).",
-      "ʒ": "Như /ʃ/ nhưng rung cổ họng: vision, measure.",
-      "ð": "Như /θ/ (lưỡi giữa hai răng) nhưng rung cổ họng. Không đọc thành “d” hay “đ”.",
-      "tʃ": "Bắt đầu như /t/ rồi bật ra /ʃ/, môi hơi chu. Mạnh hơn “ch” tiếng Việt.",
-      v: "Răng trên chạm môi dưới, thổi hơi và rung cổ họng. Không đọc thành “d” hay “b”.",
-    };
+    const TIP = IPAMouth.TIP;   // gợi ý cách đọc, từ mẫu: dùng chung trong ipa-mouth.js (app cũng dùng)
     const $ = (id) => document.getElementById(id);
     // âm mẫu từng âm IPA: file mp3 Wikimedia tự chuyển từ bản ghi .ogg (chạy được trên iPhone); [thư mục băm, tên file]
     const AUD = { p: "5/51 Voiceless_bilabial_plosive", b: "2/2c Voiced_bilabial_plosive", t: "0/02 Voiceless_alveolar_plosive", d: "0/01 Voiced_alveolar_plosive",
@@ -237,7 +216,7 @@
       st.i = i; const ph = st.phs[i];
       [...$("chips").children].forEach((c, k) => c.setAttribute("aria-pressed", String(k === i)));
       $("tip").textContent = `/${ph}/ · ${TIP[ph] || ""}`;
-      return mouth.to(params(ph), reduced() ? 0 : ms);
+      return mouth.say(ph, reduced() ? 0 : ms);
     }
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     // mức 2: từ ví dụ không phát tiếng từng âm (như âm câm): dừng ở từng khẩu hình ~0,7 giây, rồi đọc cả từ chậm
@@ -268,10 +247,7 @@
     const DI = ["eɪ", "aɪ", "ɔɪ", "aʊ", "oʊ"];
     const CON = ["p", "b", "t", "d", "tʃ", "dʒ", "k", "ɡ", "f", "v", "θ", "ð", "s", "z", "ʃ", "ʒ", "m", "n", "ŋ", "h", "l", "r", "w", "j"];
     const VOICELESS = new Set(["p", "t", "tʃ", "k", "f", "θ", "s", "ʃ", "h"]);
-    const KW = { i: "see", "ɪ": "sit", "ʊ": "book", u: "food", "ɛ": "bed", "ə": "about", "ɚ": "teacher", "ɝ": "bird", "æ": "cat", "ʌ": "cup", "ɑ": "father", "ɔ": "law",
-      "eɪ": "say", "aɪ": "my", "ɔɪ": "boy", "aʊ": "now", "oʊ": "go",
-      p: "pen", b: "bad", t: "tea", d: "do", "tʃ": "chair", "dʒ": "job", k: "key", "ɡ": "get", f: "fan", v: "van", "θ": "think", "ð": "this", s: "sun", z: "zoo", "ʃ": "she", "ʒ": "vision",
-      m: "man", n: "no", "ŋ": "sing", h: "hat", l: "leg", r: "red", w: "we", j: "yes" };
+    const KW = IPAMouth.KW;
     const CATS = [["mono", "Nguyên âm đơn"], ["di", "Nguyên âm đôi"], ["vl", "Phụ âm vô thanh"], ["vd", "Phụ âm hữu thanh"]];
     // ʌ: bản ghi trên Commons là [ʌ] lưỡi lùi sau (nghe như “ơ”), khác ʌ giọng Mỹ (lưỡi giữa) → đọc từ mẫu thay vì phát bản ghi
     const NO_REC = new Set(["ʌ"]);
@@ -312,9 +288,9 @@
       const shape = IPAMouth.PHON[ph], k = kindOf(ph), rec = hasRec(ph);
       const kind = { mono: "nguyên âm đơn", di: "nguyên âm đôi", vl: "phụ âm vô thanh, không rung cổ họng", vd: "phụ âm hữu thanh, rung cổ họng" }[k];
       $("ctip").textContent = `/${ph}/ như trong “${KW[ph]}” · ${kind}` + (rec && (k === "vl" || k === "vd") ? ` · bản ghi đọc kèm a: [${ph}a · a${ph}a]` : "")
-        + (rec ? "" : " · chưa có bản ghi riêng, nghe trong từ mẫu") + (TIP[ph] ? ` · ${TIP[ph]}` : "") + (shape ? "" : " · khẩu hình âm này đang vẽ.");
+        + (rec ? "" : " · chưa có bản ghi riêng, nghe trong từ mẫu") + (TIP[ph] ? ` · ${TIP[ph]}` : "") + (IPAMouth.GLIDE[ph] ? " · khẩu hình lướt từ hình đầu sang hình cuối." : "");
       $("src").href = audPage(ph);
-      mouth.to(shape || IPAMouth.PHON.rest, reduced() ? 0 : 260);
+      mouth.say(ph, reduced() ? 0 : 260);
       if (rec) playPh(ph); else speak(KW[ph], 0.6);
     }
     // ---- Kiểm soát: 41 âm, từ ví dụ đủ 3 vị trí (agent rà soát), tình trạng bản ghi / khẩu hình, danh sách phiên âm nghi sai
@@ -330,7 +306,7 @@
         const row = document.createElement("div"); row.className = "ctrl-row"; row.dataset.k = k;
         const kind = { mono: "Nguyên âm đơn", di: "Nguyên âm đôi", vl: "Vô thanh", vd: "Hữu thanh" }[k];
         let html = `<button type="button" class="cell${shape ? "" : " no-shape"}" data-k="${k}" data-ph="${esc(ph)}" aria-label="Nghe âm ${esc(ph)}"><span>${esc(ph)}</span><small>${esc(KW[ph])}</small></button><div class="min-w-0 space-y-1">`
-          + `<p class="flex flex-wrap items-center gap-1.5 text-xs"><span class="text-muted-foreground">${kind}</span><span class="st" data-ok="${rec ? 1 : 0}">${rec ? "Bản ghi Commons" : "Đọc từ mẫu"}</span><span class="st" data-ok="${shape ? 1 : 0}">${shape ? "Có khẩu hình" : "Khẩu hình đang vẽ"}</span></p>`;
+          + `<p class="flex flex-wrap items-center gap-1.5 text-xs"><span class="text-muted-foreground">${kind}</span><span class="st" data-ok="${rec ? 1 : 0}">${rec ? "Bản ghi Commons" : "Đọc từ mẫu"}</span><span class="st" data-ok="1">${IPAMouth.GLIDE[ph] ? "Khẩu hình lướt" : "Có khẩu hình"}</span></p>`;
         POS.forEach(([pos, lab]) => {
           const L = ex[pos] || []; nEx += L.length;
           html += `<p class="flex flex-wrap items-baseline gap-1.5"><span class="text-muted-foreground w-9 shrink-0 text-xs">${lab}</span>`
@@ -346,7 +322,7 @@
         if (c) { chartPick(c.dataset.ph, c); $("ctrl-tip").textContent = $("ctip").textContent; return; }
         if (x) {
           st.run++; document.querySelectorAll(".ex").forEach((y) => y.setAttribute("aria-pressed", String(y === x)));
-          const ph = x.dataset.ph; mouth.to(IPAMouth.PHON[ph] || IPAMouth.PHON.rest, reduced() ? 0 : 260);
+          const ph = x.dataset.ph; mouth.say(ph, reduced() ? 0 : 260);
           $("ctrl-tip").textContent = `${x.dataset.w} ${x.dataset.ipa} · âm /${ph}/` + (x.dataset.out === "1" ? " · từ ngoài bộ từ vựng" : "");
           speak(x.dataset.w, 0.7);
         }
@@ -369,6 +345,8 @@
     }
     document.querySelectorAll("#views button").forEach((x) => x.addEventListener("click", () => setView(x.dataset.view)));
     $("play").addEventListener("click", play);
+    { const q = new URLSearchParams(location.search), v = q.get("view"), ph = q.get("ph");
+      if (v === "chart" || v === "ctrl") setTimeout(() => { setView(v); if (ph) { const c = document.querySelector(`#view-${v} .cell[data-ph="${CSS.escape(ph)}"]`); if (c) { c.scrollIntoView({ block: "center" }); if (v === "chart") chartPick(ph, c); } } }, 0); }
     $("say").addEventListener("click", () => sayWord(0.95));
     document.addEventListener("keydown", (e) => {
       if ($("view-word").hidden) return;
