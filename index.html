@@ -894,14 +894,14 @@
         <div class="space-y-2">
           <div class="flex items-center justify-between gap-2"><h3 class="text-sm font-medium">1. Meme</h3><span class="text-muted-foreground text-xs" id="mm-clip-count"></span></div>
           <details id="mm-cloud" class="rounded-lg border border-border px-3 py-2">
-            <summary class="cursor-pointer text-sm font-medium">Nguồn cloud (Google Drive) <span class="text-muted-foreground font-normal" id="mm-cloud-state"></span></summary>
+            <summary class="cursor-pointer text-sm font-medium">Nguồn clip: cloud (Google Drive) <span class="text-muted-foreground font-normal" id="mm-cloud-state"></span></summary>
             <div class="mt-3 space-y-3">
               <div role="group" class="field"><label for="mm-api">URL Apps Script meme (đã điền sẵn)</label><input id="mm-api" class="input" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" spellcheck="false" /></div>
-              <div role="group" class="field"><label for="mm-key">Mã khoá (chỉ cần nhập một lần)</label><input id="mm-key" class="input" type="password" autocomplete="off" spellcheck="false" /><p>Lưu theo tên người dùng, thiết bị khác đăng nhập là dùng được. Không dán mã khoá vào nơi công khai.</p></div>
+              <div role="group" class="field"><label for="mm-key">Mã khoá riêng (không bắt buộc)</label><input id="mm-key" class="input" type="password" autocomplete="off" spellcheck="false" placeholder="Để trống: dùng mã mặc định" /><p>Chỉ cần khi dùng một Apps Script meme khác.</p></div>
               <div class="flex flex-wrap gap-2"><button type="button" class="btn" data-size="sm" id="mm-cloud-save">Lưu và kết nối</button><button type="button" class="btn" data-variant="ghost" data-size="sm" id="mm-cloud-off" hidden>Ngắt cloud</button></div>
             </div>
           </details>
-          <p class="text-muted-foreground text-sm" id="mm-load-hint">Chọn thư mục <span class="font-medium">REQ-20261011-cat-meme-clips-keyed-for-web\out</span> (hoặc các file .webm/.mp4). Nạp từ máy thì clip chỉ lưu trong trình duyệt của thiết bị này.</p>
+          <p class="text-muted-foreground text-sm" id="mm-load-hint" hidden>Chọn thư mục <span class="font-medium">REQ-20261011-cat-meme-clips-keyed-for-web\out</span> (hoặc các file .webm/.mp4). Nạp từ máy thì clip chỉ lưu trong trình duyệt của thiết bị này.</p>
           <div class="flex flex-wrap gap-2">
             <label class="btn" data-variant="outline" data-size="sm" for="mm-dir">Chọn thư mục</label>
             <input id="mm-dir" type="file" webkitdirectory multiple class="sr-only" />
@@ -1019,7 +1019,7 @@
     // ================================================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwBiNwckLC-9o_m0X0TBDE-vjazUJMWD4UlIsySwcsFuUjMyBGBo3mfVQGEhWl47CJ7DA/exec";
     const SCHEMA = 1;
-    const APP_VER = "1.8.2";
+    const APP_VER = "1.8.3";
     const VERSION_URL = "version.json";       // cùng repo; build_vocab.py tự đồng bộ số phiên bản vào file này
     const VERSION_CHECK_MS = 10 * 60 * 1000;
     const NEW_BATCH = 20;                       // "Học thêm 20 thẻ mới"
@@ -2450,8 +2450,11 @@
     // MEME LOOP: clip meme lặp + đọc tối đa 5 từ, mỗi lần đọc từ và nghĩa hiện ở vị trí ngẫu nhiên (nghĩa không đọc).
     // Clip nạp từ máy người dùng, lưu IndexedDB trên thiết bị. Clip của bên thứ ba: chỉ dùng nội bộ, không đưa lên repo.
     // ================================================================
-    // URL web app meme (không bí mật: thiếu mã khoá thì chỉ nhận bad_key). Mã khoá KHÔNG để trong repo công khai.
+    // Nguồn meme mặc định: chủ app chọn cho mọi người dùng chạy được ngay, không phải nhập mã khoá (2026-10-11).
+    // Mã khoá vì thế công khai cùng repo; đổi KEY trong Script Properties + sửa MEME_KEY_DEFAULT nếu muốn chặn lại.
     const MEME_API_DEFAULT = "https://script.google.com/macros/s/AKfycbyRWHtknwT6MI1d2VTBqufSeODu_SajQd9dI0uKmH8novdrGGTtSZbgD9OG4Q0_TpGueQ/exec";
+    const MEME_KEY_DEFAULT = "tm7Qx2Lp9Rw4Zk8Vb3Nd";
+    const memeKey = () => state.progress.settings.memeKey || MEME_KEY_DEFAULT;
     const memeApiUrl = () => state.progress.settings.memeApi || MEME_API_DEFAULT;
     const MM_DB = "ets-fc-meme", MM_MAX = 5, MM_GAIN = 0.5;
     // Safari/iPhone thường không phát được WebM có kênh alpha → dùng bản MP4 nền tối
@@ -2469,7 +2472,7 @@
         const db = await mmDb();
         mm.clips = await new Promise((res, rej) => { const q = db.transaction("clips").objectStore("clips").getAll(); q.onsuccess = () => res(q.result.sort((a, b) => a.id.localeCompare(b.id))); q.onerror = () => rej(q.error); });
       } catch (e) { mm.clips = []; }
-      $("gt-meme").textContent = mm.clips.length ? `${ui.fmt(mm.clips.length)} clip` + (mm.clips.some((c) => c.cloud) ? " (cloud)" : " trên thiết bị này") : "Chưa nạp clip";
+      $("gt-meme").textContent = mm.clips.length ? `${ui.fmt(mm.clips.length)} clip meme` : "Clip tải từ cloud khi chơi";
       return mm.clips;
     }
     async function mmSave(files) {
@@ -2499,10 +2502,10 @@
     const mmBlob = (clip) => (MM_FMT === "mp4" ? clip.mp4 || clip.video : clip.video || clip.mp4);
     const mmUrl = (clip, kind) => { const b = kind === "v" ? mmBlob(clip) : clip.poster; const k = clip.id + ":" + kind + ":" + (b && b.size); if (!mm.urls.has(k)) mm.urls.set(k, URL.createObjectURL(b)); return mm.urls.get(k); };
     // ---- Nguồn cloud: Apps Script meme riêng (không đụng script tiến độ), chỉ đọc thư mục Drive
-    const mmCloudOn = () => !!(memeApiUrl() && state.progress.settings.memeKey);
+    const mmCloudOn = () => !!(memeApiUrl() && memeKey());
     async function mmApi(params, timeoutMs) {
       const st = state.progress.settings; const u = new URL(memeApiUrl());
-      u.searchParams.set("key", st.memeKey); for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
+      u.searchParams.set("key", memeKey()); for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
       const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), timeoutMs || FETCH_TIMEOUT_MS);
       try { const r = await fetch(u.toString(), { signal: ctl.signal }); const j = await r.json(); if (!j.ok) throw new Error(j.error || "lỗi"); return j; }
       finally { clearTimeout(tm); }
@@ -2589,8 +2592,8 @@
       await mmLoad(); mm.words = mm.words.filter((id) => BY_ID.has(id));
       $("mm-q").value = ""; mmRenderClips(); mmRenderWords();
       const st = state.progress.settings; $("mm-api").value = memeApiUrl(); $("mm-key").value = st.memeKey || "";
-      $("mm-cloud-off").hidden = !mmCloudOn(); $("mm-cloud").open = !mmCloudOn() && !mm.clips.length;
-      $("mm-cloud-state").textContent = mmCloudOn() ? "· đã cấu hình" : "· chưa cấu hình";
+      $("mm-cloud-off").hidden = true; $("mm-cloud").open = false;
+      $("mm-cloud-state").textContent = mm.clips.length ? `· ${ui.fmt(mm.clips.length)} clip` : "· đang kết nối…";
       $("dlg-meme").showModal();
       if (mmCloudOn()) mmCloudSync(true);
     }
@@ -2680,8 +2683,8 @@
     $("mm-clear").addEventListener("click", mmClear);
     $("mm-cloud-save").addEventListener("click", () => {
       const api = $("mm-api").value.trim(), key = $("mm-key").value.trim();
-      if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(api) || !key) { ui.toast("Thiếu thông tin", "Dán URL web app Apps Script (https://script.google.com/…/exec) và mã khoá.", "warning"); return; }
-      state.progress.settings.memeApi = api === MEME_API_DEFAULT ? "" : api; state.progress.settings.memeKey = key; markDirty();
+      if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(api)) { ui.toast("URL chưa đúng", "Dán URL web app Apps Script (https://script.google.com/…/exec).", "warning"); return; }
+      state.progress.settings.memeApi = api === MEME_API_DEFAULT ? "" : api; state.progress.settings.memeKey = key === MEME_KEY_DEFAULT ? "" : key; markDirty();
       $("mm-cloud-off").hidden = false; mmCloudSync(false);
     });
     $("mm-cloud-off").addEventListener("click", () => {
