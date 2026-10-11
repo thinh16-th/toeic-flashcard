@@ -33,6 +33,7 @@ SUMMARY = SRC / "Boost_Vocab_TOEIC_SUMMARY_ALL.docx"
 HF_XLSX = SRC / "High_Freq_316.xlsx"
 TESTS = [SRC / f"Boost_Vocab_TOEIC_Reading_TEST{i}.docx" for i in range(1, 11)]
 OUT_JSON = HERE / "vocab.json"
+EX_VI = HERE / "vocab_example_vi.json"  # bản dịch tiếng Việt câu ví dụ: {id: {en, vi}}; câu tiếng Anh đổi thì bỏ bản dịch cũ
 ENRICH = HERE / "vocab_enrich.json"   # lớp hiệu đính: loại từ, nghĩa tách theo loại từ, topic, IPA Mỹ (sửa tay được)
 OUT_HTML = HERE / "index.html"
 
@@ -314,6 +315,12 @@ def main(argv):
         e["example"] = pick_example(cands.get(k, []))
 
     n_enrich, enrich_missing = apply_enrich(entries)
+    exvi = json.loads(EX_VI.read_text(encoding="utf-8")) if EX_VI.exists() else {}
+    n_vi = 0
+    for k, e in entries.items():
+        t = exvi.get(e.get("id", k))
+        if e["example"] and t and t.get("en", "").strip() == e["example"].strip():
+            e["example_vi"] = t["vi"]; n_vi += 1
     hf_miss = [w for w in hf if w not in entries]
     out = list(entries.values())
     OUT_JSON.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
@@ -332,6 +339,7 @@ def main(argv):
     if unmatched:
         print("   mẫu không khớp  :", ", ".join(f"{w}" for w, _ in unmatched.most_common(12)))
     print("Theme              :", ", ".join(f"{t}={c}" for t, c in themes.most_common()))
+    print(f"Dịch câu ví dụ     : {n_vi}/{n_ex} câu có bản tiếng Việt (vocab_example_vi.json)")
     print(f"Enrichment         : {n - len(enrich_missing)}/{n} từ có loại từ + nghĩa tách + topic + IPA Mỹ"
           + (f" | CHƯA hiệu đính {len(enrich_missing)}: {enrich_missing[:10]}" if enrich_missing else ""))
     print(f"vocab.json         : {OUT_JSON.stat().st_size/1024:.0f} KB → {OUT_JSON}")
