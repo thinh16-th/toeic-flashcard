@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>TOEIC Vocab Flashcard</title>
-  <meta name="description" content="Flashcard 3.330 từ vựng TOEIC Reading (ETS 2023), ôn theo Leitner 5 hộp, đồng bộ theo username." />
+  <meta name="description" content="Flashcard 3.330 từ vựng TOEIC Reading (ETS 2023), ôn theo hũ điểm nhớ (Leitner), đồng bộ theo username." />
   <!-- PWA-ish: iPhone Add to Home Screen chạy toàn màn hình -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -135,13 +135,6 @@
     .safe-t { padding-top: env(safe-area-inset-top); }
     /* chỉ hiện nút hover-only khi có chuột */
     @media (hover: none) { .hover-only { display: none; } }
-    /* thanh phân bố hộp: dùng token chart, thứ tự cố định */
-    .box-seg-new { background: var(--muted-foreground); opacity: .35; }
-    .box-seg-1 { background: var(--chart-2); }
-    .box-seg-2 { background: var(--chart-4); }
-    .box-seg-3 { background: var(--chart-1); }
-    .box-seg-4 { background: var(--chart-3); }
-    .box-seg-5 { background: var(--status-good); }
     [hidden] { display: none !important; }
     #grid { min-height: 320px; }
     .qz-opt { white-space: normal; height: auto; min-height: 3rem; justify-content: flex-start; text-align: left; padding-block: 0.6rem; }
@@ -238,6 +231,26 @@
     .frag { position: fixed; background: linear-gradient(180deg, var(--brick-hi), var(--brick-lo)); will-change: transform, opacity; }
     .frag.metal { background: linear-gradient(135deg, var(--steel-hi), var(--steel-lo)); }
     .spark { position: fixed; width: 4px; height: 4px; border-radius: 2px; background: var(--spark); }
+    /* custom: hiệu ứng hũ — chép từ Visualize/G01-hu-tu-vung/fx/hu-fx.css (ảnh hũ ở assets/hu/, không có chữ trong SVG) */
+    @keyframes hu-catch { 0%, 100% { transform: scale(1, 1); } 40% { transform: scale(1.06, .94); } 70% { transform: scale(.98, 1.03); } }
+    @keyframes hu-fall { 0% { transform: translateY(0) rotate(0); } 20% { transform: translateY(-6px) rotate(-6deg); } 55% { transform: translateY(10px) rotate(4deg); } 80% { transform: translateY(2px) rotate(-1deg); } 100% { transform: translateY(0) rotate(0); } }
+    @keyframes hu-shine { 0%, 100% { filter: drop-shadow(0 0 0 rgba(245, 197, 66, 0)); } 50% { filter: drop-shadow(0 0 10px rgba(245, 197, 66, .85)); } }
+    @keyframes hu-score-up { 0% { transform: translate(-50%, 6px); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(-50%, -28px); opacity: 0; } }
+    @keyframes hu-score-down { 0% { transform: translate(-50%, -6px); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(-50%, 22px); opacity: 0; } }
+    .hu-jar { transform-origin: 50% 90%; }
+    .hu-jar.is-catch { animation: hu-catch 420ms cubic-bezier(.16, 1, .3, 1); }
+    .hu-jar.is-fall { animation: hu-fall 640ms ease-in-out; }
+    .hu-jar.is-gold { animation: hu-shine 1.8s ease-in-out 2; }
+    .hu-score { position: absolute; left: 50%; top: 0; font-weight: 700; font-size: .875rem; pointer-events: none; white-space: nowrap; }
+    .hu-score.up { color: var(--status-good); animation: hu-score-up 900ms ease-out forwards; }
+    .hu-score.down { color: var(--status-critical); animation: hu-score-down 900ms ease-out forwards; }
+    /* hộp thoại chọn hũ */
+    .pick-jar { display: flex; flex-direction: column; align-items: center; gap: .15rem; padding: .5rem .25rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); color: var(--foreground); text-align: center; touch-action: manipulation; }
+    .pick-jar img, .pick-jar svg { height: 2.5rem; width: auto; }
+    .pick-jar[aria-pressed="true"] { border-color: var(--primary); background: color-mix(in oklab, var(--primary) 9%, var(--card)); box-shadow: 0 0 0 1px var(--primary); }
+    .pick-jar:disabled { opacity: .45; }
+    .jar-cell img { height: auto; width: 100%; max-width: 3.5rem; margin-inline: auto; }
+    #ship-panel, #ship-panel button { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
     .gm-ok { color: var(--status-good); }
     .gm-bad { color: var(--status-critical); }
     mark.fc-hl { background: color-mix(in oklab, var(--primary) 18%, transparent); color: inherit; border-radius: 3px; padding: 0 2px; }
@@ -347,6 +360,7 @@
             </header>
             <footer class="flex flex-wrap justify-center gap-2">
               <button id="btn-extra-new" class="btn" data-variant="outline">Học thêm 20 thẻ mới</button>
+              <button id="btn-pick-more" class="btn" data-variant="ghost">Chọn hũ để ôn thêm</button>
             </footer>
           </section>
         </section>
@@ -409,10 +423,11 @@
             </section>
             <header><h3>Phi thuyền từ vựng</h3><p>Đọc nghĩa ở trên, lái phi thuyền vào thiên thạch mang từ đúng.</p></header>
             <section>
-              <div class="seg" role="radiogroup" aria-label="Kiểu thiên thạch di chuyển">
-                <button type="button" role="radio" data-shipmode="straight">Rơi thẳng</button>
-                <button type="button" role="radio" data-shipmode="wave">Lượn sóng</button>
-                <button type="button" role="radio" data-shipmode="shuffle">Đổi làn</button>
+              <div class="seg" role="radiogroup" aria-label="Tốc độ thiên thạch">
+                <button type="button" role="radio" data-shipspeed="slow">Chậm</button>
+                <button type="button" role="radio" data-shipspeed="normal">Vừa</button>
+                <button type="button" role="radio" data-shipspeed="fast">Nhanh</button>
+                <button type="button" role="radio" data-shipspeed="turbo">Siêu tốc</button>
               </div>
             </section>
             <footer class="flex items-center justify-between gap-2">
@@ -426,7 +441,19 @@
       <section class="grid grid-cols-3 gap-2 sm:gap-4">
         <div class="card" data-size="sm"><header><p class="text-muted-foreground text-sm">Đến hạn hôm nay</p><h3 class="text-2xl font-semibold" data-num id="kpi-due">0</h3></header></div>
         <div class="card" data-size="sm"><header><p class="text-muted-foreground text-sm">Mới còn lại hôm nay</p><h3 class="text-2xl font-semibold" data-num id="kpi-new">0</h3></header></div>
-        <div class="card" data-size="sm"><header><p class="text-muted-foreground text-sm">Đã thuộc (hộp 4, 5)</p><h3 class="text-2xl font-semibold" data-num id="kpi-known">0</h3></header></div>
+        <div class="card" data-size="sm"><header><p class="text-muted-foreground text-sm">Đã xong (Hũ vàng)</p><h3 class="text-2xl font-semibold" data-num id="kpi-known">0</h3></header></div>
+      </section>
+
+      <section class="card">
+        <header><h3>Hũ từ vựng</h3><p>Mỗi từ có điểm nhớ từ 0 đến 100. Ôn đúng hạn được cộng nhiều nhất, ôn sớm cộng ít, trễ hạn cộng một nửa; quên bị trừ 15 và từ rơi về hũ ứng với điểm. Đủ 100 điểm là xong, từ vào Hũ vàng.</p></header>
+        <section class="space-y-4">
+          <div id="jar-row" class="grid grid-cols-7 gap-1 sm:gap-3" role="list" aria-label="Số từ trong mỗi hũ của bộ thẻ đang chọn"></div>
+          <ul class="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+            <li><span data-num id="mem-avg">0</span> <span class="text-muted-foreground">điểm nhớ trung bình</span></li>
+            <li><span data-num id="mem-ontime">0%</span> <span class="text-muted-foreground">lượt ôn đúng hạn (30 ngày)</span></li>
+            <li><span data-num id="mem-done">0</span> <span class="text-muted-foreground">từ đã xong</span></li>
+          </ul>
+        </section>
       </section>
 
       <section class="card">
@@ -441,14 +468,6 @@
         </section>
       </section>
 
-      <section class="card">
-        <header><h3>Phân bố hộp</h3><p id="dist-desc">Cách ôn Leitner: thẻ mới bắt đầu ở hộp 1. Mỗi lần "Thuộc" thẻ lên một hộp và được ôn thưa dần (hộp 2 sau 1 ngày, hộp 3 sau 3, hộp 4 sau 7, hộp 5 sau 14 rồi 30 ngày). "Quên" thì thẻ về hộp 1. Thẻ ở hộp 4 và 5 tính là đã thuộc.</p></header>
-        <section class="space-y-3">
-          <div id="dist-bar" class="flex h-3 w-full overflow-hidden rounded-full bg-muted" role="img" aria-label="Phân bố thẻ theo hộp"></div>
-          <ul id="dist-legend" class="flex flex-wrap gap-x-4 gap-y-1 text-sm"></ul>
-        </section>
-      </section>
-
     </main>
 
     <!-- ===================== BROWSE (L3 tra cứu) ===================== -->
@@ -460,10 +479,10 @@
         <section class="grid gap-3 md:grid-cols-4">
           <div class="input-group md:col-span-2"><input id="browse-q" placeholder="Tìm từ, nghĩa, synonym…" aria-label="Tìm kiếm" /></div>
           <select id="browse-deck" class="select" aria-label="Bộ thẻ"></select>
-          <select id="browse-box" class="select" aria-label="Hộp">
-            <option value="">Mọi hộp</option>
+          <select id="browse-box" class="select" aria-label="Hũ">
+            <option value="">Mọi hũ</option>
             <option value="new">Chưa học</option>
-            <option value="1">Hộp 1</option><option value="2">Hộp 2</option><option value="3">Hộp 3</option><option value="4">Hộp 4</option><option value="5">Hộp 5</option>
+            <option value="1">Hũ 1</option><option value="2">Hũ 2</option><option value="3">Hũ 3</option><option value="4">Hũ 4</option><option value="5">Hũ 5</option><option value="6">Hũ vàng</option>
             <option value="due">Đến hạn hôm nay</option>
           </select>
         </section>
@@ -471,7 +490,7 @@
       <section>
         <div id="grid"></div>
         <section id="browse-empty" class="empty mt-4" hidden>
-          <header><h3>Không có từ nào khớp</h3><p>Thử từ khoá khác, hoặc bỏ bộ lọc hộp.</p></header>
+          <header><h3>Không có từ nào khớp</h3><p>Thử từ khoá khác, hoặc bỏ bộ lọc hũ.</p></header>
           <footer><button class="btn" data-variant="outline" id="browse-clear">Xoá bộ lọc</button></footer>
         </section>
       </section>
@@ -539,7 +558,7 @@
       </div>
 
       <div class="card">
-        <header><h3>Xoá tiến độ</h3><p>Xoá toàn bộ hộp và lịch ôn của người dùng này, cả trên thiết bị lẫn server. Không khôi phục được.</p></header>
+        <header><h3>Xoá tiến độ</h3><p>Xoá toàn bộ hũ, điểm nhớ và lịch ôn của người dùng này, cả trên thiết bị lẫn server. Không khôi phục được.</p></header>
         <section>
           <button class="btn" data-variant="destructive" onclick="document.getElementById('dlg-reset').showModal()">Xoá tiến độ…</button>
         </section>
@@ -577,7 +596,12 @@
         <p class="truncate text-sm font-medium" id="study-deck"></p>
         <p class="text-muted-foreground text-xs" id="study-counter"></p>
       </div>
-      <button class="btn" data-variant="ghost" data-size="sm" id="study-known" title="Từ này đã biết rồi: đưa thẳng lên hộp 5, ôn lại sau 30 ngày" hidden>Đã biết</button>
+      <div class="relative flex shrink-0 items-center gap-1.5" id="study-jar-wrap">
+        <img id="study-jar" class="hu-jar h-10 w-auto" src="assets/hu/hu_moi.svg" alt="" width="28" height="40" />
+        <span class="text-muted-foreground hidden text-xs leading-4 sm:inline" id="study-jar-label"></span>
+        <span class="sr-only" id="study-jar-live" aria-live="polite"></span>
+      </div>
+      <button class="btn" data-variant="ghost" data-size="sm" id="study-known" title="Từ này đã biết rồi: đưa vào Hũ 5 (75 điểm), ôn lại sau 30 ngày" hidden>Đã biết</button>
       <button class="btn" data-variant="ghost" data-size="icon" aria-label="Hoàn tác lần chấm trước" id="study-undo" disabled>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
       </button>
@@ -653,7 +677,7 @@
       </div>
       <div class="relative mx-3 mt-2 flex-1 overflow-hidden rounded-lg min-h-0" id="ship-stage">
         <canvas id="ship-canvas" class="absolute inset-0 h-full w-full" aria-label="Màn chơi phi thuyền: 3 làn thiên thạch, mỗi thiên thạch mang một từ"></canvas>
-        <div class="ship-hud absolute top-2 left-2 flex items-center gap-2 text-sm">
+        <div class="ship-hud hud absolute top-2 left-2 flex items-center gap-2 rounded-full px-2 py-0.5 text-sm">
           <span id="ship-lives" class="flex gap-0.5" aria-label="Số mạng"></span>
           <span data-num><span id="ship-score">0</span> điểm</span>
         </div>
@@ -763,22 +787,44 @@
         <p id="dlg-card-full" class="text-muted-foreground text-sm"></p>
         <p id="dlg-card-example" class="text-muted-foreground italic leading-6"></p>
         <div id="dlg-card-chips" class="flex flex-wrap gap-1.5"></div>
+        <div id="dlg-card-mem" class="space-y-2"></div>
         <div role="group" class="field">
-          <label for="dlg-card-box">Đặt vào hộp</label>
+          <label for="dlg-card-box">Đặt vào hũ</label>
           <select id="dlg-card-box" class="select">
-            <option value="new">Chưa học (reset)</option>
-            <option value="1">Hộp 1, ôn lại hôm nay</option>
-            <option value="2">Hộp 2, ôn sau 1 ngày</option>
-            <option value="3">Hộp 3, ôn sau 3 ngày</option>
-            <option value="4">Hộp 4, ôn sau 7 ngày</option>
-            <option value="5">Hộp 5, ôn sau 14 ngày</option>
+            <option value="new">Chưa học (xoá điểm)</option>
+            <option value="1">Hũ 1 (0 điểm), ôn sau 1 ngày</option>
+            <option value="2">Hũ 2 (5 điểm), ôn sau 1 ngày</option>
+            <option value="3">Hũ 3 (15 điểm), ôn sau 3 ngày</option>
+            <option value="4">Hũ 4 (30 điểm), ôn sau 7 ngày</option>
+            <option value="5">Hũ 5 (50 điểm), ôn sau 14 ngày</option>
+            <option value="6">Hũ vàng (100 điểm), đã xong</option>
           </select>
-          <p>Dùng khi đã biết từ này, muốn bỏ qua các hộp đầu.</p>
+          <p>Điểm nhớ được đặt bằng mức thấp nhất của hũ. Dùng khi đã biết từ này.</p>
         </div>
       </section>
       <footer>
         <button class="btn" data-variant="outline" onclick="this.closest('dialog').close()">Đóng</button>
-        <button class="btn" id="dlg-card-save">Lưu hộp</button>
+        <button class="btn" id="dlg-card-save">Lưu hũ</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <dialog id="dlg-pick" class="dialog" aria-labelledby="dlg-pick-title">
+    <div>
+      <header><h2 id="dlg-pick-title">Chọn hũ để học</h2><p id="dlg-pick-desc"></p></header>
+      <section class="space-y-4">
+        <div id="pick-grid" class="grid grid-cols-4 gap-2" role="group" aria-label="Chọn hũ, có thể chọn nhiều"></div>
+        <div role="group" class="field">
+          <label for="pick-size">Số từ trong phiên</label>
+          <select id="pick-size" class="select">
+            <option value="0">Tất cả từ đã chọn</option><option value="10">10 từ</option><option value="20">20 từ</option><option value="30">30 từ</option>
+          </select>
+        </div>
+        <p id="pick-sum" class="text-muted-foreground text-sm" aria-live="polite"></p>
+      </section>
+      <footer>
+        <button class="btn" data-variant="outline" onclick="this.closest('dialog').close()">Huỷ</button>
+        <button class="btn" id="pick-go">Bắt đầu</button>
       </footer>
     </div>
   </dialog>
@@ -786,7 +832,7 @@
   <dialog id="dlg-reset" class="dialog" aria-labelledby="dlg-reset-title">
     <div>
       <header><h2 id="dlg-reset-title">Xoá toàn bộ tiến độ?</h2><p id="dlg-reset-desc"></p></header>
-      <section><p class="text-sm">Mọi hộp, lịch ôn và chuỗi ngày của người dùng này sẽ bị xoá trên thiết bị và trên server. Nếu muốn giữ, tải tiến độ về máy trước.</p></section>
+      <section><p class="text-sm">Mọi hũ, điểm nhớ, lịch ôn và chuỗi ngày của người dùng này sẽ bị xoá trên thiết bị và trên server. Nếu muốn giữ, tải tiến độ về máy trước.</p></section>
       <footer>
         <button class="btn" data-variant="outline" onclick="this.closest('dialog').close()">Giữ lại</button>
         <button class="btn" data-variant="destructive" id="btn-reset-confirm">Xoá tiến độ</button>
@@ -861,7 +907,7 @@
     // ================================================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwBiNwckLC-9o_m0X0TBDE-vjazUJMWD4UlIsySwcsFuUjMyBGBo3mfVQGEhWl47CJ7DA/exec";
     const SCHEMA = 1;
-    const APP_VER = "1.5.0";
+    const APP_VER = "1.6.0";
     const VERSION_URL = "version.json";       // cùng repo; build_vocab.py tự đồng bộ số phiên bản vào file này
     const VERSION_CHECK_MS = 10 * 60 * 1000;
     const NEW_BATCH = 20;                       // "Học thêm 20 thẻ mới"
@@ -871,9 +917,78 @@
     const RETRY_FAST_MS = 20000;
     const USER_RE = /^[a-z0-9_.-]{2,32}$/;
     const LS_PREFIX = "ets-fc:";
-    // Leitner: hộp → số ngày tới lần ôn sau khi "Thuộc" (hộp 5 lặp lại: 30 ngày)
-    const INTERVAL = { 1: 0, 2: 1, 3: 3, 4: 7, 5: 14 };
-    const INTERVAL_MAX = 30;
+    // <MEM-CORE> lõi điểm nhớ: hàm thuần, không đụng DOM (test: docs/test/mem_core.test.js). Spec: docs/SPEC-v1.6-hu-diem-nho.md
+    // Hũ = dải điểm: 1 [0,5) · 2 [5,15) · 3 [15,30) · 4 [30,50) · 5 [50,100) · 6 = Hũ vàng (100, khoá)
+    const JAR_MIN = [0, 0, 5, 15, 30, 50, 100];
+    const JAR_GAIN = { 1: 5, 2: 10, 3: 15, 4: 20, 5: 25 };
+    const MODE_W = { card: 1, reverse: 1, cloze: 1, dictation: 1, quiz: 0.7, ship: 0.5 };
+    const PENALTY = 15, EARLY_GAIN = 2, LOG_MAX = 30, GOLD = 6, GOLD_DUE = "9999-12-31";
+    const OLD_BOX_SCORE = { 1: 0, 2: 5, 3: 15, 4: 30, 5: 50 };
+    const OLD_INTERVAL = { 1: 0, 2: 1, 3: 3, 4: 7, 5: 14 };
+    const jarOf = (score) => (score >= 100 ? 6 : score >= 50 ? 5 : score >= 30 ? 4 : score >= 15 ? 3 : score >= 5 ? 2 : 1);
+    const jarInterval = (jar, score) => (jar <= 2 ? 1 : jar === 3 ? 3 : jar === 4 ? 7 : jar === 5 ? (score >= 75 ? 30 : 14) : 0);
+    const dDiff = (a, b) => Math.round((Date.parse(a + "T00:00:00Z") - Date.parse(b + "T00:00:00Z")) / 864e5);
+    const dAdd = (d, n) => new Date(Date.parse(d + "T00:00:00Z") + n * 864e5).toISOString().slice(0, 10);
+    /** n = lần đầu · e = sớm · o = đúng hạn (trễ ≤ max(1, chu kỳ/2) ngày) · l = trễ */
+    function timing(card, today) {
+      if (!card) return "n";
+      if (today < card.due) return "e";
+      return dDiff(today, card.due) <= Math.max(1, Math.floor((card.iv || 0) / 2)) ? "o" : "l";
+    }
+    const logLine = (today, delta, kind, mode, from, to) => `${today}|${delta > 0 ? "+" : ""}${delta}|${kind}|${mode}|${from}|${to}`;
+    function migrateCard(c, today) {
+      if (typeof c.score === "number") return c;
+      const box = Math.min(5, Math.max(1, c.box || 1));
+      c.score = OLD_BOX_SCORE[box]; c.box = jarOf(c.score); c.iv = OLD_INTERVAL[box];
+      c.last = c.last || ""; c.ok = c.ok || 0; c.log = [logLine(today, c.score, "c", "-", box, c.box)];
+      return c;
+    }
+    /** một lượt chấm → thẻ mới + sự kiện; mỗi từ chỉ tính điểm 1 lần/ngày, Hũ vàng khoá */
+    function applyReview(prev, known, mode, today) {
+      const c = prev ? JSON.parse(JSON.stringify(prev)) : { box: 1, score: 0, due: today, iv: 0, last: "", seen: 0, lapses: 0, ok: 0, log: [] };
+      const from = prev ? c.box : 0; const w = MODE_W[mode] || 1;
+      c.seen = (c.seen || 0) + 1;
+      let kind, delta = 0;
+      if (prev && (c.box === GOLD || c.last === today)) kind = "p";
+      else if (!known) { kind = "f"; delta = -Math.max(1, Math.round(PENALTY * w)); c.lapses = (c.lapses || 0) + 1; }
+      else {
+        kind = timing(prev, today); const base = JAR_GAIN[c.box] || JAR_GAIN[1];
+        delta = Math.max(1, Math.round((kind === "e" ? EARLY_GAIN : kind === "l" ? base / 2 : base) * w));
+        if (kind === "o") c.ok = (c.ok || 0) + 1;
+      }
+      if (kind !== "p") {
+        const before = c.score || 0; c.score = Math.max(0, Math.min(100, before + delta)); c.box = jarOf(c.score); delta = c.score - before;
+        if (kind === "f") { c.iv = 0; c.due = today; }
+        else { c.iv = jarInterval(c.box, c.score); c.due = c.box === GOLD ? GOLD_DUE : dAdd(today, c.iv); }
+        c.last = today;
+      }
+      c.log = [...(c.log || []), logLine(today, delta, kind, mode, from, c.box)].slice(-LOG_MAX);
+      return { card: c, ev: { delta, kind, from, to: c.box, score: c.score } };
+    }
+    function knownCard(mode, today) {
+      return { box: 5, score: 75, iv: 30, due: dAdd(today, 30), last: today, seen: 1, lapses: 0, ok: 0, log: [logLine(today, 75, "k", mode, 0, 5)] };
+    }
+    function manualCard(prev, jar, today) {
+      const c = prev ? JSON.parse(JSON.stringify(prev)) : { seen: 0, lapses: 0, ok: 0, log: [] };
+      const from = prev ? prev.box : 0; const before = prev ? prev.score || 0 : 0;
+      c.score = JAR_MIN[jar]; c.box = jarOf(c.score); c.iv = jarInterval(c.box, c.score);
+      c.due = c.box === GOLD ? GOLD_DUE : dAdd(today, c.iv); c.last = c.last || "";
+      c.log = [...(c.log || []), logLine(today, c.score - before, "m", "-", from, c.box)].slice(-LOG_MAX);
+      return c;
+    }
+    // </MEM-CORE>
+    const jarName = (b) => (b === GOLD ? "Hũ vàng" : b ? `Hũ ${b}` : "Mới");
+    const jarSrc = (b) => `assets/hu/${b === GOLD ? "hu_vang" : b ? "hu_" + b : "hu_moi"}.svg`;
+    const JAR_RANGE = { 0: "chưa học", 1: "0-4", 2: "5-14", 3: "15-29", 4: "30-49", 5: "50-99", 6: "100" };
+    const KIND_LABEL = { n: "Lần đầu", o: "Đúng hạn", e: "Ôn sớm", l: "Trễ hạn", f: "Quên", p: "Luyện thêm", k: "Đã biết", m: "Đặt tay", c: "Quy đổi" };
+    const MODE_LABEL = { card: "Thẻ lật", reverse: "Thẻ ngược", quiz: "Trắc nghiệm", cloze: "Điền câu", dictation: "Nghe và gõ", ship: "Phi thuyền", "-": "" };
+    /** câu ngắn cho người học: "+10 điểm nhớ (đúng hạn), Hũ 2 → Hũ 3" */
+    function evText(ev) {
+      if (ev.kind === "p") return ev.to === GOLD ? "Từ đã ở Hũ vàng, lượt này không đổi điểm." : "Hôm nay từ này đã được tính điểm, lượt này là luyện thêm.";
+      if (ev.delta === 0) return `Điểm nhớ giữ ở ${ev.score} (${KIND_LABEL[ev.kind].toLowerCase()}), ${jarName(ev.to)}.`;
+      const move = ev.from !== ev.to ? `, ${ev.from ? jarName(ev.from) : "Mới"} → ${jarName(ev.to)}` : `, vẫn ở ${jarName(ev.to)}`;
+      return `${ev.delta > 0 ? "+" : "−"}${Math.abs(ev.delta)} điểm nhớ (${KIND_LABEL[ev.kind].toLowerCase()})${move}.`;
+    }
     const THEMES = ["Office & Admin", "Business & Management", "Finance & Accounting", "Marketing & Sales", "Retail & Customer Service",
       "Travel & Transport", "Hospitality & Dining", "Technology & IT", "Real Estate & Construction", "Manufacturing & Logistics",
       "HR & Recruitment", "Health & Medicine", "Events & Media", "General"];
@@ -897,7 +1012,7 @@
 
     const DECKS = [];
     DECKS.push({ id: "hf", name: "High-frequency 316", group: "Gợi ý", filter: (e) => e.hf, desc: "316 từ xuất hiện trong 3 đề trở lên" });
-    DECKS.push({ id: "hard", name: "Thẻ khó", group: "Gợi ý", filter: (e) => { const s = cardState(e.id); return s && s.box === 1 && s.lapses >= 3; }, desc: "Thẻ đang ở hộp 1 và đã quên từ 3 lần" });
+    DECKS.push({ id: "hard", name: "Thẻ khó", group: "Gợi ý", filter: (e) => { const s = cardState(e.id); return s && s.box === 1 && s.lapses >= 3; }, desc: "Từ đang ở Hũ 1 và đã quên từ 3 lần" });
     for (let i = 1; i <= 10; i++) DECKS.push({ id: "test-" + i, name: "Test " + i, group: "Theo đề", filter: (e) => e.tests.includes(i), desc: "Từ trong đề Reading Test " + i });
     for (const t of THEMES) DECKS.push({ id: "theme-" + t, name: t, group: "Theo chủ đề", filter: (e) => e.theme === t, desc: "Chủ đề " + t });
     DECKS.push({ id: "all", name: "Tất cả 3.330 từ (A đến Z)", group: "Tất cả", filter: () => true, desc: "Toàn bộ từ unique của 10 đề" });
@@ -914,19 +1029,23 @@
       session: null, table: null, voices: [],
     };
 
-    const SETTINGS_DEFAULT = { newPerDay: 20, voice: "", autoSpeak: true, speakFront: false, speakExample: false, rate: 0.95, mode: "card", shipMode: "straight" };
+    const SETTINGS_DEFAULT = { newPerDay: 20, voice: "", autoSpeak: true, speakFront: false, speakExample: false, rate: 0.95, mode: "card", shipSpeed: "normal" };
     const HISTORY_DAYS = 90;
     /** bù trường thiếu cho tiến độ cũ (schema cũ hơn) */
     function normalizeProgress(p) {
-      p.settings = Object.assign({}, SETTINGS_DEFAULT, p.settings || {});
+      p.settings = Object.assign({}, SETTINGS_DEFAULT, p.settings || {}); delete p.settings.shipMode;
+      if (!SHIP_SPEED[p.settings.shipSpeed]) p.settings.shipSpeed = "normal";
       if (!p.history || typeof p.history !== "object") p.history = {};
       if (!p.cards) p.cards = {};
+      migrateAll(p);
       return p;
     }
-    function logHistory(known, isNew) {
+    function migrateAll(p) { const t = todayStr(); for (const k of Object.keys(p.cards || {})) migrateCard(p.cards[k], t); return p; }
+    function logHistory(known, isNew, kind) {
       const p = state.progress; const t = todayStr();
       const h = p.history[t] || { r: 0, k: 0, n: 0 };
       h.r++; if (known) h.k++; if (isNew) h.n++;
+      if (kind === "o" || kind === "l") { h.d = (h.d || 0) + 1; if (kind === "o") h.o = (h.o || 0) + 1; }
       p.history[t] = h;
       const cutoff = addDays(t, -HISTORY_DAYS);
       for (const d of Object.keys(p.history)) if (d < cutoff) delete p.history[d];
@@ -980,10 +1099,11 @@
       const days = new Set([...Object.keys(a.history || {}), ...Object.keys(b.history || {})]);
       for (const d of days) {
         const ha = (a.history || {})[d] || { r: 0, k: 0, n: 0 }, hb = (b.history || {})[d] || { r: 0, k: 0, n: 0 };
-        out.history[d] = { r: Math.max(ha.r || 0, hb.r || 0), k: Math.max(ha.k || 0, hb.k || 0), n: Math.max(ha.n || 0, hb.n || 0) };
+        out.history[d] = { r: Math.max(ha.r || 0, hb.r || 0), k: Math.max(ha.k || 0, hb.k || 0), n: Math.max(ha.n || 0, hb.n || 0), d: Math.max(ha.d || 0, hb.d || 0), o: Math.max(ha.o || 0, hb.o || 0) };
       }
       out.updated = (a.updated || "") >= (b.updated || "") ? a.updated : b.updated;
       out.schema = SCHEMA;
+      migrateAll(out);
       return out;
     }
     const sameProgress = (a, b) => JSON.stringify(a) === JSON.stringify(b);
@@ -1182,18 +1302,18 @@
     // ================================================================
     function deckStats(deckId, mode) {
       const cards = deckCards(deckId).filter(modeFilter(mode)); const t = todayStr();
-      const dist = { new: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-      let due = 0, known = 0, fresh = 0;
+      const dist = { new: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+      let due = 0, known = 0, fresh = 0, scoreSum = 0, learned = 0;
       for (const c of cards) {
         const s = cardState(c.id);
         if (!s) { dist.new++; fresh++; continue; }
-        dist[s.box]++;
-        if (s.due <= t) due++;
-        if (s.box >= 4) known++;
+        dist[s.box] = (dist[s.box] || 0) + 1; learned++; scoreSum += s.score || 0;
+        if (s.box !== GOLD && s.due <= t) due++;
+        if (s.box === GOLD) known++;
       }
       const p = state.progress; ensureDaily();
       const newLeft = Math.min(fresh, Math.max(0, (p.settings.newPerDay || 0) - p.daily.new));
-      return { total: cards.length, due, known, fresh, newLeft, dist };
+      return { total: cards.length, due, known, fresh, newLeft, dist, avg: learned ? Math.round(scoreSum / learned) : 0 };
     }
 
     function fillDeckSelect(sel) {
@@ -1219,16 +1339,18 @@
       $("kpi-due").textContent = ui.fmt(sm.due);
       $("kpi-new").textContent = ui.fmt(sm.newLeft);
       $("kpi-known").textContent = ui.fmt(st.known);
-      // phân bố hộp
-      const bar = $("dist-bar"), legend = $("dist-legend"); bar.innerHTML = ""; legend.innerHTML = "";
-      const segs = [["new", "Chưa học"], [1, "Hộp 1"], [2, "Hộp 2"], [3, "Hộp 3"], [4, "Hộp 4"], [5, "Hộp 5"]];
-      for (const [k, label] of segs) {
-        const n = st.dist[k]; const pct = st.total ? (n / st.total) * 100 : 0;
-        if (n) { const s = document.createElement("div"); s.className = "box-seg-" + k; s.style.width = pct + "%"; s.title = `${label}: ${n}`; bar.appendChild(s); }
-        const li = document.createElement("li"); li.className = "flex items-center gap-1.5";
-        li.innerHTML = `<span class="inline-block h-2.5 w-2.5 rounded-sm box-seg-${k}"></span><span class="text-muted-foreground">${label}</span><span data-num>${ui.fmt(n)}</span>`;
-        legend.appendChild(li);
+      // hàng 7 hũ (đồ hoạ Visualize G01) + chỉ số điểm nhớ
+      const row = $("jar-row"); row.innerHTML = "";
+      for (const k of ["new", 1, 2, 3, 4, 5, 6]) {
+        const b = k === "new" ? 0 : k; const n = st.dist[k] || 0;
+        const cell = document.createElement("div"); cell.className = "jar-cell min-w-0 text-center"; cell.setAttribute("role", "listitem");
+        cell.innerHTML = `<img src="${jarSrc(b)}" alt="" width="56" height="80" class="hu-jar"><p class="truncate text-xs">${b === GOLD ? "Vàng" : jarName(b)}</p><p class="text-sm font-medium" data-num>${ui.fmt(n)}</p><p class="text-muted-foreground truncate text-xs">${b ? JAR_RANGE[b] : "-"}</p>`;
+        cell.title = `${jarName(b)}: ${n} từ` + (b ? `, ${JAR_RANGE[b]} điểm` : "");
+        row.appendChild(cell);
       }
+      $("mem-avg").textContent = ui.fmt(st.avg); $("mem-done").textContent = ui.fmt(st.dist[6] || 0);
+      { const t0 = todayStr(); let d = 0, o = 0; for (let i = 0; i < 30; i++) { const h = state.progress.history[addDays(t0, -i)]; if (h) { d += h.d || 0; o += h.o || 0; } }
+        $("mem-ontime").textContent = d ? Math.round((o / d) * 100) + "%" : "chưa có"; }
       // nút học
       const btn = $("btn-study"), empty = $("home-empty");
       const n = sm.due + sm.newLeft;
@@ -1264,20 +1386,23 @@
       $("hist-rate").textContent = total ? Math.round((known / total) * 100) + "%" : "0%";
       $("hist-days").textContent = ui.fmt(days);
     }
-    $("btn-study").addEventListener("click", () => startSession(state.deck, false));
+    $("btn-study").addEventListener("click", () => openPicker(state.progress.settings.mode));
+    $("btn-pick-more").addEventListener("click", () => openPicker(state.progress.settings.mode));
     $("btn-extra-new").addEventListener("click", () => startSession(state.deck, true));
 
     // ================================================================
     // STUDY
     // ================================================================
-    function startSession(deckId, extraNew, modeOverride) {
+    function startSession(deckId, extraNew, modeOverride, pickedQueue) {
       ensureDaily();
       const curMode = modeOverride || state.progress.settings.mode || "card";
       if (curMode === "dictation" && !("speechSynthesis" in window)) { ui.toast("Không chơi được Nghe và gõ", "Trình duyệt này không đọc được văn bản. Thử Safari hoặc Chrome.", "warning"); return; }
       const cards = deckCards(deckId).filter(modeFilter(curMode)); const t = todayStr(); const p = state.progress;
       let queue = [];
-      if (!extraNew) {
+      if (pickedQueue) queue = pickedQueue.slice();
+      else if (!extraNew) {
         const due = cards.filter((c) => { const s = cardState(c.id); return s && s.due <= t; })
+          .filter((c) => cardState(c.id).box !== GOLD)
           .sort((a, b) => { const sa = cardState(a.id), sb = cardState(b.id); return sa.due < sb.due ? -1 : sa.due > sb.due ? 1 : sa.box - sb.box; });
         const allow = Math.max(0, (p.settings.newPerDay || 0) - p.daily.new);
         const fresh = cards.filter((c) => !cardState(c.id)).sort(byPriority).slice(0, allow);
@@ -1305,7 +1430,76 @@
 
     function currentId() { const s = state.session; return s ? s.queue[s.idx] : null; }
 
-    function boxLabel(s) { return s ? `Hộp ${s.box}` : "Thẻ mới"; }
+    function boxLabel(s) { return s ? `${jarName(s.box)} · ${ui.fmt(s.score || 0)} điểm` : "Thẻ mới"; }
+
+    // ---- Hộp thoại chọn hũ: chọn nhóm từ, xáo, mỗi từ chỉ một lần trong phiên
+    const ICON_CLOCK = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+    const PICK_MODE_NAME = { card: "Thẻ lật", reverse: "Thẻ lật ngược", quiz: "Trắc nghiệm", cloze: "Điền câu ETS", dictation: "Nghe và gõ", ship: "Phi thuyền từ vựng" };
+    const pick = { mode: "card", groups: {}, sel: new Set() };
+    function pickGroups(mode) {
+      const cards = deckCards(state.deck).filter(modeFilter(mode)); const t = todayStr(); const p = state.progress; ensureDaily();
+      const quota = Math.max(0, (p.settings.newPerDay || 0) - p.daily.new);
+      const fresh = cards.filter((c) => !cardState(c.id)).sort(byPriority);
+      const g = { due: [], new: fresh.slice(0, quota > 0 ? quota : NEW_BATCH).map((c) => c.id), 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+      for (const c of cards) { const s = cardState(c.id); if (!s) continue; g[s.box].push(c.id); if (s.box !== GOLD && s.due <= t) g.due.push(c.id); }
+      g.newExtra = quota === 0;
+      return g;
+    }
+    function pickTiles() {
+      const g = pick.groups; const grid = $("pick-grid"); grid.innerHTML = "";
+      const tiles = [["due", "Đến hạn", null], ["new", g.newExtra ? "Mới (thêm)" : "Mới", 0], ["1", "Hũ 1", 1], ["2", "Hũ 2", 2], ["3", "Hũ 3", 3], ["4", "Hũ 4", 4], ["5", "Hũ 5", 5], ["6", "Hũ vàng", 6]];
+      for (const [k, label, b] of tiles) {
+        const n = g[k].length; const btn = document.createElement("button"); btn.type = "button"; btn.className = "pick-jar"; btn.dataset.pick = k;
+        btn.setAttribute("aria-pressed", String(pick.sel.has(k))); btn.disabled = n === 0;
+        btn.innerHTML = (b === null ? ICON_CLOCK : `<img src="${jarSrc(b)}" alt="" width="28" height="40">`) + `<span class="text-sm font-medium leading-5">${label}</span><span class="text-muted-foreground text-xs" data-num>${ui.fmt(n)} từ</span>`;
+        btn.addEventListener("click", () => { if (pick.sel.has(k)) pick.sel.delete(k); else pick.sel.add(k); btn.setAttribute("aria-pressed", String(pick.sel.has(k))); pickSum(); });
+        grid.appendChild(btn);
+      }
+      pickSum();
+    }
+    function pickIds() { const ids = new Set(); for (const k of pick.sel) for (const id of pick.groups[k] || []) ids.add(id); return [...ids]; }
+    function pickSum() {
+      const n = pickIds().length; const size = Number($("pick-size").value) || 0; const take = size ? Math.min(size, n) : n;
+      $("pick-sum").textContent = n ? `${ui.fmt(n)} từ trong các hũ đã chọn, phiên này học ${ui.fmt(take)} từ, xáo ngẫu nhiên, mỗi từ một lần.` : "Chưa chọn hũ nào có từ.";
+      $("pick-go").disabled = n === 0;
+    }
+    function openPicker(mode) {
+      if (mode === "dictation" && !("speechSynthesis" in window)) { ui.toast("Không chơi được Nghe và gõ", "Trình duyệt này không đọc được văn bản. Thử Safari hoặc Chrome.", "warning"); return; }
+      pick.mode = mode; pick.groups = pickGroups(mode);
+      pick.sel = new Set(["due", "new"].filter((k) => pick.groups[k].length));
+      if (!pick.sel.size) for (const k of ["1", "2", "3", "4", "5"]) if (pick.groups[k].length) pick.sel.add(k);
+      $("dlg-pick-desc").textContent = `${PICK_MODE_NAME[mode] || ""} · ${deckById(state.deck).name}. Chọn một hoặc nhiều hũ.`;
+      $("pick-size").value = "0";
+      pickTiles(); $("dlg-pick").showModal();
+    }
+    $("pick-size").addEventListener("change", pickSum);
+    $("pick-go").addEventListener("click", () => {
+      const ids = shuffle(pickIds()); const size = Number($("pick-size").value) || 0;
+      const queue = size ? ids.slice(0, size) : ids; if (!queue.length) return;
+      $("dlg-pick").close(); startSession(state.deck, false, pick.mode, queue);
+    });
+
+    // ---- Hũ của từ đang học trên thanh trên + hiệu ứng sau mỗi lần chấm
+    let jarHoldUntil = 0, jarTimer = null;
+    function showStudyJar(id) {
+      const wait = jarHoldUntil - Date.now();
+      if (wait > 0) { clearTimeout(jarTimer); jarTimer = setTimeout(() => showStudyJar(currentId()), wait); return; }
+      const s = id ? cardState(id) : null; const img = $("study-jar");
+      img.src = jarSrc(s ? s.box : 0); img.className = "hu-jar h-10 w-auto";
+      $("study-jar-label").textContent = s ? `${jarName(s.box)} · ${ui.fmt(s.score || 0)}` : "Mới";
+      $("study-jar-wrap").title = s ? `${jarName(s.box)}, ${s.score || 0} điểm nhớ` : "Từ mới";
+    }
+    function jarFx(ev) {
+      const img = $("study-jar"); const wrap = $("study-jar-wrap");
+      img.src = jarSrc(ev.to); $("study-jar-label").textContent = `${jarName(ev.to)} · ${ui.fmt(ev.score)}`;
+      $("study-jar-live").textContent = evText(ev);
+      if (ev.kind === "p") return;
+      const cls = ev.to === GOLD && ev.from !== GOLD ? "is-gold" : ev.delta < 0 ? "is-fall" : "is-catch";
+      img.className = "hu-jar h-10 w-auto"; void img.offsetWidth; img.classList.add(cls);
+      const f = document.createElement("span"); f.className = "hu-score " + (ev.delta < 0 ? "down" : "up");
+      f.textContent = (ev.delta > 0 ? "+" : "−") + Math.abs(ev.delta); wrap.appendChild(f); setTimeout(() => f.remove(), 950);
+      jarHoldUntil = Date.now() + (reducedMotion() ? 300 : 900);
+    }
 
     function highlight(example, word) {
       if (!example) return "";
@@ -1326,6 +1520,7 @@
     }
 
     function renderProgressBar(s) {
+      showStudyJar(currentId());
       $("study-counter").textContent = `Thẻ ${s.idx + 1} / ${s.queue.length}` + (s.idx + 1 > 1 ? ` · thuộc ${s.known}, quên ${s.forgot}` : "");
       const pct = Math.round((s.idx / s.queue.length) * 100);
       const pb = $("study-progress"); pb.setAttribute("aria-valuenow", pct); pb.querySelector("span").style.width = pct + "%";
@@ -1348,7 +1543,7 @@
       if (e.hf) chips.push(`<span class="badge" data-variant="secondary">High-frequency</span>`);
       chips.push(`<span class="badge" data-variant="outline">Test ${e.tests.join(", ")}</span>`);
       if (e.theme && e.theme !== "General") chips.push(`<span class="badge" data-variant="outline">${escapeHtml(e.theme)}</span>`);
-      if (s && s.due) chips.push(`<span class="badge" data-variant="outline">Ôn tới ${fmtDate(s.due)}</span>`);
+      if (s && s.due && s.box !== GOLD) chips.push(`<span class="badge" data-variant="outline">Ôn tới ${fmtDate(s.due)}</span>`);
       return chips.join("");
     }
 
@@ -1361,7 +1556,7 @@
       const e = BY_ID.get(id); const cs = cardState(id); const reverse = s.mode === "reverse";
       s.flipped = false;
       const card = $("fc-card"); card.classList.remove("is-flipped"); card.style.transform = "";
-      $("fc-box").textContent = boxLabel(cs) + (s.again.has(id) ? " · ôn lại" : "");
+      $("fc-box").textContent = boxLabel(cs);
       const w = $("fc-word"), ipa = $("fc-ipa");
       if (reverse) {
         w.className = "space-y-1 text-xl font-medium leading-8 md:text-2xl";
@@ -1407,7 +1602,7 @@
     function renderQuiz() {
       const s = state.session; const id = currentId(); const e = BY_ID.get(id); const cs = cardState(id);
       s.flipped = false; s.quiz = buildQuiz(id);
-      $("qz-box").textContent = boxLabel(cs) + (s.again.has(id) ? " · ôn lại" : "");
+      $("qz-box").textContent = boxLabel(cs);
       $("qz-word").textContent = e.word; $("qz-ipa").textContent = e.ipa; $("qz-pos").innerHTML = posChipsHtml(e);
       const box = $("qz-options"); box.innerHTML = "";
       s.quiz.options.forEach((o, i) => {
@@ -1430,7 +1625,8 @@
       const correctIdx = q.options.findIndex((o) => o.id === id); q.correct = i === correctIdx;
       const btns = $("qz-options").querySelectorAll("button");
       btns.forEach((b, j) => { b.disabled = true; if (j === correctIdx) b.dataset.state = "correct"; else if (j === i) b.dataset.state = "wrong"; });
-      $("qz-feedback").textContent = q.correct ? "Đúng." : "Chưa đúng. Đáp án đúng được đánh dấu bên trên; thẻ sẽ về hộp 1 và quay lại cuối phiên.";
+      const pv = applyReview(cardState(id), q.correct, "quiz", todayStr()).ev;
+      $("qz-feedback").textContent = (q.correct ? "Đúng. " : "Chưa đúng, đáp án đúng được đánh dấu bên trên. ") + evText(pv);
       $("btn-quiz-next").hidden = false; $("btn-quiz-next").focus();
       if (state.progress.settings.autoSpeak) speak(BY_ID.get(id).word);
     }
@@ -1572,7 +1768,7 @@
       s.flipped = false;
       const ans = s.mode === "cloze" ? findToken(e.example, e.word).token : dictAnswers(e)[0];
       s.game = { level: 0, answered: false, correct: false, pts: 0, token: ans, slots: [], idx: 0, wrongSlots: 0, keyErr: 0 };
-      $("gm-box").textContent = boxLabel(cs) + (s.again.has(id) ? " · ôn lại" : "");
+      $("gm-box").textContent = boxLabel(cs);
       $("gm-score").textContent = fmtPts(sumPts(s.gameLog));
       $("gm-pos").innerHTML = posChipsHtml(e);
       $("gm-hint").textContent = ""; $("gm-options").hidden = true; $("gm-options").innerHTML = "";
@@ -1660,15 +1856,14 @@
       $("gm-options").querySelectorAll("button").forEach((b) => { b.disabled = true; });
       $("gm-score").textContent = fmtPts(sumPts(s.gameLog) + g.pts);
       setMascot(g.correct ? "happy" : "sad");
-      const cs = cardState(e.id); const nextBox = Math.min(5, (cs ? cs.box : 1) + 1);
-      const back = "thẻ về hộp 1 và quay lại cuối phiên.";
+      const mem = evText(applyReview(cardState(e.id), g.correct, s.mode, todayStr()).ev);
       const verdict = g.correct
-        ? `<p class="gm-ok font-medium">Đúng${near ? " (gõ sai 1 chữ, vạch vàng)" : ""}. +${fmtPts(g.pts)} điểm, thẻ lên hộp ${nextBox}.</p>`
+        ? `<p class="gm-ok font-medium">Đúng${near ? " (gõ sai 1 chữ, vạch vàng)" : ""}. +${fmtPts(g.pts)} điểm game. ${mem}</p>`
         : clean
-          ? `<p class="gm-bad font-medium">Đúng nhưng phải xem ${s.mode === "cloze" ? "lựa chọn" : "IPA"}. +${fmtPts(g.pts)} điểm, ${back}</p>`
+          ? `<p class="gm-bad font-medium">Đúng nhưng phải xem ${s.mode === "cloze" ? "lựa chọn" : "IPA"}, +${fmtPts(g.pts)} điểm game, tính là quên. ${mem}</p>`
           : completed
-            ? `<p class="gm-bad font-medium">Phá xong tường nhưng gõ sai ${g.wrongSlots} chữ (vạch vàng). +${fmtPts(g.pts)} điểm, ${back}</p>`
-            : `<p class="gm-bad font-medium">${kind === "giveup" ? "Chưa nhớ" : "Chọn chưa đúng"}. Thẻ về hộp 1 và quay lại cuối phiên.</p>`;
+            ? `<p class="gm-bad font-medium">Phá xong tường nhưng gõ sai ${g.wrongSlots} chữ (vạch vàng), +${fmtPts(g.pts)} điểm game, tính là quên. ${mem}</p>`
+            : `<p class="gm-bad font-medium">${kind === "giveup" ? "Chưa nhớ" : "Chọn chưa đúng"}. ${mem}</p>`;
       gameStatus(completed ? (g.wrongSlots ? `Hoàn thành, ${g.keyErr} lần gõ sai.` : "Hoàn thành, không sai chữ nào.") : "Đã mở các chữ còn lại (vạch đỏ).");
       const sentence = e.example ? `<p class="text-muted-foreground italic leading-6">${highlight(e.example, e.word)}</p>` : "";
       $("gm-result").innerHTML = verdict +
@@ -1701,26 +1896,23 @@
       for (const m of ["cloze", "dictation", "ship"]) {
         const st = deckStats(state.deck, m); const el = $("gt-" + m); const btn = document.querySelector(`[data-game="${m}"]`);
         el.textContent = st.total === 0 ? "Bộ này không có từ phù hợp" : st.due + st.newLeft > 0 ? `${ui.fmt(st.due)} đến hạn, ${ui.fmt(st.newLeft)} mới` : st.fresh > 0 ? "Xong hôm nay, chơi thêm thẻ mới" : "Đã học hết bộ này";
-        btn.disabled = st.total === 0 || (st.due + st.newLeft === 0 && st.fresh === 0);
+        btn.disabled = st.total === 0;
       }
-      const sm = state.progress.settings.shipMode || "straight";
-      document.querySelectorAll("[data-shipmode]").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.shipmode === sm)));
+      const sp = state.progress.settings.shipSpeed || "normal";
+      document.querySelectorAll("[data-shipspeed]").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.shipspeed === sp)));
     }
-    document.querySelectorAll("[data-game]").forEach((b) => b.addEventListener("click", () => {
-      const m = b.dataset.game; const st = deckStats(state.deck, m); startSession(state.deck, st.due + st.newLeft === 0, m);
-    }));
-    document.querySelectorAll("[data-shipmode]").forEach((b) => b.addEventListener("click", () => {
-      state.progress.settings.shipMode = b.dataset.shipmode; markDirty(); renderGameTiles();
+    document.querySelectorAll("[data-game]").forEach((b) => b.addEventListener("click", () => openPicker(b.dataset.game)));
+    document.querySelectorAll("[data-shipspeed]").forEach((b) => b.addEventListener("click", () => {
+      state.progress.settings.shipSpeed = b.dataset.shipspeed; markDirty(); renderGameTiles();
     }));
 
     // ================================================================
     // GAME: Phi thuyền từ vựng. Câu hỏi (nghĩa) ở trên, 3 thiên thạch mang 3 từ rơi theo 3 làn.
-    // Đây là nhận diện 1 trong 3 nên: đúng = không đổi hộp (chỉ tính lượt ôn), sai = Quên (về hộp 1).
+    // Nhận diện 1 trong 3 nên điểm nhớ nhân 0,5. Tốc độ: 4 mức, đúng liên tiếp thì nhanh thêm tối đa 30%.
     // ================================================================
-    const SHIP_MODES = { straight: "Rơi thẳng", wave: "Lượn sóng", shuffle: "Đổi làn" };
-    const SHIP_BASE_MS = { straight: 7000, wave: 7600, shuffle: 8200 };
-    const ship = { raf: 0, ro: null, ctx: null, w: 0, h: 0, dpr: 1, lane: 1, x: 0, stars: [], rocks: [], parts: [], floats: [], wave: null,
+    const ship = { drag: false, dragX: 0, raf: 0, ro: null, ctx: null, w: 0, h: 0, dpr: 1, lane: 1, x: 0, stars: [], rocks: [], parts: [], floats: [], wave: null,
       lives: 3, score: 0, streak: 0, best: 0, paused: true, started: false, phase: "play", t: 0, last: 0, shake: 0, colors: {}, resolveAt: 0, lastOk: false };
+    const SHIP_SPEED = { slow: { label: "Chậm", ms: 9000 }, normal: { label: "Vừa", ms: 7000 }, fast: { label: "Nhanh", ms: 5000 }, turbo: { label: "Siêu tốc", ms: 3500 } };
     const laneX = (i) => ship.w * (i + 0.5) / 3;
     const shipY = () => ship.h - Math.max(46, ship.h * 0.11);
     const ease = (u) => (u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u));
@@ -1743,11 +1935,11 @@
     }
     function shipOverlay(kind) {
       const ov = $("ship-overlay"); if (!kind) { ov.hidden = true; return; }
-      const mode = SHIP_MODES[state.progress.settings.shipMode || "straight"];
+      const sp = SHIP_SPEED[state.progress.settings.shipSpeed] || SHIP_SPEED.normal;
       const fine = matchMedia("(hover: hover)").matches;
-      $("ship-ov-title").textContent = kind === "start" ? `Phi thuyền từ vựng · ${mode}` : "Tạm dừng";
+      $("ship-ov-title").textContent = kind === "start" ? `Phi thuyền từ vựng · ${sp.label}` : "Tạm dừng";
       $("ship-ov-desc").textContent = kind === "start"
-        ? `Đọc nghĩa ở trên, rồi lái phi thuyền vào thiên thạch mang từ đúng. ${fine ? "Đổi làn bằng phím ← → (hoặc A, D)." : "Đổi làn bằng hai nút mũi tên bên dưới, chạm hai bên màn hình, hoặc vuốt."} Có 3 mạng; trả lời đúng liên tiếp thì thiên thạch rơi nhanh hơn.`
+        ? `Đọc nghĩa ở trên, rồi lái phi thuyền vào thiên thạch mang từ đúng. ${fine ? "Đổi làn bằng phím ← → (hoặc A, D), hoặc bấm chuột vào làn." : "Chạm vào làn muốn tới, kéo phi thuyền, hoặc dùng hai nút mũi tên."} Có 3 mạng; trả lời đúng liên tiếp thì thiên thạch rơi nhanh dần.`
         : "Bấm Tiếp tục để chơi tiếp.";
       $("ship-ov-go").textContent = kind === "start" ? "Bắt đầu" : "Tiếp tục";
       $("ship-ov-quit").hidden = kind === "start";
@@ -1778,7 +1970,7 @@
         $("ship-q").innerHTML = `<p class="text-muted-foreground text-xs">Lái vào thiên thạch mang từ có nghĩa</p>
           <p class="font-medium leading-6"><span class="hud-chip me-1">${POS_LABEL[sense.pos] || sense.pos}</span>${escapeHtml(sense.syn)}</p>${ex}`;
       } else {
-        $("ship-q").innerHTML = `<p class="${verdict.ok ? "gm-ok" : "gm-bad"} text-sm font-medium">${verdict.ok ? `Đúng, +${verdict.pts} điểm` : "Chưa đúng. Thẻ về hộp 1 và quay lại cuối phiên"}</p>
+        $("ship-q").innerHTML = `<p class="${verdict.ok ? "gm-ok" : "gm-bad"} text-sm font-medium">${verdict.ok ? `Đúng, +${verdict.pts} điểm game.` : "Chưa đúng."} ${escapeHtml(verdict.mem || "")}</p>
           <p class="leading-6"><span class="text-lg font-semibold">${escapeHtml(stripParen(e.word))}</span> <span class="text-muted-foreground">${escapeHtml(e.ipa)}</span></p>
           <p class="text-muted-foreground text-sm">${escapeHtml(POS_LABEL[sense.pos] || sense.pos)} ${escapeHtml(sense.syn)}</p>`;
       }
@@ -1788,31 +1980,14 @@
       const okC = (c) => c.id !== id && posOf(c)[0] === mpos && stripParen(c.word).length <= 22 && normAns(stripParen(c.word)) !== wl;
       let pool = deckCards(state.session.deckId).filter(okC); if (pool.length < 2) pool = VOCAB.filter(okC);
       const labels = shuffle([{ text: stripParen(e.word), correct: true }, ...shuffle(pool.slice()).slice(0, 2).map((c) => ({ text: stripParen(c.word), correct: false }))]);
-      const mode = state.progress.settings.shipMode || "straight";
-      const dur = Math.max(3400, SHIP_BASE_MS[mode] - ship.streak * 280);
-      let sched = null;
-      if (mode === "shuffle") {
-        let perm = [0, 1, 2]; sched = [{ p: 0, perm: perm.slice() }];
-        for (const at of [0.2, 0.42]) { let np; do { np = shuffle(perm.slice()); } while (np.every((v, k) => v === perm[k])); perm = np; sched.push({ p: at, perm: np.slice() }); }
-      }
+      const sp = SHIP_SPEED[state.progress.settings.shipSpeed] || SHIP_SPEED.normal;
+      const dur = sp.ms * Math.max(0.7, 1 - 0.04 * ship.streak);
       const r = Math.min(ship.w / 3 * 0.44, 66);
-      ship.rocks = labels.map((lb, i) => ({ ...lb, lane: i, finalLane: sched ? sched[sched.length - 1].perm[i] : i, r, fit: null,
+      ship.rocks = labels.map((lb, i) => ({ ...lb, lane: i, finalLane: i, r, fit: null,
         verts: Array.from({ length: 11 }, () => 0.84 + Math.random() * 0.2), rot: Math.random() * 6, spin: (Math.random() - 0.5) * 0.7, x: laneX(i), y: -r, hit: false, reveal: false }));
-      ship.wave = { id, start: ship.t, dur, mode, sched, resolved: false };
+      ship.wave = { id, start: ship.t, dur, resolved: false };
     }
-    function rockX(rk, p, wv) {
-      if (wv.mode === "wave") { const A = (ship.w / 3) * 0.42; return laneX(rk.lane) + A * Math.sin(p * Math.PI * 3.2) * (1 - ease((p - 0.5) / 0.3)); }
-      if (wv.mode === "shuffle") {
-        let x = laneX(wv.sched[0].perm[rk.lane]);
-        for (let k = 1; k < wv.sched.length; k++) {
-          if (p < wv.sched[k].p) break;
-          const a = laneX(wv.sched[k - 1].perm[rk.lane]), b = laneX(wv.sched[k].perm[rk.lane]);
-          x = a + (b - a) * ease((p - wv.sched[k].p) / 0.12);
-        }
-        return x;
-      }
-      return laneX(rk.lane);
-    }
+    const laneAt = (x) => Math.max(0, Math.min(2, Math.floor(x / (ship.w / 3))));
     function shipMove(dir) {
       if (!ship.started || ship.paused) return;
       ship.lane = Math.max(0, Math.min(2, ship.lane + dir));
@@ -1829,6 +2004,7 @@
     }
     function shipResolve() {
       const wv = ship.wave; wv.resolved = true;
+      if (ship.drag) ship.lane = laneAt(ship.x);
       const hit = ship.rocks.find((rk) => rk.finalLane === ship.lane);
       const ok = !!(hit && hit.correct); const e = BY_ID.get(wv.id);
       ship.rocks.forEach((rk) => { if (rk.correct) rk.reveal = true; });
@@ -1837,25 +2013,21 @@
       if (ok) { ship.streak++; ship.best = Math.max(ship.best, ship.streak); pts = 10 + 2 * (ship.streak - 1); ship.score += pts; ship.floats.push({ x: ship.x, y: shipY() - 40, text: `+${pts}`, life: 1 }); $("ship-mascot").src = "assets/choco_happy.svg"; }
       else { ship.lives--; ship.streak = 0; ship.shake = 0.35; $("ship-mascot").src = "assets/choco_sad.svg"; if (navigator.vibrate) { try { navigator.vibrate(120); } catch (er) {} } }
       ship.lastOk = ok; ship.phase = "feedback"; ship.resolveAt = ship.t + (ok ? 1300 : 2300);
-      shipQuestion(e, { ok, pts }); shipHud();
+      shipQuestion(e, { ok, pts, mem: evText(applyReview(cardState(e.id), ok, "ship", todayStr()).ev) }); shipHud();
       if (state.progress.settings.autoSpeak) speak(stripParen(e.word));
     }
     function shipNext() {
       const s = state.session; if (!s || !ship.wave) return;
       ship.phase = "play"; ship.rocks = []; const id = ship.wave.id; ship.wave = null;
       $("ship-mascot").src = "assets/choco_idle.svg";
-      if (ship.lastOk) {
-        const p = state.progress; ensureDaily(); logHistory(true, false); p.daily.reviews++;
-        const t = todayStr(); if (p.streak.last !== t) { p.streak.days = p.streak.last === addDays(t, -1) ? (p.streak.days || 0) + 1 : 1; p.streak.last = t; }
-        s.known++; markDirty(); s.idx++; renderCard();
-      } else { s.flipped = true; rate(false); }
+      s.flipped = true; rate(ship.lastOk);
     }
     function renderShip() {
       const s = state.session; if (ship.lives <= 0) { finishSession(); return; }
       const id = currentId(); const e = BY_ID.get(id);
       renderProgressBar(s);
       $("study-actions-front").hidden = true; $("study-actions-back").hidden = true; $("study-actions-quiz").hidden = true; $("study-actions-game").hidden = true; $("study-known").hidden = true;
-      $("study-hint").textContent = matchMedia("(hover: hover)").matches ? "← → hoặc A, D: đổi làn · Space: tạm dừng · Esc: kết thúc" : "Chạm hai bên màn hình hoặc vuốt để đổi làn";
+      $("study-hint").textContent = matchMedia("(hover: hover)").matches ? "← → hoặc A, D: đổi làn · Space: tạm dừng · Esc: kết thúc" : "Chạm vào làn muốn tới, hoặc kéo phi thuyền";
       shipQuestion(e, null); shipBuildWave(id);
     }
     function shipFrame(ts) {
@@ -1865,14 +2037,15 @@
       shipUpdate(dt); shipDraw();
     }
     function shipUpdate(dt) {
-      ship.x += (laneX(ship.lane) - ship.x) * Math.min(1, dt * 14);
+      if (ship.drag) { ship.x += (ship.dragX - ship.x) * Math.min(1, dt * 22); ship.lane = laneAt(ship.x); }
+      else ship.x += (laneX(ship.lane) - ship.x) * Math.min(1, dt * 14);
       if (ship.paused) return;
       for (const st of ship.stars) { st.y += dt * 0.09 * st.z; if (st.y > 1) { st.y = 0; st.x = Math.random(); } }
       const wv = ship.wave;
       if (wv && !wv.resolved) {
         const p = Math.max(0, (ship.t - wv.start) / wv.dur);
         const top = -ship.rocks[0].r, bottom = shipY() - 26;
-        for (const rk of ship.rocks) { rk.x = rockX(rk, Math.min(1, p), wv); rk.y = top + (bottom - top) * Math.min(1, p); rk.rot += rk.spin * dt; }
+        for (const rk of ship.rocks) { rk.x = laneX(rk.lane); rk.y = top + (bottom - top) * Math.min(1, p); rk.rot += rk.spin * dt; }
         if (p >= 1) shipResolve();
       } else ship.rocks.forEach((rk) => { rk.rot += rk.spin * dt; });
       for (const q of ship.parts) { q.x += q.vx * dt; q.y += q.vy * dt; q.vx *= 0.96; q.vy *= 0.96; q.life -= dt; }
@@ -1952,25 +2125,36 @@
     $("ship-pause").addEventListener("click", () => shipSetPaused(!ship.paused));
     $("ship-ov-go").addEventListener("click", () => { if (!ship.started) { ship.started = true; ship.paused = false; shipOverlay(null); } else shipSetPaused(false); });
     $("ship-ov-quit").addEventListener("click", () => { shipOverlay(null); finishSession(); });
+    // cảm ứng: chạm vào làn → bay tới làn đó; kéo → phi thuyền theo ngón tay, thả ra vào làn gần nhất
     (() => {
-      const cv = $("ship-canvas"); let x0 = null;
-      cv.addEventListener("pointerdown", (e) => { x0 = e.clientX; });
-      cv.addEventListener("pointerup", (e) => {
-        if (x0 === null) return; const dx = e.clientX - x0; x0 = null;
-        if (Math.abs(dx) > 30) shipMove(dx > 0 ? 1 : -1);
-        else { const r = cv.getBoundingClientRect(); shipMove(e.clientX - r.left < ship.x ? -1 : 1); }
+      const cv = $("ship-canvas"); let pid = null, x0 = 0, moved = false;
+      const lx = (e) => { const r = cv.getBoundingClientRect(); return Math.max(0, Math.min(ship.w, e.clientX - r.left)); };
+      cv.addEventListener("pointerdown", (e) => {
+        if (!ship.started || ship.paused) return;
+        pid = e.pointerId; x0 = e.clientX; moved = false; try { cv.setPointerCapture(pid); } catch (er) {}
       });
+      cv.addEventListener("pointermove", (e) => {
+        if (e.pointerId !== pid) return;
+        if (!moved && Math.abs(e.clientX - x0) > 10) { moved = true; ship.drag = true; }
+        if (moved) ship.dragX = lx(e);
+      });
+      const end = (e) => {
+        if (e.pointerId !== pid) return; pid = null;
+        if (!ship.started || ship.paused) { ship.drag = false; return; }
+        ship.lane = laneAt(moved ? ship.x : lx(e)); ship.drag = false;
+      };
+      cv.addEventListener("pointerup", end); cv.addEventListener("pointercancel", end);
     })();
     document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden" && ship.started && !ship.paused) shipSetPaused(true); });
 
-    // ---- Đã biết: thẻ mới đưa thẳng lên hộp 5
+    // ---- Đã biết: thẻ mới vào Hũ 5 (75 điểm), ôn lại sau 30 ngày
     function markKnown() {
       const s = state.session; const id = currentId(); if (!s || !id || cardState(id)) return;
       const p = state.progress;
       s.history.push({ id, prev: null, daily: clone(p.daily), streak: clone(p.streak), hist: clone(p.history[todayStr()] || null), qlen: s.queue.length, known: null });
-      p.cards[id] = { box: 5, due: addDays(todayStr(), INTERVAL_MAX), seen: 1, lapses: 0, updated: nowIso() };
-      markDirty(); s.idx++; renderCard();
-      ui.toast("Đã biết: " + BY_ID.get(id).word, "Đưa lên hộp 5, ôn lại sau 30 ngày.", "success");
+      const kc = knownCard(s.mode, todayStr()); kc.updated = nowIso(); p.cards[id] = kc;
+      markDirty(); jarFx({ delta: 75, kind: "k", from: 0, to: 5, score: 75 }); s.idx++; renderCard();
+      ui.toast("Đã biết: " + BY_ID.get(id).word, "Vào Hũ 5 với 75 điểm nhớ, ôn lại sau 30 ngày.", "success");
     }
     $("study-known").addEventListener("click", markKnown);
 
@@ -1989,20 +2173,12 @@
       const id = currentId(); const p = state.progress; ensureDaily();
       const prev = cardState(id);
       s.history.push({ id, prev: prev ? clone(prev) : null, daily: clone(p.daily), streak: clone(p.streak), hist: clone(p.history[todayStr()] || null), qlen: s.queue.length, known });
-      logHistory(known, !prev);
-      const ns = prev ? clone(prev) : { box: 1, seen: 0, lapses: 0 };
+      const { card: ns, ev } = applyReview(prev, known, s.mode, todayStr());
+      logHistory(known, !prev, ev.kind);
       if (!prev) p.daily.new++;
-      ns.seen++;
-      if (known) {
-        const atMax = prev && prev.box === 5;
-        ns.box = Math.min(5, ns.box + 1);
-        ns.due = addDays(todayStr(), atMax ? INTERVAL_MAX : INTERVAL[ns.box]);
-        s.known++;
-      } else {
-        ns.box = 1; ns.lapses++; ns.due = todayStr(); s.forgot++;
-        if (!s.again.has(id)) { s.again.add(id); s.queue.push(id); }
-      }
+      if (known) s.known++; else s.forgot++;
       ns.updated = nowIso(); p.cards[id] = ns; p.daily.reviews++;
+      jarFx(ev);
       const t = todayStr();
       if (p.streak.last !== t) { p.streak.days = p.streak.last === addDays(t, -1) ? (p.streak.days || 0) + 1 : 1; p.streak.last = t; }
       markDirty();
@@ -2145,7 +2321,7 @@
       return VOCAB.map((e) => {
         const s = cardState(e.id);
         return { id: e.id, word: e.word, hf: e.hf, ipa: e.ipa, def: e.def, full: (e.def_full || "").toLowerCase(), posStr: posOf(e).map((p) => POS_LABEL[p] || p).join(" "), tests: e.tests, testsStr: e.tests.join(", "), theme: e.theme,
-          box: s ? s.box : 0, boxStr: s ? String(s.box) : "new", due: s ? s.due : "", isDue: !!(s && s.due <= t), lapses: s ? s.lapses : 0 };
+          box: s ? s.box : 0, boxStr: s ? String(s.box) : "new", score: s ? s.score || 0 : null, due: s && s.box !== GOLD ? s.due : "", isDue: !!(s && s.box !== GOLD && s.due <= t), lapses: s ? s.lapses : 0 };
       });
     }
 
@@ -2163,7 +2339,8 @@
           { title: "Nghĩa / synonym", field: "def", minWidth: 160, responsive: 2, headerSort: false, formatter: (c) => `<span class="block truncate" title="${escapeHtml(c.getValue())}">${escapeHtml(c.getValue())}</span>` },
           { title: "Đề", field: "testsStr", width: 120, responsive: 5, headerSort: false },
           { title: "Chủ đề", field: "theme", width: 190, responsive: 6 },
-          { title: "Hộp", field: "box", width: 100, responsive: 1, sorter: "number", hozAlign: "center", formatter: (c) => { const r = c.getRow().getData(); return r.box ? `<span class="badge" data-variant="${r.isDue ? "default" : "outline"}">Hộp ${r.box}</span>` : '<span class="text-muted-foreground">Chưa học</span>'; } },
+          { title: "Hũ", field: "box", width: 120, responsive: 1, sorter: "number", formatter: (c) => { const r = c.getRow().getData(); return r.box ? `<span class="inline-flex items-center gap-1.5"><img src="${jarSrc(r.box)}" alt="" width="14" height="20" class="h-5 w-auto"><span class="badge" data-variant="${r.isDue ? "default" : "outline"}">${jarName(r.box)}</span></span>` : '<span class="text-muted-foreground">Chưa học</span>'; } },
+          { title: "Điểm", field: "score", width: 80, responsive: 1, sorter: "number", hozAlign: "right", formatter: (c) => (c.getValue() === null ? "" : ui.fmt(c.getValue())) },
           { title: "Ôn tới", field: "due", width: 100, responsive: 4, sorter: "string", formatter: (c) => c.getValue() ? fmtDate(c.getValue()) : "" },
         ],
       });
@@ -2196,6 +2373,18 @@
     }
 
     let dlgId = null;
+    // lịch sử điểm của một từ: mới nhất ở trên
+    function memHtml(s) {
+      if (!s) return `<p class="text-muted-foreground text-sm">Từ chưa học, chưa có điểm nhớ.</p>`;
+      const rows = (s.log || []).slice().reverse().map((ln) => {
+        const [d, delta, kind, mode, from, to] = ln.split("|"); const dn = Number(delta);
+        const cls = dn > 0 ? "gm-ok" : dn < 0 ? "gm-bad" : "text-muted-foreground";
+        const move = from === to ? jarName(Number(to)) : `${Number(from) ? jarName(Number(from)) : "Mới"} → ${jarName(Number(to))}`;
+        return `<tr><td>${fmtDate(d)}</td><td>${escapeHtml(KIND_LABEL[kind] || kind)}${MODE_LABEL[mode] ? `<span class="text-muted-foreground"> · ${MODE_LABEL[mode]}</span>` : ""}</td><td class="${cls}" data-num style="text-align:right">${dn > 0 ? "+" : dn < 0 ? "−" : ""}${Math.abs(dn)}</td><td>${move}</td></tr>`;
+      }).join("");
+      const head = `<div class="flex items-center gap-3"><img src="${jarSrc(s.box)}" alt="" width="28" height="40" class="h-10 w-auto"><div><p class="font-medium">${jarName(s.box)} · <span data-num>${ui.fmt(s.score || 0)}</span> điểm nhớ</p><p class="text-muted-foreground text-sm">Ôn ${ui.fmt(s.seen || 0)} lần, đúng hạn ${ui.fmt(s.ok || 0)} lần, quên ${ui.fmt(s.lapses || 0)} lần</p></div></div>`;
+      return head + (rows ? `<div class="table-container max-h-56 overflow-auto"><table class="table text-sm"><thead><tr><th>Ngày</th><th>Lượt</th><th style="text-align:right">Điểm</th><th>Hũ</th></tr></thead><tbody>${rows}</tbody></table></div>` : "");
+    }
     function openCardDialog(id) {
       const e = BY_ID.get(id); const s = cardState(id); dlgId = id;
       $("dlg-card-title").textContent = e.word; $("dlg-card-ipa").textContent = e.ipa;
@@ -2204,6 +2393,7 @@
       const ex = $("dlg-card-example"); ex.hidden = !e.example; ex.innerHTML = e.example ? highlight(e.example, e.word) : "";
       $("dlg-card-chips").innerHTML = chipsHtml(e, s);
       $("dlg-card-box").value = s ? String(s.box) : "new";
+      $("dlg-card-mem").innerHTML = memHtml(s);
       $("dlg-card").showModal();
     }
     $("dlg-card-speak").addEventListener("click", () => { if (dlgId) speak(BY_ID.get(dlgId).word); });
@@ -2211,14 +2401,9 @@
       if (!dlgId) return;
       const v = $("dlg-card-box").value; const p = state.progress; const prev = cardState(dlgId);
       if (v === "new") { if (prev) delete p.cards[dlgId]; }
-      else {
-        const box = Number(v);
-        const ns = prev ? clone(prev) : { box: 1, seen: 0, lapses: 0 };
-        if (!prev || prev.box !== box) { ns.box = box; ns.due = addDays(todayStr(), INTERVAL[box]); }
-        ns.updated = nowIso(); p.cards[dlgId] = ns;
-      }
+      else if (!prev || prev.box !== Number(v)) { const ns = manualCard(prev, Number(v), todayStr()); ns.updated = nowIso(); p.cards[dlgId] = ns; }
       markDirty(); $("dlg-card").close(); refreshTable(); renderHome();
-      ui.toast("Đã cập nhật " + BY_ID.get(dlgId).word, v === "new" ? "Thẻ trở về trạng thái chưa học." : `Đặt vào hộp ${v}.`, "success");
+      ui.toast("Đã cập nhật " + BY_ID.get(dlgId).word, v === "new" ? "Từ trở về trạng thái chưa học." : `Đặt vào ${jarName(Number(v))}, ${JAR_MIN[Number(v)]} điểm nhớ.`, "success");
     });
 
     // ================================================================
