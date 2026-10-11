@@ -79,3 +79,18 @@ function posters_(root) {
 function out_(o) {
   return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
 }
+
+/**
+ * Chạy hàm này MỘT LẦN trong trình soạn Apps Script (chọn "authorize" → Run) để cấp quyền đọc Drive
+ * và kiểm tra FOLDER_ID. Execution log in ra tên thư mục và số file trong clips/, mp4/, posters/.
+ */
+function authorize() {
+  var id = PropertiesService.getScriptProperties().getProperty("FOLDER_ID");
+  var root = DriveApp.getFolderById(id);
+  Logger.log("Thư mục: " + root.getName());
+  ["webm", "mp4", "poster"].forEach(function (k) {
+    var n = Object.keys(ids_(root, k)).length;
+    Logger.log(SUB[k] + "/: " + n + " file ." + EXT[k]);
+  });
+  CacheService.getScriptCache().remove("list");
+}
