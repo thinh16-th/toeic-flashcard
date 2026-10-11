@@ -164,8 +164,10 @@
     .art-space { fill: var(--space-bg); } .art-star { fill: var(--space-star); } .art-rock { fill: var(--rock-b); } .art-rock2 { fill: var(--rock-a); }
     .art-hull { fill: var(--ship-hull); } .art-glass { fill: var(--ship-glass); } .art-flame { fill: var(--ship-flame); }
     .art-lane { stroke: var(--space-star); stroke-opacity: .22; stroke-dasharray: 4 5; }
+    /* hộp thoại cao hơn màn hình: phần thân cuộn, header + nút luôn thấy (basecoat chỉ đặt flex:1) */
+    .dialog > div > section { min-height: 0; overflow-y: auto; padding: 2px; margin: -2px; }
     .seg { display: inline-flex; gap: 2px; padding: 2px; border-radius: var(--radius); background: var(--muted); }
-    .seg button { padding: .25rem .55rem; border-radius: calc(var(--radius) - 2px); font-size: .875rem; color: var(--muted-foreground); }
+    .seg button { white-space: nowrap; padding: .25rem .55rem; border-radius: calc(var(--radius) - 2px); font-size: .875rem; color: var(--muted-foreground); }
     .seg button[aria-checked="true"] { background: var(--card); color: var(--foreground); box-shadow: 0 0 0 1px var(--border); }
     /* custom: màn phi thuyền luôn tối ở cả 2 theme. Đổi token trong phạm vi màn học, basecoat tự theo */
     #scr-study.is-space, #scr-meme {
@@ -253,7 +255,9 @@
     #ship-panel, #ship-panel button { touch-action: manipulation; user-select: none; -webkit-user-select: none; }
     /* custom: Meme loop */
     #mm-stage { background: rgba(255, 255, 255, .03); }
-    .mm-word { max-width: 85%; }
+    .mm-word { max-width: 85%; transition: opacity var(--dur-base) var(--ease-out); }
+    .mm-word.is-old { opacity: .62; }
+    .mm-word.is-old .mm-m { display: none; }
     .mm-tile { aspect-ratio: 1; padding: .25rem; }
     .mm-tile img { height: 100%; width: 100%; object-fit: contain; }
     .mm-row { display: flex; align-items: baseline; gap: .5rem; padding: .5rem .75rem; border-bottom: 1px solid var(--border); }
@@ -808,10 +812,9 @@
     <div class="shrink-0 px-3"><div class="progress" role="progressbar" aria-label="Thời gian còn lại của loop" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="mm-progress"><span style="width:0%"></span></div></div>
     <div class="relative mx-3 my-3 min-h-0 flex-1 overflow-hidden rounded-lg" id="mm-stage">
       <video id="mm-video" class="absolute inset-0 h-full w-full object-contain" playsinline loop preload="auto" aria-label="Clip meme đang lặp"></video>
-      <div id="mm-word" class="mm-word hud absolute rounded-lg px-4 py-2 text-center" aria-live="polite" hidden>
-        <p class="text-3xl font-semibold tracking-tight" id="mm-w"></p>
-        <p class="text-muted-foreground" id="mm-m"></p>
-      </div>
+      <div id="mm-words-layer" class="absolute inset-0" aria-hidden="true"></div>
+      <p class="sr-only" id="mm-live" aria-live="polite"></p>
+      <div id="mm-loading" class="absolute inset-0 flex items-center justify-center p-4" hidden><p class="hud rounded-lg px-4 py-2 text-sm" id="mm-loading-text">Đang tải meme…</p></div>
       <div id="mm-end" class="absolute inset-0 flex items-center justify-center p-4" hidden>
         <div class="card w-full max-w-sm">
           <header><h3>Hết loop</h3><p id="mm-end-desc"></p></header>
@@ -890,12 +893,20 @@
       <section class="space-y-4">
         <div class="space-y-2">
           <div class="flex items-center justify-between gap-2"><h3 class="text-sm font-medium">1. Meme</h3><span class="text-muted-foreground text-xs" id="mm-clip-count"></span></div>
-          <p class="text-muted-foreground text-sm" id="mm-load-hint">Chọn thư mục <span class="font-medium">REQ-20261011-cat-meme-clips-keyed-for-web\out</span> (hoặc các file .webm trong out\clips). Clip chỉ lưu trong trình duyệt của thiết bị này, không tải lên mạng.</p>
+          <details id="mm-cloud" class="rounded-lg border border-border px-3 py-2">
+            <summary class="cursor-pointer text-sm font-medium">Nguồn cloud (Google Drive) <span class="text-muted-foreground font-normal" id="mm-cloud-state"></span></summary>
+            <div class="mt-3 space-y-3">
+              <div role="group" class="field"><label for="mm-api">URL Apps Script meme</label><input id="mm-api" class="input" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off" spellcheck="false" /></div>
+              <div role="group" class="field"><label for="mm-key">Mã khoá</label><input id="mm-key" class="input" type="password" autocomplete="off" spellcheck="false" /><p>Lưu theo tên người dùng, thiết bị khác đăng nhập là dùng được. Không dán mã khoá vào nơi công khai.</p></div>
+              <div class="flex flex-wrap gap-2"><button type="button" class="btn" data-size="sm" id="mm-cloud-save">Lưu và kết nối</button><button type="button" class="btn" data-variant="ghost" data-size="sm" id="mm-cloud-off" hidden>Ngắt cloud</button></div>
+            </div>
+          </details>
+          <p class="text-muted-foreground text-sm" id="mm-load-hint">Chọn thư mục <span class="font-medium">REQ-20261011-cat-meme-clips-keyed-for-web\out</span> (hoặc các file .webm/.mp4). Nạp từ máy thì clip chỉ lưu trong trình duyệt của thiết bị này.</p>
           <div class="flex flex-wrap gap-2">
             <label class="btn" data-variant="outline" data-size="sm" for="mm-dir">Chọn thư mục</label>
             <input id="mm-dir" type="file" webkitdirectory multiple class="sr-only" />
             <label class="btn" data-variant="outline" data-size="sm" for="mm-files">Chọn file</label>
-            <input id="mm-files" type="file" accept=".webm,.webp,video/webm,image/webp" multiple class="sr-only" />
+            <input id="mm-files" type="file" accept=".webm,.mp4,.webp,video/webm,video/mp4,image/webp" multiple class="sr-only" />
             <button id="mm-clear" class="btn" data-variant="ghost" data-size="sm" type="button" hidden>Xoá clip đã nạp</button>
           </div>
           <div id="mm-grid" class="grid max-h-48 grid-cols-4 gap-2 overflow-auto sm:grid-cols-6" role="group" aria-label="Chọn một meme"></div>
@@ -1008,7 +1019,7 @@
     // ================================================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwBiNwckLC-9o_m0X0TBDE-vjazUJMWD4UlIsySwcsFuUjMyBGBo3mfVQGEhWl47CJ7DA/exec";
     const SCHEMA = 1;
-    const APP_VER = "1.7.0";
+    const APP_VER = "1.8.0";
     const VERSION_URL = "version.json";       // cùng repo; build_vocab.py tự đồng bộ số phiên bản vào file này
     const VERSION_CHECK_MS = 10 * 60 * 1000;
     const NEW_BATCH = 20;                       // "Học thêm 20 thẻ mới"
@@ -1130,7 +1141,7 @@
       session: null, table: null, voices: [],
     };
 
-    const SETTINGS_DEFAULT = { newPerDay: 20, voice: "", autoSpeak: true, speakFront: false, speakExample: false, rate: 0.95, mode: "card", shipSpeed: "normal", memeRate: 0.85, memeSecs: 15 };
+    const SETTINGS_DEFAULT = { newPerDay: 20, voice: "", autoSpeak: true, speakFront: false, speakExample: false, rate: 0.95, mode: "card", shipSpeed: "normal", memeRate: 0.85, memeSecs: 15, memeApi: "", memeKey: "" };
     const HISTORY_DAYS = 90;
     /** bù trường thiếu cho tiến độ cũ (schema cũ hơn) */
     function normalizeProgress(p) {
@@ -2440,7 +2451,9 @@
     // Clip nạp từ máy người dùng, lưu IndexedDB trên thiết bị. Clip của bên thứ ba: chỉ dùng nội bộ, không đưa lên repo.
     // ================================================================
     const MM_DB = "ets-fc-meme", MM_MAX = 5, MM_GAIN = 0.5;
-    const mm = { clips: [], urls: new Map(), sel: "random", words: [], cur: null, running: false, t0: 0, raf: 0, step: 0, ac: null, gain: null, gap: 0, fb: 0 };
+    // Safari/iPhone thường không phát được WebM có kênh alpha → dùng bản MP4 nền tối
+    const MM_FMT = (() => { const v = document.createElement("video"); const webm = v.canPlayType('video/webm; codecs="vp9"'); const safari = /^((?!chrome|android|crios|fxios|edg).)*safari/i.test(navigator.userAgent) || /iP(hone|ad|od)/.test(navigator.userAgent); return webm && !safari ? "webm" : "mp4"; })();
+    const mm = { boxes: [], clips: [], urls: new Map(), sel: "random", words: [], cur: null, running: false, t0: 0, raf: 0, step: 0, ac: null, gain: null, gap: 0, fb: 0 };
     function mmDb() {
       return new Promise((res, rej) => {
         const r = indexedDB.open(MM_DB, 1);
@@ -2453,16 +2466,22 @@
         const db = await mmDb();
         mm.clips = await new Promise((res, rej) => { const q = db.transaction("clips").objectStore("clips").getAll(); q.onsuccess = () => res(q.result.sort((a, b) => a.id.localeCompare(b.id))); q.onerror = () => rej(q.error); });
       } catch (e) { mm.clips = []; }
-      $("gt-meme").textContent = mm.clips.length ? `${ui.fmt(mm.clips.length)} clip trên thiết bị này` : "Chưa nạp clip";
+      $("gt-meme").textContent = mm.clips.length ? `${ui.fmt(mm.clips.length)} clip` + (mm.clips.some((c) => c.cloud) ? " (cloud)" : " trên thiết bị này") : "Chưa nạp clip";
       return mm.clips;
     }
     async function mmSave(files) {
       const vids = new Map(), posters = new Map();
-      for (const f of files) { const m = f.name.match(/^(.+)\.(webm|webp)$/i); if (m) (m[2].toLowerCase() === "webm" ? vids : posters).set(m[1], f); }
-      if (!vids.size) { ui.toast("Không thấy clip .webm", "Chọn thư mục out (hoặc out\\clips) của request meme.", "warning"); return; }
+      for (const f of files) {
+        const m = f.name.match(/^(.+)\.(webm|mp4|webp)$/i); if (!m) continue; const ext = m[2].toLowerCase();
+        if (ext === "webp") posters.set(m[1], f); else { const r = vids.get(m[1]) || {}; r[ext] = f; vids.set(m[1], r); }
+      }
+      if (!vids.size) { ui.toast("Không thấy clip", "Chọn thư mục out (hoặc out\\clips, out\\mp4) của request meme.", "warning"); return; }
       try {
         const db = await mmDb(); const tx = db.transaction("clips", "readwrite"); const st = tx.objectStore("clips");
-        for (const [id, v] of vids) st.put({ id, video: v, poster: posters.get(id) || null });
+        for (const [id, v] of vids) {
+          const old = mm.clips.find((c) => c.id === id) || {};
+          st.put({ id, video: v.webm || old.video || null, mp4: v.mp4 || old.mp4 || null, poster: posters.get(id) || old.poster || null, cloud: old.cloud || null });
+        }
         await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error); });
         try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
       } catch (e) { ui.toast("Không lưu được clip", "Bộ nhớ trình duyệt đầy hoặc bị chặn (chế độ riêng tư).", "warning"); return; }
@@ -2474,7 +2493,52 @@
       for (const u of mm.urls.values()) URL.revokeObjectURL(u); mm.urls.clear(); mm.sel = "random";
       await mmLoad(); mmRenderClips(); mmReady();
     }
-    const mmUrl = (clip, kind) => { const k = clip.id + ":" + kind; if (!mm.urls.has(k)) mm.urls.set(k, URL.createObjectURL(kind === "v" ? clip.video : clip.poster)); return mm.urls.get(k); };
+    const mmBlob = (clip) => (MM_FMT === "mp4" ? clip.mp4 || clip.video : clip.video || clip.mp4);
+    const mmUrl = (clip, kind) => { const b = kind === "v" ? mmBlob(clip) : clip.poster; const k = clip.id + ":" + kind + ":" + (b && b.size); if (!mm.urls.has(k)) mm.urls.set(k, URL.createObjectURL(b)); return mm.urls.get(k); };
+    // ---- Nguồn cloud: Apps Script meme riêng (không đụng script tiến độ), chỉ đọc thư mục Drive
+    const mmCloudOn = () => !!(state.progress.settings.memeApi && state.progress.settings.memeKey);
+    async function mmApi(params) {
+      const st = state.progress.settings; const u = new URL(st.memeApi);
+      u.searchParams.set("key", st.memeKey); for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
+      const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), FETCH_TIMEOUT_MS);
+      try { const r = await fetch(u.toString(), { signal: ctl.signal }); const j = await r.json(); if (!j.ok) throw new Error(j.error || "lỗi"); return j; }
+      finally { clearTimeout(tm); }
+    }
+    const b64Blob = (b64, mime) => { const bin = atob(b64); const a = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return new Blob([a], { type: mime }); };
+    async function mmPut(recs) {
+      const db = await mmDb(); const tx = db.transaction("clips", "readwrite"); const st = tx.objectStore("clips");
+      recs.forEach((r) => st.put(r)); await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error); });
+    }
+    async function mmCloudSync(silent) {
+      if (!mmCloudOn()) return;
+      $("mm-cloud-state").textContent = "· đang kết nối…";
+      try {
+        const list = (await mmApi({ action: "list" })).clips || [];
+        const have = new Map(mm.clips.map((c) => [c.id, c]));
+        const needPosters = list.some((c) => c.poster && !(have.get(c.id) || {}).poster);
+        const posters = needPosters ? (await mmApi({ action: "posters" })).posters || {} : {};
+        await mmPut(list.map((c) => { const o = have.get(c.id) || { id: c.id, video: null, mp4: null, poster: null };
+          return { ...o, cloud: { webm: !!c.webm, mp4: !!c.mp4 }, poster: o.poster || (posters[c.id] ? b64Blob(posters[c.id], "image/webp") : null) }; }));
+        await mmLoad(); mmRenderClips(); mmReady();
+        $("mm-cloud-state").textContent = `· ${ui.fmt(list.length)} clip`;
+        if (!silent) ui.toast("Đã kết nối cloud", `${ui.fmt(list.length)} clip. Clip tải về khi chạy lần đầu rồi lưu trên thiết bị.`, "success");
+      } catch (e) {
+        $("mm-cloud-state").textContent = "· chưa kết nối được";
+        if (!silent) ui.toast("Không kết nối được cloud", e.name === "AbortError" ? "Apps Script phản hồi quá lâu, thử lại." : `Kiểm tra URL và mã khoá (${e.message}).`, "warning");
+      }
+    }
+    // tải clip từ cloud nếu thiết bị chưa có bản đúng định dạng
+    async function mmEnsure(clip) {
+      const cl = clip.cloud || {};
+      const local = MM_FMT === "mp4" ? clip.mp4 || (!cl.mp4 && clip.video) : clip.video || (!cl.webm && clip.mp4);
+      if (local) return clip;
+      if (!clip.cloud || !mmCloudOn()) return mmBlob(clip) ? clip : null;
+      const fmt = MM_FMT === "mp4" && clip.cloud.mp4 ? "mp4" : clip.cloud.webm ? "webm" : "mp4";
+      const j = await mmApi({ action: "clip", id: clip.id, fmt });
+      const rec = { ...clip, [fmt === "mp4" ? "mp4" : "video"]: b64Blob(j.b64, j.mime) };
+      await mmPut([rec]); const i = mm.clips.findIndex((c) => c.id === clip.id); if (i >= 0) mm.clips[i] = rec;
+      return rec;
+    }
     const ICON_SHUFFLE = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/></svg>';
     function mmRenderClips() {
       const g = $("mm-grid"); g.innerHTML = "";
@@ -2520,7 +2584,11 @@
       if (!("speechSynthesis" in window)) { ui.toast("Không chạy được Meme loop", "Trình duyệt này không đọc được văn bản. Thử Safari hoặc Chrome.", "warning"); return; }
       await mmLoad(); mm.words = mm.words.filter((id) => BY_ID.has(id));
       $("mm-q").value = ""; mmRenderClips(); mmRenderWords();
+      const st = state.progress.settings; $("mm-api").value = st.memeApi || ""; $("mm-key").value = st.memeKey || "";
+      $("mm-cloud-off").hidden = !mmCloudOn(); $("mm-cloud").open = !mmCloudOn() && !mm.clips.length;
+      $("mm-cloud-state").textContent = mmCloudOn() ? "· đã cấu hình" : "· chưa cấu hình";
       $("dlg-meme").showModal();
+      if (mmCloudOn()) mmCloudSync(true);
     }
     // tiếng meme = 50% tiếng đọc: đi qua Web Audio (iPhone Safari không cho đổi video.volume)
     function mmAudio() {
@@ -2530,14 +2598,30 @@
         mm.gain.gain.value = MM_GAIN; if (mm.ac.state !== "running") mm.ac.resume();
       } catch (e) { try { v.volume = MM_GAIN; } catch (er) {} }
     }
+    const MM_BOX_MAX = 40;
+    function mmClearWords() { $("mm-words-layer").innerHTML = ""; mm.boxes = []; }
     function mmShowWord(e) {
-      const box = $("mm-word"), st = $("mm-stage");
-      $("mm-w").textContent = e.word; $("mm-m").textContent = sensesOf(e).map((x) => (POS_LABEL[x.pos] || x.pos) + " " + x.syn).join("; ");
-      box.hidden = false; box.style.left = "0px"; box.style.top = "0px";
-      const W = st.clientWidth, H = st.clientHeight, w = box.offsetWidth, h = box.offsetHeight;
-      box.style.left = Math.round(8 + Math.random() * Math.max(0, W - w - 16)) + "px";
-      box.style.top = Math.round(8 + Math.random() * Math.max(0, H - h - 16)) + "px";
-      if (!reducedMotion()) box.animate([{ opacity: 0, transform: "scale(.96)" }, { opacity: 1, transform: "scale(1)" }], { duration: 200, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
+      const layer = $("mm-words-layer"), st = $("mm-stage"); const mean = sensesOf(e).map((x) => (POS_LABEL[x.pos] || x.pos) + " " + x.syn).join("; ");
+      mm.boxes.forEach((b) => b.el.classList.add("is-old"));
+      const el = document.createElement("div"); el.className = "mm-word hud absolute rounded-lg px-4 py-2 text-center";
+      const w0 = document.createElement("p"); w0.className = "text-3xl font-semibold tracking-tight"; w0.textContent = e.word;
+      const m0 = document.createElement("p"); m0.className = "mm-m text-muted-foreground"; m0.textContent = mean;
+      el.append(w0, m0); el.style.left = "0px"; el.style.top = "0px"; layer.appendChild(el);
+      const W = st.clientWidth, H = st.clientHeight, w = el.offsetWidth, h = el.offsetHeight;
+      // thử 16 vị trí ngẫu nhiên, lấy chỗ chồng lên các hộp cũ ít nhất
+      let best = null, bestCost = Infinity;
+      for (let k = 0; k < 16; k++) {
+        const x = 8 + Math.random() * Math.max(0, W - w - 16), y = 8 + Math.random() * Math.max(0, H - h - 16);
+        let cost = 0;
+        for (const b of mm.boxes) { const ox = Math.max(0, Math.min(x + w, b.x + b.w) - Math.max(x, b.x)), oy = Math.max(0, Math.min(y + h, b.y + b.h) - Math.max(y, b.y)); cost += ox * oy; }
+        if (cost < bestCost) { bestCost = cost; best = { x, y }; } if (cost === 0) break;
+      }
+      el.style.left = Math.round(best.x) + "px"; el.style.top = Math.round(best.y) + "px";
+      const ow = el.offsetWidth, oh = el.querySelector(".text-3xl").offsetHeight + 16; // sau khi mờ chỉ còn dòng từ
+      mm.boxes.push({ el, x: best.x, y: best.y, w: ow, h: oh });
+      while (mm.boxes.length > MM_BOX_MAX) mm.boxes.shift().el.remove();
+      $("mm-live").textContent = `${e.word}: ${mean}`;
+      if (!reducedMotion()) el.animate([{ opacity: 0, transform: "scale(.96)" }, { opacity: 1, transform: "scale(1)" }], { duration: 200, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
     }
     function mmNext() {
       if (!mm.running) return;
@@ -2562,28 +2646,44 @@
       const v = $("mm-video"); try { v.pause(); } catch (e) {}
     }
     function mmEnd() {
-      mmHalt(); $("mm-word").hidden = true;
+      mmHalt();
       $("mm-end-desc").textContent = `Đã đọc ${ui.fmt(mm.step)} lượt cho ${ui.fmt(mm.words.length)} từ trong ${ui.fmt(Number(state.progress.settings.memeSecs) || 15)} giây.`;
       $("mm-end").hidden = false; $("mm-again").focus();
     }
-    function mmStart(clipId) {
+    async function mmStart(clipId) {
       if (!mm.clips.length || !mm.words.length) return;
+      mmAudio(); // mở khoá âm thanh ngay trong cú chạm (iPhone)
       const pool = mm.clips.filter((c) => c.id !== mm.cur);
       const clip = clipId && clipId !== "random" ? mm.clips.find((c) => c.id === clipId) || mm.clips[0] : (pool.length ? pool : mm.clips)[Math.floor(Math.random() * (pool.length || mm.clips.length))];
       mm.cur = clip.id;
-      $("shell").hidden = true; $("scr-meme").hidden = false; $("mm-end").hidden = true; $("mm-word").hidden = true;
+      $("shell").hidden = true; $("scr-meme").hidden = false; $("mm-end").hidden = true; mmClearWords();
+      mmHalt(); $("mm-loading").hidden = false; $("mm-loading-text").textContent = clip.cloud && !mmBlob(clip) ? "Đang tải meme từ cloud, lần đầu có thể mất vài chục giây…" : "Đang mở meme…";
+      let ready = null;
+      try { ready = await mmEnsure(clip); } catch (e) { ready = null; }
+      $("mm-loading").hidden = true;
+      if (!ready || $("scr-meme").hidden) { if (!ready) { ui.toast("Không tải được meme " + clip.id, "Kiểm tra kết nối cloud rồi thử lại, hoặc chọn meme khác.", "warning"); $("mm-end-desc").textContent = "Chưa tải được clip."; $("mm-end").hidden = false; } return; }
       $("mm-sub").textContent = `Meme ${clip.id} · ${mm.words.length} từ · ${Number(state.progress.settings.memeSecs) || 15} giây`;
-      const v = $("mm-video"); if (v.dataset.clip !== clip.id) { v.src = mmUrl(clip, "v"); v.dataset.clip = clip.id; }
+      const v = $("mm-video"); if (v.dataset.clip !== clip.id) { v.src = mmUrl(ready, "v"); v.dataset.clip = clip.id; }
       try { v.currentTime = 0; } catch (e) {}
       mmAudio(); const pr = v.play(); if (pr && pr.catch) pr.catch(() => {});
       mm.running = true; mm.step = 0; mm.t0 = performance.now();
       mmNext(); mm.raf = requestAnimationFrame(mmTick);
     }
-    function mmExit() { mmHalt(); $("scr-meme").hidden = true; $("shell").hidden = false; show("home"); renderAll(); }
+    function mmExit() { mmHalt(); mmClearWords(); $("mm-loading").hidden = true; $("scr-meme").hidden = true; $("shell").hidden = false; show("home"); renderAll(); }
     $("btn-meme").addEventListener("click", mmOpen);
     $("mm-dir").addEventListener("change", (e) => { mmSave([...e.target.files]); e.target.value = ""; });
     $("mm-files").addEventListener("change", (e) => { mmSave([...e.target.files]); e.target.value = ""; });
     $("mm-clear").addEventListener("click", mmClear);
+    $("mm-cloud-save").addEventListener("click", () => {
+      const api = $("mm-api").value.trim(), key = $("mm-key").value.trim();
+      if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(api) || !key) { ui.toast("Thiếu thông tin", "Dán URL web app Apps Script (https://script.google.com/…/exec) và mã khoá.", "warning"); return; }
+      state.progress.settings.memeApi = api; state.progress.settings.memeKey = key; markDirty();
+      $("mm-cloud-off").hidden = false; mmCloudSync(false);
+    });
+    $("mm-cloud-off").addEventListener("click", () => {
+      state.progress.settings.memeApi = ""; state.progress.settings.memeKey = ""; markDirty();
+      $("mm-api").value = ""; $("mm-key").value = ""; $("mm-cloud-off").hidden = true; $("mm-cloud-state").textContent = "· chưa cấu hình";
+    });
     $("mm-q").addEventListener("input", () => mmRenderWords());
     $("mm-rand").addEventListener("click", () => { mm.words = shuffle(deckCards(state.deck).map((e) => e.id)).slice(0, MM_MAX); $("mm-q").value = ""; mmRenderWords(); });
     document.querySelectorAll("[data-mmrate]").forEach((b) => b.addEventListener("click", () => { state.progress.settings.memeRate = Number(b.dataset.mmrate); markDirty(); mmReady(); }));
