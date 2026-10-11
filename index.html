@@ -341,6 +341,9 @@
     @keyframes lvl-pop { 0% { transform: scale(.55); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
     @keyframes lvl-shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
     .lvl-shuttle.up { animation: lvl-pop 520ms var(--ease-out) both; } .lvl-shuttle.down { animation: lvl-shake 360ms ease-in-out both; }
+    /* cột cuộn: thẻ con giữ đúng chiều cao (không co lại), phần dư thì cuộn */
+    #study-done > * { flex-shrink: 0; }
+    #study-done { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
     .lvl-row { opacity: 0; transform: translateY(6px); transition: opacity 260ms ease, transform 260ms var(--ease-out); } .lvl-row.on { opacity: 1; transform: none; }
     /* Giới thiệu: các trang vuốt ngang (kiểu màn chào của Apple) */
     .guide-track { display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
@@ -1385,7 +1388,7 @@
     // ================================================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwBiNwckLC-9o_m0X0TBDE-vjazUJMWD4UlIsySwcsFuUjMyBGBo3mfVQGEhWl47CJ7DA/exec";
     const SCHEMA = 1;
-    const APP_VER = "1.12.1";
+    const APP_VER = "1.12.2";
     const VERSION_URL = "version.json";       // cùng repo; build_vocab.py tự đồng bộ số phiên bản vào file này
     const VERSION_CHECK_MS = 10 * 60 * 1000;
     const NEW_BATCH = 20;                       // "Học thêm 20 thẻ mới"
