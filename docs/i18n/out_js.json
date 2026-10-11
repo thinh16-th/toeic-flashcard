@@ -281,5 +281,12 @@
  "`${ui.fmt(prac)} từ đã tính điểm hôm nay hoặc đã ở Hũ vàng: học lại không cộng điểm nhớ, chỉ nhận vàng.`": "`${ui.fmt(prac)} words already scored today or in the Gold jar: studying them again adds no memory points, only coins.`",
  "`${ui.fmt(prac.length)} / ${ui.fmt(queue.length)} từ đã tính điểm nhớ hôm nay hoặc đã ở Hũ vàng. Học lại không đổi điểm nhớ; mỗi lần nhớ đúng được +${gain} vàng. Vàng dùng để mua vật phẩm ở phiên bản sau.`": "`${ui.fmt(prac.length)} / ${ui.fmt(queue.length)} words already scored today or are in the Gold jar. Studying them again won't change memory points; each correct answer earns +${gain} coins. Coins will buy items in the next version.`",
  "`+${coin} vàng`": "`+${coin} coins`",
- "` +${ui.fmt(s.coins)} vàng (còn ${ui.fmt(coinsLeft())}).`": "` +${ui.fmt(s.coins)} coins (balance ${ui.fmt(coinsLeft())}).`"
+ "` +${ui.fmt(s.coins)} vàng (còn ${ui.fmt(coinsLeft())}).`": "` +${ui.fmt(s.coins)} coins (balance ${ui.fmt(coinsLeft())}).`",
+ "\"Không nghe thấy phát âm?\"": "\"Can't hear the pronunciation?\"",
+ "\"iPhone: gạt nút im lặng bên hông sang bật tiếng, tăng âm lượng, rồi chạm nút loa. Không cần cấp quyền micro.\"": "\"iPhone: flip the side silent switch to ring, turn the volume up, then tap the speaker button. No microphone permission is needed.\"",
+ "\"trình duyệt chặn: chạm vào màn hình rồi thử lại\"": "\"blocked by the browser: tap the screen and try again\"",
+ "\"Đang thử…\"": "\"Testing…\"",
+ "\"Phát âm hoạt động. Nếu vẫn không nghe: tăng âm lượng, tắt chế độ im lặng.\"": "\"Speech is working. Still silent? Turn the volume up and switch off silent mode.\"",
+ "\"Chưa phát được tiếng. iPhone: gạt nút im lặng bên hông sang bật tiếng, tăng âm lượng, thử giọng khác. Không cần cấp quyền micro.\"": "\"No sound yet. iPhone: flip the side silent switch to ring, turn the volume up, try another voice. No microphone permission is needed.\"",
+ "` (lỗi: ${tts.lastErr})`": "` (error: ${tts.lastErr})`"
 }
