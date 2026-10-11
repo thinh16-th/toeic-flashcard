@@ -75,7 +75,30 @@
     </div>
   </main>
 
-  <script src="ipa-mouth.js"></script>
+  <script>
+    // TỰ CẬP NHẬT (trang lab): GitHub Pages giữ bản cũ trong cache ~10 phút. Mỗi lần mở / quay lại tab, so LAB_VER với lab/version.json
+    // (luôn tải mới); khác thì tải lại trang bằng URL ?v=<bản mới> (URL mới nên bỏ qua cache), mỗi bản chỉ thử 1 lần.
+    // Sửa trang này thì tăng LAB_VER và version.json cùng lúc.
+    const LAB_VER = "2026.10.12-2";
+    (function () {
+      if (location.protocol === "file:") return;
+      let last = 0;
+      async function check() {
+        if (Date.now() - last < 30000) return; last = Date.now();
+        try {
+          const r = await fetch("version.json?t=" + Date.now(), { cache: "no-store" }); if (!r.ok) return;
+          const v = String((await r.json()).ver || ""); if (!v || v === LAB_VER) return;
+          let done = ""; try { done = sessionStorage.getItem("lab-reloaded-for") || ""; } catch (e) {}
+          if (done === v) return;
+          try { sessionStorage.setItem("lab-reloaded-for", v); } catch (e) {}
+          location.replace(location.pathname + "?v=" + encodeURIComponent(v) + location.hash);
+        } catch (e) {}
+      }
+      check();
+      document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") check(); });
+    })();
+  </script>
+  <script src="ipa-mouth.js?v=2026.10.12-2"></script>
   <script>
     const WORDS = [{ w: "think", ipa: "/θɪŋk/" }, { w: "share", ipa: "/ʃɛr/" }, { w: "red", ipa: "/rɛd/" }];
     const TIP = {
