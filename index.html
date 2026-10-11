@@ -292,7 +292,31 @@
     .dialog > div { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), 0 20px 50px rgba(20, 30, 60, .18); }
     html.dark .glass-tabbar { border-color: rgba(255, 255, 255, .12); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 10px 30px rgba(0, 0, 0, .45); }
     html.dark .dialog > div { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 20px 50px rgba(0, 0, 0, .5); }
-    @media (prefers-reduced-transparency: reduce) { .glass-bar, .glass-tabbar, .dialog > div { background: var(--card) !important; -webkit-backdrop-filter: none; backdrop-filter: none; } body { background-image: none; } }
+    /* Liquid Glass cho phần điều khiển: một công thức dùng chung (nền xuyên + mờ + viền sáng phía trên) */
+    :root { --glass-fill: color-mix(in oklab, var(--card) 58%, transparent); --glass-rim: rgba(255, 255, 255, .6); --glass-edge: color-mix(in oklab, #fff 50%, var(--border)); --glass-drop: 0 6px 20px rgba(20, 30, 60, .10); }
+    html.dark { --glass-fill: color-mix(in oklab, var(--card) 52%, transparent); --glass-rim: rgba(255, 255, 255, .1); --glass-edge: rgba(255, 255, 255, .12); --glass-drop: 0 6px 20px rgba(0, 0, 0, .4); }
+    #scr-study.is-space, #scr-meme.is-meme { --glass-fill: color-mix(in oklab, #141c3d 64%, transparent); --glass-edge: var(--hud-line); --glass-rim: rgba(255, 255, 255, .12); --glass-drop: 0 6px 20px rgba(0, 0, 0, .45); }
+    .seg, .glass-pill, .toaster .toast, #ship-overlay .card, #ship-gameover .card, .guide-bar {
+      background: var(--glass-fill) !important; -webkit-backdrop-filter: blur(16px) saturate(170%); backdrop-filter: blur(16px) saturate(170%);
+      border: 1px solid var(--glass-edge); box-shadow: inset 0 1px 0 var(--glass-rim), var(--glass-drop); }
+    .seg { border-radius: 999px; padding: 3px; }
+    .seg button { border-radius: 999px; }
+    .seg button[aria-checked="true"] { background: color-mix(in oklab, var(--card) 92%, transparent); box-shadow: inset 0 1px 0 var(--glass-rim), 0 1px 4px rgba(20, 30, 60, .14); }
+    .glass-pill { border-radius: 999px; padding: 2px; }
+    #ship-overlay .card, #ship-gameover .card { border-radius: 1.25rem; }
+    /* game: HUD và nút điều khiển thành viên kính (vũ trụ: kính tối; sân cầu lông: kính sáng) */
+    .hud { -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14); }
+    .btn.console-btn, .btn.console-btn:hover { -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); border-radius: 999px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16); }
+    #scr-study.is-court .hud { background: var(--glass-fill); border-color: var(--glass-edge); box-shadow: inset 0 1px 0 var(--glass-rim), var(--glass-drop); }
+    #scr-study.is-court .btn.console-btn { background: var(--glass-fill); border-color: var(--glass-edge); box-shadow: inset 0 1px 0 var(--glass-rim), var(--glass-drop); }
+    /* Giới thiệu: nền trang chính nhìn xuyên qua lớp mờ, nút dưới gom trong một viên kính */
+    #scr-guide { background: color-mix(in oklab, var(--background) 80%, transparent) !important; -webkit-backdrop-filter: blur(28px) saturate(160%); backdrop-filter: blur(28px) saturate(160%); }
+    .guide-bar { border-radius: 999px; padding: 4px; }
+    @media (prefers-reduced-transparency: reduce) {
+      .glass-bar, .glass-tabbar, .dialog > div, .seg, .glass-pill, .toaster .toast, #ship-overlay .card, #ship-gameover .card, .guide-bar, #scr-guide,
+      #scr-study.is-court .hud, #scr-study.is-court .btn.console-btn { background: var(--card) !important; -webkit-backdrop-filter: none; backdrop-filter: none; }
+      body { background-image: none; }
+    }
     /* Cầu lông: sân sáng, HUD sáng */
     #scr-study.is-court .hud { background: color-mix(in oklab, var(--card) 86%, transparent); border-color: var(--border); }
     #scr-study.is-court .ship-hud { color: var(--foreground); }
@@ -352,7 +376,7 @@
 
   <!-- ===================== LOGIN (L2 form tối giản) ===================== -->
   <main id="scr-login" class="relative mx-auto flex min-h-dvh max-w-sm flex-col justify-center gap-6 p-6 safe-t safe-b" hidden>
-    <div class="absolute top-3 right-3 flex gap-1"><button class="btn guide-btn" data-variant="ghost" data-size="icon-sm" type="button" aria-label="Giới thiệu và hướng dẫn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></button><button class="btn lang-btn" data-variant="ghost" data-size="sm" type="button">EN</button><button class="btn" data-variant="ghost" data-size="icon-sm" aria-label="Đổi giao diện sáng tối" onclick="ui.toggleTheme()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></button></div>
+    <div class="glass-pill absolute top-3 right-3 flex gap-1"><button class="btn guide-btn" data-variant="ghost" data-size="icon-sm" type="button" aria-label="Giới thiệu và hướng dẫn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></button><button class="btn lang-btn" data-variant="ghost" data-size="sm" type="button">EN</button><button class="btn" data-variant="ghost" data-size="icon-sm" aria-label="Đổi giao diện sáng tối" onclick="ui.toggleTheme()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></button></div>
     <div class="flex items-end justify-center" aria-hidden="true">
       <span class="p04 h-36 w-32" data-p04="an" data-clip="wave"></span><span class="p04 h-20 w-20" data-p04="be_cau" data-clip="idle"></span><span class="p04 h-36 w-32" data-p04="mai" data-clip="wave" data-flip="1" data-off="0.6"></span>
     </div>
@@ -860,7 +884,7 @@
 
 
   <!-- ===================== GIỚI THIỆU (nút ? ở góc): các trang vuốt ngang, hướng dẫn chi tiết đặt ở đây ===================== -->
-  <main id="scr-guide" class="fixed inset-0 z-50 flex h-dvh flex-col bg-background safe-t" hidden aria-labelledby="guide-title">
+  <main id="scr-guide" class="fixed inset-0 z-50 flex h-dvh flex-col safe-t" hidden aria-labelledby="guide-title">
     <header class="flex h-14 shrink-0 items-center gap-2 px-3">
       <p class="flex-1 text-sm font-medium" id="guide-title">Giới thiệu</p>
       <button class="btn lang-btn" data-variant="ghost" data-size="sm" type="button">EN</button>
@@ -917,7 +941,7 @@
       </section>
     </div>
     <footer class="shrink-0 px-4 pb-3 safe-b">
-      <div class="mx-auto flex max-w-xl items-center gap-3">
+      <div class="guide-bar mx-auto flex max-w-xl items-center gap-3">
         <button class="btn" data-variant="ghost" id="guide-prev">Quay lại</button>
         <div class="flex flex-1 justify-center gap-1.5" id="guide-dots" role="tablist" aria-label="Trang giới thiệu"></div>
         <button class="btn" id="guide-next">Tiếp</button>
@@ -1301,7 +1325,7 @@
     // ================================================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwBiNwckLC-9o_m0X0TBDE-vjazUJMWD4UlIsySwcsFuUjMyBGBo3mfVQGEhWl47CJ7DA/exec";
     const SCHEMA = 1;
-    const APP_VER = "1.11.0";
+    const APP_VER = "1.11.1";
     const VERSION_URL = "version.json";       // cùng repo; build_vocab.py tự đồng bộ số phiên bản vào file này
     const VERSION_CHECK_MS = 10 * 60 * 1000;
     const NEW_BATCH = 20;                       // "Học thêm 20 thẻ mới"
