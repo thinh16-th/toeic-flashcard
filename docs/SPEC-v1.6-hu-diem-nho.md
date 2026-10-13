@@ -44,6 +44,7 @@ Cộng khi trả lời đúng (theo hũ trước khi chấm):
   - ship: 0,5
 - Hệ số áp cho cả cộng lẫn trừ. Làm tròn; điểm cộng tối thiểu 1.
 - **Mỗi từ chỉ được tính điểm 1 lần mỗi ngày.** Các lượt sau trong ngày được ghi là "luyện", 0 điểm, không đổi hạn. Lượt ôn vẫn được đếm vào lịch sử 30 ngày.
+  - Ngoại lệ (v1.18.1): từ vừa **quên** hôm nay (hạn = hôm nay) mà sau đó nhớ đúng → ghi "nhớ lại" (`r`), 0 điểm, nhưng dời hạn sang ngày mai (`iv` = 1) để từ rời danh sách đến hạn. Quên tiếp thì vẫn là "luyện", hạn giữ hôm nay.
 - Từ ở Hũ vàng: lượt ôn không đổi gì (ghi "luyện").
 - Nút "Đã biết" (thẻ mới): điểm 75 (Hũ 5), ôn sau 30 ngày.
 - Đặt hũ thủ công trong trang Từ vựng: điểm = mức thấp nhất của hũ đó (Hũ vàng = 100), ghi "đặt tay".
@@ -59,7 +60,7 @@ Mỗi phần tử `cards[id]` có các trường:
 - `box`, `score`, `due`, `iv`, `last`, `seen`, `lapses`, `ok`, `log`, `updated`
 - `ok`: số lần ôn đúng hạn.
 - `log`: tối đa 30 dòng, mỗi dòng dạng `"YYYY-MM-DD|delta|kind|mode|from|to"`.
-  - `kind` là một trong: n (mới), o (đúng hạn), e (sớm), l (trễ), f (quên), p (luyện), k (đã biết), m (đặt tay), c (quy đổi).
+  - `kind` là một trong: n (mới), o (đúng hạn), e (sớm), l (trễ), f (quên), p (luyện), r (nhớ lại), k (đã biết), m (đặt tay), c (quy đổi).
 
 Mỗi phần tử `history[date]` có thêm hai trường:
 - `d`: số lượt ôn từ đã đến hạn (đúng hạn hoặc trễ)

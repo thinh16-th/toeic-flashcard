@@ -1,0 +1,12 @@
+# Không phải code nguồn: dữ liệu từ vựng, asset đồ hoạ, bản dịch i18n sinh ra
+assets/
+vocab.json
+vocab_enrich.json
+vocab_example_vi.json
+version.json
+lab/version.json
+docs/i18n/out_js.json
+docs/i18n/out_static.json
+progress/
+__pycache__/
+.gitnexus/

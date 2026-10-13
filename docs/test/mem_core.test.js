@@ -56,6 +56,17 @@ t("one scored event per day: second review same day is practice, no change", () 
   const r = applyReview(c, false, "card", T);
   assert.strictEqual(r.ev.kind, "p"); assert.strictEqual(r.ev.delta, 0); assert.strictEqual(r.card.score, 5); assert.strictEqual(r.card.box, 2);
 });
+t("forgot today then correct: relearned, no score change, due moves to tomorrow", () => {
+  const c = { box: 3, score: 20, due: T, iv: 3, last: "2026-10-08", seen: 3, lapses: 0, ok: 2, log: [] };
+  const f = applyReview(c, false, "card", T).card;           // −15 → 5, due today
+  const r = applyReview(f, true, "card", T);
+  assert.strictEqual(r.ev.kind, "r"); assert.strictEqual(r.ev.delta, 0); assert.strictEqual(r.card.score, f.score);
+  assert.strictEqual(r.card.due, "2026-10-12"); assert.strictEqual(r.card.iv, 1);
+  const again = applyReview(f, false, "card", T);             // quên tiếp: vẫn đến hạn hôm nay
+  assert.strictEqual(again.ev.kind, "p"); assert.strictEqual(again.card.due, T);
+  const nw = applyReview(applyReview(null, false, "card", T).card, true, "card", T);  // từ mới sai rồi đúng
+  assert.strictEqual(nw.ev.kind, "r"); assert.strictEqual(nw.card.due, "2026-10-12");
+});
 t("gold is locked", () => {
   const c = { box: 6, score: 100, due: "9999-12-31", iv: 0, last: "2026-09-01", seen: 9, lapses: 0, ok: 6, log: [] };
   const r = applyReview(c, false, "card", T);

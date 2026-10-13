@@ -1771,7 +1771,7 @@
     // ================================================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwBiNwckLC-9o_m0X0TBDE-vjazUJMWD4UlIsySwcsFuUjMyBGBo3mfVQGEhWl47CJ7DA/exec";
     const SCHEMA = 1;
-    const APP_VER = "1.18.0";
+    const APP_VER = "1.18.1";
     const VERSION_URL = "version.json";       // cùng repo; build_vocab.py tự đồng bộ số phiên bản vào file này
     const VERSION_CHECK_MS = 10 * 60 * 1000;
     const NEW_BATCH = 20;                       // "Học thêm 20 thẻ mới"
@@ -1813,14 +1813,16 @@
       const from = prev ? c.box : 0; const w = MODE_W[mode] || 1;
       c.seen = (c.seen || 0) + 1;
       let kind, delta = 0;
-      if (prev && (c.box === GOLD || c.last === today)) kind = "p";
+      // r = nhớ lại từ vừa quên hôm nay: không đổi điểm (1 lần/ngày) nhưng dời hạn sang mai, để từ rời danh sách đến hạn
+      if (prev && known && c.box !== GOLD && c.last === today && c.due <= today) { kind = "r"; c.iv = 1; c.due = dAdd(today, 1); }
+      else if (prev && (c.box === GOLD || c.last === today)) kind = "p";
       else if (!known) { kind = "f"; delta = -Math.max(1, Math.round(PENALTY * w)); c.lapses = (c.lapses || 0) + 1; }
       else {
         kind = timing(prev, today); const base = JAR_GAIN[c.box] || JAR_GAIN[1];
         delta = Math.max(1, Math.round((kind === "e" ? EARLY_GAIN : kind === "l" ? base / 2 : base) * w));
         if (kind === "o") c.ok = (c.ok || 0) + 1;
       }
-      if (kind !== "p") {
+      if (kind !== "p" && kind !== "r") {
         const before = c.score || 0; c.score = Math.max(0, Math.min(100, before + delta)); c.box = jarOf(c.score); delta = c.score - before;
         if (kind === "f") { c.iv = 0; c.due = today; }
         else { c.iv = jarInterval(c.box, c.score); c.due = c.box === GOLD ? GOLD_DUE : dAdd(today, c.iv); }
@@ -1844,11 +1846,12 @@
     const jarName = (b) => (b === GOLD ? L("Hũ vàng", "Gold jar") : b ? L(`Hũ ${b}`, `Jar ${b}`) : L("Mới", "New"));
     const jarSrc = (b) => `assets/hu/${b === GOLD ? "hu_vang" : b ? "hu_" + b : "hu_moi"}.svg`;
     const JAR_RANGE = { 0: L("chưa học", "not studied"), 1: "0-4", 2: "5-14", 3: "15-29", 4: "30-49", 5: "50-99", 6: "100" };
-    const KIND_LABEL = { n: L("Lần đầu", "First time"), o: L("Đúng hạn", "On time"), e: L("Ôn sớm", "Early review"), l: L("Trễ hạn", "Overdue"), f: L("Quên", "Forgot"), p: L("Luyện thêm", "Extra practice"), k: L("Đã biết", "Already known"), m: L("Đặt tay", "Set manually"), c: L("Quy đổi", "Converted") };
+    const KIND_LABEL = { n: L("Lần đầu", "First time"), o: L("Đúng hạn", "On time"), e: L("Ôn sớm", "Early review"), l: L("Trễ hạn", "Overdue"), f: L("Quên", "Forgot"), p: L("Luyện thêm", "Extra practice"), r: L("Nhớ lại", "Relearned"), k: L("Đã biết", "Already known"), m: L("Đặt tay", "Set manually"), c: L("Quy đổi", "Converted") };
     const MODE_LABEL = { card: L("Thẻ lật", "Flashcards"), reverse: L("Thẻ ngược", "Reverse cards"), quiz: L("Trắc nghiệm", "Quiz"), cloze: L("Điền câu", "Cloze"), dictation: L("Nghe và gõ", "Listen & type"), ship: L("Phi thuyền", "Spaceship"), "-": "" };
     /** câu ngắn cho người học: "+10 điểm nhớ (đúng hạn), Hũ 2 → Hũ 3" */
     function evText(ev) {
       if (ev.kind === "p") return ev.to === GOLD ? L("Từ đã ở Hũ vàng, lượt này không đổi điểm.", "Word is already in the Gold jar, no points change this time.") : L("Hôm nay từ này đã được tính điểm, lượt này là luyện thêm.", "This word already scored today, so this round is extra practice.");
+      if (ev.kind === "r") return L(`Đã nhớ lại. Điểm nhớ giữ ở ${ev.score} (hôm nay đã tính điểm), ôn lại vào ngày mai.`, `Relearned. Memory points stay at ${ev.score} (already scored today), next review tomorrow.`);
       if (ev.delta === 0) return L(`Điểm nhớ giữ ở ${ev.score} (${KIND_LABEL[ev.kind].toLowerCase()}), ${jarName(ev.to)}.`, `Memory points stay at ${ev.score} (${KIND_LABEL[ev.kind].toLowerCase()}), ${jarName(ev.to)}.`);
       const move = ev.from !== ev.to ? L(`, ${ev.from ? jarName(ev.from) : "Mới"} → ${jarName(ev.to)}`, `, ${ev.from ? jarName(ev.from) : "New"} → ${jarName(ev.to)}`) : L(`, vẫn ở ${jarName(ev.to)}`, `, still in ${jarName(ev.to)}`);
       return L(`${ev.delta > 0 ? "+" : "−"}${Math.abs(ev.delta)} điểm nhớ (${KIND_LABEL[ev.kind].toLowerCase()})${move}.`, `${ev.delta > 0 ? "+" : "−"}${Math.abs(ev.delta)} memory points (${KIND_LABEL[ev.kind].toLowerCase()})${move}.`);
@@ -2016,9 +2019,10 @@
       if (!API_URL || !state.user || !state.dirty || state.pushing) return;
       clearTimeout(state.pushTimer); clearTimeout(state.retryTimer);
       state.pushing = true; setSync("saving", L("Đang gửi tiến độ lên server…", "Sending progress to the server…"));
-      const snapshot = state.progress.updated;
+      const snapshot = state.progress.updated, user = state.user;
       try {
-        const res = await apiPost({ u: state.user, data: state.progress });
+        const res = await apiPost({ u: user, data: state.progress });
+        if (state.user !== user) return;   // đã đăng xuất / đổi người dùng trong lúc chờ: bỏ kết quả, không gộp dữ liệu người khác
         if (res.ok) {
           if (state.progress.updated === snapshot) state.dirty = false;
           setSync(state.dirty ? "saving" : "synced", L("Lưu lúc ", "Saved at ") + new Date().toLocaleTimeString(LOCALE));
@@ -2031,11 +2035,15 @@
           state.retryTimer = setTimeout(() => push(), RETRY_MS);
         }
       } catch (err) {
+        if (state.user !== user) return;
         const off = typeof navigator !== "undefined" && navigator.onLine === false;
         const timeout = err && err.name === "AbortError";
         setSync(off ? "offline" : "error", off ? L("Không có mạng. Tiến độ giữ trên thiết bị, tự gửi khi có mạng.", "No connection. Progress is kept on this device and will send when you're back online.") : timeout ? L("Server phản hồi chậm, sẽ tự gửi lại sau 20 giây. Tiến độ vẫn an toàn trên thiết bị.", "Server is slow to respond, will resend in 20 seconds. Progress is safe on this device.") : L("Không gọi được server (", "Couldn't reach the server (") + err.message + L("). Sẽ thử lại sau 1 phút.", "). Will retry in 1 minute."));
         state.retryTimer = setTimeout(() => push(), timeout ? RETRY_FAST_MS : RETRY_MS);
-      } finally { state.pushing = false; }
+      } finally {
+        state.pushing = false;
+        if (state.user && state.user !== user && state.dirty) state.pushTimer = setTimeout(() => push(), PUSH_DEBOUNCE_MS);   // người dùng mới bị chặn bởi lượt gửi cũ
+      }
     }
 
     function flushBeacon() {
@@ -2128,7 +2136,7 @@
       clearTimeout(state.pushTimer); if (state.dirty) flushBeacon();
       state.user = null; state.progress = null; state.dirty = false; state.session = null;
       $("shell").hidden = true; $("scr-study").hidden = true; $("scr-login").hidden = false;
-      renderLogin(); $("login-user").focus();
+      renderLogin(); $("login-user").focus(); p04Wake();
     }
 
     function renderLogin() {
@@ -2156,7 +2164,7 @@
       });
       if (name === "browse") { if (state.table) refreshTable(); else initTable(); }
       if (name === "settings") renderSettings();
-      window.scrollTo(0, 0);
+      window.scrollTo(0, 0); p04Wake();
     }
     document.querySelectorAll(".nav-btn").forEach((b) => b.addEventListener("click", () => show(b.dataset.nav)));
 
@@ -2291,7 +2299,7 @@
       if (mode === "pig") pigInit();
       const modeLabel = { card: "", reverse: L(" · ngược", " · reverse"), quiz: L(" · trắc nghiệm", " · quiz"), cloze: L(" · điền câu", " · cloze"), dictation: L(" · nghe và gõ", " · listen & type"), ship: L(" · phi thuyền", " · spaceship"), badminton: L(" · cầu lông", " · badminton"), pig: L(" · heo ăn cầu", " · piggy feast") }[mode] || "";
       $("study-deck").textContent = deckById(deckId).name + modeLabel + (extraNew ? L(" · thẻ mới", " · new card") : "");
-      renderCard();
+      renderCard(); p04Wake();
     }
 
     // thẻ mới: từ xuất hiện nhiều đề học trước
@@ -2409,7 +2417,7 @@
       const img = $("study-jar"); const wrap = $("study-jar-wrap");
       img.src = jarSrc(ev.to); $("study-jar-label").textContent = `${jarName(ev.to)} · ${ui.fmt(ev.score)}`;
       $("study-jar-live").textContent = evText(ev);
-      if (ev.kind === "p") return;
+      if (ev.kind === "p" || ev.kind === "r") return;
       const cls = ev.to === GOLD && ev.from !== GOLD ? "is-gold" : ev.delta < 0 ? "is-fall" : "is-catch";
       img.className = "hu-jar h-10 w-auto"; void img.offsetWidth; img.classList.add(cls);
       const f = document.createElement("span"); f.className = "hu-score " + (ev.delta < 0 ? "down" : "up");
@@ -2419,14 +2427,9 @@
 
     function highlight(example, word) {
       if (!example) return "";
-      const base = stripParen(word).toLowerCase().split(/\s+/).filter(Boolean).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-      if (!base.length) return escapeHtml(example);
-      base[base.length - 1] += "(?:s|es|ed|d|ing)?";
-      const rx = new RegExp("\\b" + base.join("\\s+") + "\\b", "i");
-      const m = example.match(rx);
-      if (!m) return escapeHtml(example);
-      const i = m.index;
-      return escapeHtml(example.slice(0, i)) + `<mark class="fc-hl">${escapeHtml(m[0])}</mark>` + escapeHtml(example.slice(i + m[0].length));
+      const t = findToken(example, word);
+      if (!t) return escapeHtml(example);
+      return escapeHtml(t.before) + `<mark class="fc-hl">${escapeHtml(t.token)}</mark>` + escapeHtml(t.after);
     }
 
     function maskExample(example, word) {
@@ -2563,13 +2566,21 @@
     const ICON_SPK = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>';
     const normAns = (x) => String(x || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[’‘`]/g, "'")
       .replace(/[^a-z0-9' -]/g, " ").replace(/[\s-]+/g, " ").trim();
+    // kết quả chỉ phụ thuộc (câu, từ) nên nhớ lại: trang chủ lọc ~3.330 từ nhiều lần mỗi lần vẽ
+    const tokenCache = new Map();
     function findToken(example, word) {
       if (!example) return null;
+      const key = word + "\u0001" + example;
+      if (tokenCache.has(key)) return tokenCache.get(key);
       const base = stripParen(word).toLowerCase().split(/\s+/).filter(Boolean).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-      if (!base.length) return null;
-      base[base.length - 1] += "(?:s|es|ed|d|ing)?";
-      const m = example.match(new RegExp("\\b" + base.join("\\s+") + "\\b", "i"));
-      return m ? { before: example.slice(0, m.index), token: m[0], after: example.slice(m.index + m[0].length) } : null;
+      let r = null;
+      if (base.length) {
+        base[base.length - 1] += "(?:s|es|ed|d|ing)?";
+        const m = example.match(new RegExp("\\b" + base.join("\\s+") + "\\b", "i"));
+        if (m) r = { before: example.slice(0, m.index), token: m[0], after: example.slice(m.index + m[0].length) };
+      }
+      tokenCache.set(key, r);
+      return r;
     }
     function dictAnswers(e) {
       const base = stripParen(e.word).trim();
@@ -2862,24 +2873,30 @@
       }
       if (a.mood === mood) return;
       a.mood = mood; a.clip = P04_MOOD_CLIP[mood] || "idle"; a.face = mood === "angry" ? "angry" : null; a.dirty = true;
-      p04Flame(a, mood === "angry");
+      p04Flame(a, mood === "angry"); p04Wake();
     }
+    // trả về true nếu còn việc cho khung sau (có nhân vật/sân đang hiện, hoặc Bé Cầu còn đang giận)
     function p04Draw(now) {
-      const still = reducedMotion(), t = now / 1000;
+      const still = reducedMotion(), t = now / 1000; let busy = false;
       for (const a of p04Actors) {
-        if (a.mood === "angry" && now > a.until) p04Mood(a, "idle");
+        if (a.mood === "angry") { busy = true; if (now > a.until) p04Mood(a, "idle"); }
         if (a.host.offsetParent === null) continue;
+        busy = true;
         if (still && !a.dirty) continue;
         a.dirty = false; a.rig.pose(a.clip, still ? 0.3 : t + a.off);
         if (a.face) p04Face(a, a.face);
       }
-      for (const c of p04Courts) if (c.host.offsetParent !== null && (!still || c.dirty)) { c.dirty = false; c.r.seek(still ? 0.35 : t); }
+      for (const c of p04Courts) if (c.host.offsetParent !== null) { busy = true; if (!still || c.dirty) { c.dirty = false; c.r.seek(still ? 0.35 : t); } }
+      return busy;
     }
-    function p04Tick(now) { requestAnimationFrame(p04Tick); if (!document.hidden) p04Draw(now); }
+    // vòng vẽ chỉ chạy khi có thứ đang hiện; đổi màn / đổi tâm trạng thì gọi p04Wake() để chạy lại
+    let p04Raf = 0;
+    function p04Tick(now) { p04Raf = 0; if (!document.hidden && !p04Draw(now)) return; p04Raf = requestAnimationFrame(p04Tick); }
+    function p04Wake() { if (!p04Raf) p04Raf = requestAnimationFrame(p04Tick); }
     document.querySelectorAll("[data-p04]").forEach((el) => { const a = p04Char(el, el.dataset.p04, { clip: el.dataset.clip, flip: el.dataset.flip === "1", off: Number(el.dataset.off || 0) }); if (el.id) p04ById.set(el.id, a); });
     { const host = $("gt-court"); p04Courts.add({ host, dirty: true, r: P04Rally.mount(host, { svg: P04.svg, anims: P04.anims, html: p04Html, period: 1.6 }) }); }
-    window.addEventListener("resize", () => { for (const c of p04Courts) { c.r.invalidate(); c.dirty = true; } if (mm.rally) mm.rally.invalidate(); for (const a of p04Actors) a.dirty = true; });
-    requestAnimationFrame(p04Tick);
+    window.addEventListener("resize", () => { for (const c of p04Courts) { c.r.invalidate(); c.dirty = true; } if (mm.rally) mm.rally.invalidate(); for (const a of p04Actors) a.dirty = true; p04Wake(); });
+    p04Wake();
     const shipMascot = (mood) => p04Mood(p04ById.get("ship-mascot"), mood);
     const BECAU_PILOT = new Image(); BECAU_PILOT.src = "assets/p04/be_cau_pilot.svg";
     function renderGameTiles() {
@@ -3045,13 +3062,16 @@
     }
     const toneHas = (e, mod) => { const m = tone.mc && tone.mc.get(e.id); return !!(m && m.has(mod)); };
     // bộ ngẫu nhiên: mỗi học phần 1 câu, không trùng câu
-    function toneMix() {
-      if (!tone.dict) return;
+    function toneMixBuild() {
       const used = new Set(); tone.mix = [];
       TONE_MODS.forEach((m) => {
         const c = tone.list.filter((e) => toneHas(e, m.id) && !used.has(e.id)); if (!c.length) return;
         const e = c[Math.floor(Math.random() * c.length)]; used.add(e.id); tone.mix.push({ e, mod: m.id });
       });
+    }
+    function toneMix() {
+      if (!tone.dict) return;
+      toneMixBuild();
       tone.mod = "mix"; try { localStorage.setItem("ets-fc:tone-mod", "mix"); } catch (e) {}
       toneModFill(); toneView(); tone.i = 0;
       if (tone.src !== "toeic") toneSetSrc("toeic"); else toneShow(0);
@@ -3076,11 +3096,11 @@
       $("tone-mix").title = L("Mỗi học phần lấy ngẫu nhiên 1 câu để đọc và nghe; bấm lại để đổi bộ khác", "Pick 1 random sentence per focus to read and hear; press again for a new set");
     }
     function toneView() {
-      if (tone.mod === "mix" && tone.dict && !(tone.mix && tone.mix.length)) { tone.mix = []; const used = new Set(); TONE_MODS.forEach((m) => { const c = tone.list.filter((e) => toneHas(e, m.id) && !used.has(e.id)); if (c.length) { const e = c[Math.floor(Math.random() * c.length)]; used.add(e.id); tone.mix.push({ e, mod: m.id }); } }); }
+      if (tone.mod === "mix" && tone.dict && !(tone.mix && tone.mix.length)) toneMixBuild();
       tone.view = !tone.dict || tone.mod === "all" ? tone.list : tone.mod === "mix" ? tone.mix.map((x) => x.e) : tone.list.filter((e) => toneHas(e, tone.mod));
     }
     try { tone.mine = localStorage.getItem("ets-fc:tone-mine") || ""; } catch (e) {}
-    const toneEsc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+    const toneEsc = escapeHtml;
     function toneList() {
       return deckCards(state.deck).filter((e) => e.example && e.example.split(" ").length >= 3).sort(byPriority);
     }
@@ -3357,8 +3377,10 @@
     const pigWait = (ms) => new Promise((r) => setTimeout(r, ms));
     const pigUrl = (l) => `assets/p04/heo/heo_un_w${String(l).padStart(2, "0")}.svg`;
     function pigLoad(l) { return pig.src[l] || (pig.src[l] = fetch(pigUrl(l)).then((r) => (r.ok ? r.text() : "")).catch(() => "").then((t) => { if (!t) delete pig.src[l]; return t; })); }
+    let pigSetSeq = 0;
     async function pigSet(l) {
-      const txt = await pigLoad(l); if (!txt || !pig.g) return;
+      const seq = ++pigSetSeq;   // lần gọi sau thắng: bản tải chậm của mức cũ không được vẽ đè mức mới
+      const txt = await pigLoad(l); if (!txt || !pig.g || seq !== pigSetSeq) return;
       const root = new DOMParser().parseFromString(txt, "image/svg+xml").documentElement;
       pig.g.replaceChildren(...[...root.childNodes].filter((n) => n.nodeName !== "title").map((n) => document.importNode(n, true)));
       pig.rig = P04Rig.bind(pig.g, "heo_un", P04.anims.pig, P04.anims.anchors.pig); pigPose();
@@ -3541,7 +3563,7 @@
     // ================================================================
     const ship = { drag: false, dragX: 0, raf: 0, ro: null, ctx: null, w: 0, h: 0, dpr: 1, lane: 1, x: 0, stars: [], rocks: [], parts: [], floats: [], shards: [], rockets: [], wave: null,
       lives: 3, score: 0, streak: 0, best: 0, paused: true, started: false, phase: "play", t: 0, last: 0, shake: 0, colors: {}, resolveAt: 0, lastOk: false };
-    const SHIP_SPEED = { slow: { label: L("Chậm", "Slow"), ms: 9000 }, normal: { label: L("Vừa", "Medium"), ms: 7000 }, fast: { label: "Nhanh", ms: 5000 }, turbo: { label: L("Siêu tốc", "Turbo"), ms: 3500 } };
+    const SHIP_SPEED = { slow: { label: L("Chậm", "Slow"), ms: 9000 }, normal: { label: L("Vừa", "Medium"), ms: 7000 }, fast: { label: L("Nhanh", "Fast"), ms: 5000 }, turbo: { label: L("Siêu tốc", "Turbo"), ms: 3500 } };
     const laneX = (i) => ship.w * (i + 0.5) / 3;
     const shipY = () => ship.h - Math.max(46, ship.h * 0.11);
     const ease = (u) => (u <= 0 ? 0 : u >= 1 ? 1 : u * u * (3 - 2 * u));
@@ -3701,7 +3723,7 @@
     }
     function bdSwing(ok, touched) {
       const a = p04ById.get("bd-player"); if (!a) return;
-      a.clip = touched ? "swing" : "run"; a.off = 0.3 - performance.now() / 1000; a.dirty = true;
+      a.clip = touched ? "swing" : "run"; a.off = 0.3 - performance.now() / 1000; a.dirty = true; p04Wake();
       clearTimeout(ship.swingT);
       ship.swingT = setTimeout(() => { a.clip = ok ? "celebrate" : "sad"; a.off = 0; a.dirty = true;
         ship.swingT = setTimeout(() => { a.clip = "ready"; a.dirty = true; }, 900); }, 650);
@@ -4020,7 +4042,7 @@
       const s = state.session; if (!s) return;
       $("fc-scene").hidden = true; $("quiz-panel").hidden = true; $("game-panel").hidden = true; $("ship-panel").hidden = true; $("pig-panel").hidden = true; $("pig-gameover").hidden = true; $("scr-study").querySelector(":scope > footer").hidden = true;
       const done = $("study-done"); done.hidden = false; $("scr-study").classList.remove("is-space", "is-court"); $("ship-gameover").hidden = true;
-      renderLevels(s);
+      renderLevels(s); p04Wake();
       const total = s.known + s.forgot;
       $("done-total").textContent = ui.fmt(total); $("done-known").textContent = ui.fmt(s.known); $("done-forgot").textContent = ui.fmt(s.forgot);
       const st = deckStats(s.deckId);
@@ -4045,6 +4067,7 @@
       shipStop();
       const s = state.session; state.session = null;
       $("scr-study").hidden = true; $("scr-study").classList.remove("is-space", "is-court"); $("shell").hidden = false;
+      $("pig-panel").hidden = true;   // pigTick tự dừng khi panel ẩn
       if (s) state.deck = s.deckId;
       show("home"); renderAll();
     }
@@ -4748,12 +4771,12 @@
     }
     function guideSync() {
       $("guide-dots").querySelectorAll("button").forEach((d, k) => d.setAttribute("aria-selected", String(k === guide.i)));
-      $("guide-prev").disabled = guide.i === 0; $("guide-next").textContent = guide.i === guide.pages.length - 1 ? "Xong" : L("Tiếp", "Next");
+      $("guide-prev").disabled = guide.i === 0; $("guide-next").textContent = guide.i === guide.pages.length - 1 ? L("Xong", "Done") : L("Tiếp", "Next");
     }
     function guideOpen() {
       $("scr-guide").hidden = false; document.body.style.overflow = "hidden";
       if (!guide.court) { const host = $("guide-court"); guide.court = { host, dirty: true, r: P04Rally.mount(host, { svg: P04.svg, anims: P04.anims, html: p04Html, period: 1.5 }) }; p04Courts.add(guide.court); }
-      guide.court.r.invalidate(); guide.court.dirty = true;
+      guide.court.r.invalidate(); guide.court.dirty = true; p04Wake();
       requestAnimationFrame(() => guideGo(0, false)); $("guide-next").focus();
       try { localStorage.setItem(LS_PREFIX + "guide-seen", "1"); } catch (e) {}
     }

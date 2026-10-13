@@ -42,3 +42,11 @@ iPhone: mở URL bằng **Safari** → Share → **Add to Home Screen** → mở
 - Không mật khẩu: ai có URL + username thì sửa được tiến độ của username đó. Muốn khoá sau này: thêm PIN, không đổi kiến trúc.
 - Apps Script giới hạn ~20.000 request/ngày/tài khoản — một người học dùng ~30 request/ngày.
 - Reset trong Settings xoá cả dòng trên Sheet (không khôi phục được) — nút Export JSON trước khi reset nếu muốn giữ.
+
+## D. GitNexus (graph code, pilot 2026-10-14)
+
+- Phạm vi: cả folder trừ data/asset (xem `.gitnexusignore`); index nằm ở `.gitnexus/` (không commit).
+- Chạy lại sau khi sửa code (`index.html` ~2,4 MB nên phải nâng ngưỡng):
+  `$env:GITNEXUS_MAX_FILE_SIZE="3000"; gitnexus analyze --skip-git --index-only .`
+- Hỏi thử: `gitnexus impact apply_enrich -d upstream --summary-only` (đúng: chỉ `main` gọi).
+- Giới hạn: GitNexus không phân tích JS viết trong `<script>` của `index.html`, nên graph chỉ có `build_vocab.py`, `gas/*.gs`, `lab/*.js`, `docs/**/*.js`; phần app chính vẫn phải tra bằng grep.
