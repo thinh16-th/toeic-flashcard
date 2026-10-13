@@ -1007,8 +1007,10 @@
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <select class="select min-w-0 flex-1" id="tone-mod"></select>
+          <button type="button" class="btn" data-variant="outline" id="tone-mix"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/></svg><span id="tone-mix-l"></span></button>
           <button type="button" class="btn" data-variant="outline" id="tone-ipa" aria-pressed="false">IPA</button>
         </div>
+        <select class="select w-full" id="tone-pick" hidden></select>
         <p class="rounded-lg border px-3 py-2 text-sm leading-6" id="tone-rule" hidden></p>
         <section class="card"><section class="space-y-3">
           <div class="tone-stage" id="tone-stage"><svg class="tone-svg" id="tone-svg" aria-hidden="true"></svg><p class="tone-text text-2xl md:text-4xl" id="tone-text"></p></div>
@@ -1747,7 +1749,7 @@
     // ================================================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwBiNwckLC-9o_m0X0TBDE-vjazUJMWD4UlIsySwcsFuUjMyBGBo3mfVQGEhWl47CJ7DA/exec";
     const SCHEMA = 1;
-    const APP_VER = "1.16.0";
+    const APP_VER = "1.16.1";
     const VERSION_URL = "version.json";       // cùng repo; build_vocab.py tự đồng bộ số phiên bản vào file này
     const VERSION_CHECK_MS = 10 * 60 * 1000;
     const NEW_BATCH = 20;                       // "Học thêm 20 thẻ mới"
@@ -2983,19 +2985,45 @@
     const toneIpaOf = (w) => (tone.dict && tone.dict[w]) || "";
     const toneMarks = (r) => (tone.dict && r ? toneDetect(r, toneIpaOf) : []);
     function toneCounts() {
-      tone.counts = { all: tone.list.length };
+      tone.counts = { all: tone.list.length }; tone.mc = new Map();
       if (!tone.dict) return;
-      tone.list.forEach((e) => { const seen = new Set(toneMarks(toneAnalyze(e.example)).map((m) => m.mod)); seen.forEach((m) => { tone.counts[m] = (tone.counts[m] || 0) + 1; }); });
+      tone.list.forEach((e) => { const seen = new Set(toneMarks(toneAnalyze(e.example)).map((m) => m.mod)); tone.mc.set(e.id, seen); seen.forEach((m) => { tone.counts[m] = (tone.counts[m] || 0) + 1; }); });
+    }
+    const toneHas = (e, mod) => { const m = tone.mc && tone.mc.get(e.id); return !!(m && m.has(mod)); };
+    // bộ ngẫu nhiên: mỗi học phần 1 câu, không trùng câu
+    function toneMix() {
+      if (!tone.dict) return;
+      const used = new Set(); tone.mix = [];
+      TONE_MODS.forEach((m) => {
+        const c = tone.list.filter((e) => toneHas(e, m.id) && !used.has(e.id)); if (!c.length) return;
+        const e = c[Math.floor(Math.random() * c.length)]; used.add(e.id); tone.mix.push({ e, mod: m.id });
+      });
+      tone.mod = "mix"; try { localStorage.setItem("ets-fc:tone-mod", "mix"); } catch (e) {}
+      toneModFill(); toneView(); tone.i = 0;
+      if (tone.src !== "toeic") toneSetSrc("toeic"); else toneShow(0);
+    }
+    const toneCurMod = () => (tone.mod === "mix" ? (tone.src === "toeic" && tone.mix && tone.mix[tone.i] ? tone.mix[tone.i].mod : "") : tone.mod);
+    function tonePickFill() {
+      const sel = $("tone-pick"), show = tone.src === "toeic" && tone.mod !== "all" && tone.view.length > 0;
+      sel.hidden = !show; if (!show) return;
+      sel.setAttribute("aria-label", L("Chọn câu", "Pick a sentence"));
+      const cut = (t) => (t.length > 70 ? t.slice(0, 68).replace(/\s+\S*$/, "") + "…" : t);
+      sel.innerHTML = tone.view.map((e, k) => `<option value="${k}">${k + 1}. ${toneEsc((tone.mod === "mix" ? "[" + L(TONE_MODS.find((m) => m.id === tone.mix[k].mod).vi, TONE_MODS.find((m) => m.id === tone.mix[k].mod).en) + "] " : "") + cut(e.example))}</option>`).join("");
+      sel.value = String(tone.i);
     }
     function toneModFill() {
       const sel = $("tone-mod"), c = tone.counts;
       sel.setAttribute("aria-label", L("Học phần", "Focus"));
       sel.innerHTML = `<option value="all">${L("Tất cả: ngữ điệu & nối âm", "All: intonation & linking")} · ${ui.fmt(c.all || 0)}</option>` +
         TONE_MODS.map((m) => `<option value="${m.id}"${tone.dict ? "" : " disabled"}>${L(m.vi, m.en)} · ${tone.dict ? ui.fmt(c[m.id] || 0) + L(" câu", "") : L("đang tải…", "loading…")}</option>`).join("");
+      sel.innerHTML += `<option value="mix"${tone.dict ? "" : " disabled"}>${L("Ngẫu nhiên: mỗi học phần 1 câu", "Random: 1 sentence per focus")}${tone.mix && tone.mix.length ? " · " + ui.fmt(tone.mix.length) : ""}</option>`;
       sel.value = tone.dict || tone.mod === "all" ? tone.mod : "all";
+      $("tone-mix").disabled = !tone.dict; $("tone-mix-l").textContent = L("Ngẫu nhiên", "Random");
+      $("tone-mix").title = L("Mỗi học phần lấy ngẫu nhiên 1 câu để đọc và nghe; bấm lại để đổi bộ khác", "Pick 1 random sentence per focus to read and hear; press again for a new set");
     }
     function toneView() {
-      tone.view = tone.mod === "all" || !tone.dict ? tone.list : tone.list.filter((e) => toneMarks(toneAnalyze(e.example)).some((m) => m.mod === tone.mod));
+      if (tone.mod === "mix" && tone.dict && !(tone.mix && tone.mix.length)) { tone.mix = []; const used = new Set(); TONE_MODS.forEach((m) => { const c = tone.list.filter((e) => toneHas(e, m.id) && !used.has(e.id)); if (c.length) { const e = c[Math.floor(Math.random() * c.length)]; used.add(e.id); tone.mix.push({ e, mod: m.id }); } }); }
+      tone.view = !tone.dict || tone.mod === "all" ? tone.list : tone.mod === "mix" ? tone.mix.map((x) => x.e) : tone.list.filter((e) => toneHas(e, tone.mod));
     }
     try { tone.mine = localStorage.getItem("ets-fc:tone-mine") || ""; } catch (e) {}
     const toneEsc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -3037,9 +3065,9 @@
       toneDictLoad().then((d) => { if (!d || $("scr-tone").hidden) return; toneCounts(); toneModFill(); toneView(); toneRuleShow(); if (tone.src === "toeic") toneShow(tone.i); else toneRender(tone.r ? tone.mine : "", ""); });
     }
     function toneRuleShow() {
-      const r = TONE_RULE[tone.mod], el = $("tone-rule");
+      const cm = toneCurMod(), r = TONE_RULE[cm], el = $("tone-rule");
       el.hidden = !r; if (!r) return;
-      el.innerHTML = r; el.style.borderColor = TONE_MOD_COL[tone.mod];
+      el.innerHTML = r; el.style.borderColor = TONE_MOD_COL[cm];
     }
     function toneExit() {
       tone.run++; toneRecStop(); try { speechSynthesis.cancel(); } catch (e) {}
@@ -3048,7 +3076,7 @@
     function toneSetSrc(src) {
       tone.src = src;
       $("tone-src").querySelectorAll("button").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.src === src)));
-      $("tone-input-wrap").hidden = src !== "mine"; $("tone-nav").hidden = src !== "toeic";
+      $("tone-input-wrap").hidden = src !== "mine"; $("tone-nav").hidden = src !== "toeic"; tonePickFill(); toneRuleShow();
       if (src === "mine") { $("tone-input").value = tone.mine; toneRender(tone.mine || "", ""); }
       else toneShow(tone.i);
     }
@@ -3057,7 +3085,10 @@
       if (!n) { toneRender("", ""); $("tone-sub").textContent = tone.list.length ? L("Không có câu nào trong bộ có hiện tượng này.", "No sentence in this deck has this feature.") : L("Bộ này chưa có câu ví dụ.", "This deck has no example sentences."); $("tone-count").textContent = ""; return; }
       tone.i = (i + n) % n; const e = tone.view[tone.i];
       $("tone-count").textContent = L(`Câu ${tone.i + 1}/${n}`, `${tone.i + 1}/${n}`);
-      $("tone-sub").textContent = `${deckById(state.deck).name} · ${e.word}`;
+      const cm = toneCurMod(), mn = TONE_MODS.find((m) => m.id === cm);
+      $("tone-sub").textContent = `${deckById(state.deck).name} · ${e.word}` + (tone.mod === "mix" && mn ? " · " + L(mn.vi, mn.en) : "");
+      toneRuleShow();
+      if (!$("tone-pick").hidden && $("tone-pick").options.length === n) $("tone-pick").value = String(tone.i); else tonePickFill();
       toneRender(e.example, exampleVi(e) ? `(${exampleVi(e)})` : "");
     }
     function toneRender(text, vi) {
@@ -3068,7 +3099,7 @@
       ["tone-play", "tone-slow", "tone-rec"].forEach((k) => { $(k).disabled = !tone.r; });
       if (!tone.r) { $("tone-svg").innerHTML = ""; box.innerHTML = `<span class="text-muted-foreground text-base">${L("Nhập một câu rồi bấm Phân tích.", "Type a sentence, then press Analyze.")}</span>`; return; }
       tone.marks = toneMarks(tone.r);
-      const mk = {}; tone.marks.forEach((m) => { if (m.mod === tone.mod) mk[m.i] = m; });
+      const cmod = toneCurMod(), mk = {}; tone.marks.forEach((m) => { if (m.mod === cmod) mk[m.i] = m; });
       tone.r.words.forEach((x, i) => {
         const sp = document.createElement("span"); sp.className = "tw"; sp.dataset.i = i; sp.dataset.s = x.stress;
         const c = x.core, bare = c.toLowerCase().replace(/’/g, "'").replace(/[^a-z']/g, "");
@@ -3221,9 +3252,12 @@
     $("tone-play").addEventListener("click", () => tonePlay(0.95));
     $("tone-slow").addEventListener("click", () => tonePlay(0.6));
     $("tone-rec").addEventListener("click", toneRec);
+    $("tone-mix").addEventListener("click", toneMix);
+    $("tone-pick").addEventListener("change", (ev) => toneShow(Number(ev.target.value)));
     $("tone-mod").addEventListener("change", (ev) => {
+      if (ev.target.value === "mix") { toneMix(); return; }
       tone.mod = ev.target.value; try { localStorage.setItem("ets-fc:tone-mod", tone.mod); } catch (e) {}
-      toneView(); toneRuleShow(); tone.i = 0;
+      toneView(); toneRuleShow(); tone.i = 0; tonePickFill();
       if (tone.src === "toeic") toneShow(0); else toneRender(tone.r ? tone.mine : "", "");
     });
     $("tone-ipa").addEventListener("click", () => {
