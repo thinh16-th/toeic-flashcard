@@ -102,3 +102,12 @@ Gộp dữ liệu (merge) vẫn theo từng thẻ, bản có `updated` mới hơ
 ## 7. Kiểm tra
 - Test node cho phần lõi điểm: `jarOf`, `classify`, `applyReview` với các trường hợp mới, đúng hạn, sớm, trễ, quên, giới hạn 1 lần/ngày, Hũ vàng, quy đổi.
 - Playwright: máy tính và điện thoại, sáng và tối. Chạy cả 6 chế độ qua hộp chọn hũ, mở hộp thoại lịch sử điểm, và chạy lint.
+
+## Cập nhật v1.19 — trần điểm trong ngày, cho gỡ lại
+
+- Thay luật "mỗi từ chỉ tính điểm 1 lần/ngày". Lượt chấm đầu tiên trong ngày đặt **điểm của ngày** g (theo hũ + đúng hạn/sớm/trễ, chưa nhân hệ số chế độ) và lưu `card.day = { d, s0, cap: s0 + g, g }`.
+- Trong ngày điểm nằm trong `[s0 − 15, s0 + g]`. Quên: trừ 15 × hệ số (một ngày trừ tối đa 15), hẹn ôn lại hôm đó. Nhớ đúng: cộng g × hệ số tới trần (lượt đầu ngày theo loại o/e/l/n, các lượt sau là `r` = Gỡ lại).
+- Đủ trần (hoặc Hũ vàng): luyện thêm `p`, không đổi điểm, nhớ đúng được vàng.
+- Thẻ đã chấm hôm nay bằng bản cũ (chưa có `day`): suy `s0` từ nhật ký hôm nay.
+- Chế độ mới "Gần nghĩa nhất" (p7) hệ số 0,7. Chép chính tả câu và Đọc & chấm (Ngữ điệu) chỉ cộng vàng.
+- Test: `node docs/test/mem_core.test.js index.html`.

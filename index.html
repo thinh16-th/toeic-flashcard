@@ -163,6 +163,7 @@
     .art-text { fill: var(--foreground); font-family: inherit; font-weight: 600; font-size: 12px; }
     .art-brick { fill: var(--brick); } .art-brick-hi { fill: var(--brick-hi); } .art-mortar { fill: none; stroke: var(--mortar); stroke-width: 1.5; }
     .art-steel { fill: var(--steel); } .art-rivet { fill: var(--rivet); } .art-tile { fill: var(--card); stroke: var(--border); stroke-width: 1.2; }
+    .art-fog { fill: color-mix(in oklab, var(--muted-foreground) 28%, var(--card)); opacity: .9; }
     .art-ok { fill: var(--status-good); } .art-warn { fill: var(--status-warning); } .art-spark { fill: var(--spark); }
     .art-tile-text { fill: var(--foreground); font-family: inherit; font-weight: 700; font-size: 15px; }
     .art-space { fill: var(--space-bg); } .art-star { fill: var(--space-star); } .art-rock { fill: var(--rock-b); } .art-rock2 { fill: var(--rock-a); }
@@ -281,6 +282,31 @@
     .mm-word.is-past { opacity: .38; }
     .mm-word.is-past.is-now { opacity: 1; }
     /* bảng kết quả: trái cầu của từ cần ôn bấm được → Loop */
+    /* chép chính tả câu: mỗi từ một viên gạch (nhánh Gạch) hoặc cả câu chìm trong sương (nhánh Sương mù) */
+    .sent-stage { position: relative; overflow: hidden; border-radius: var(--radius); border: 1px solid var(--border); background: var(--card); padding: .75rem 1rem; min-height: 6rem; }
+    .wslot { position: relative; display: inline-block; }
+    .wbox { position: relative; display: inline-block; border-radius: 6px; padding: 0 .2rem; box-shadow: inset 0 -3px 0 var(--tile-line, transparent); }
+    .wbox .wtx { visibility: hidden; }
+    .wbox .brick { opacity: 1; transition: opacity 120ms ease-out; }
+    .wslot.on .wtx { visibility: visible; } .wslot.on .brick { opacity: 0; }
+    .wslot.ok .wbox { --tile-line: var(--status-good); } .wslot.retry .wbox { --tile-line: var(--status-warning); } .wslot.miss .wbox { --tile-line: var(--status-critical); } .wslot.miss .wtx { color: var(--muted-foreground); }
+    .wslot.cur .brick { outline: 2px solid var(--ring); outline-offset: 2px; animation: bob 1.4s ease-in-out infinite; }
+    .sent-fog { display: none; }
+    .sent-stage.is-fog .wbox .brick { display: none; }
+    .sent-stage.is-fog .wbox .wtx { visibility: visible; color: transparent; }
+    .sent-stage.is-fog .wslot.on { z-index: 3; border-radius: 8px; background: var(--card); box-shadow: 0 0 10px 7px var(--card); }
+    .sent-stage.is-fog .wslot.on .wtx { color: inherit; }
+    .sent-stage.is-fog .sent-fog { display: block; position: absolute; inset: -30%; z-index: 2; pointer-events: none;
+      background:
+        radial-gradient(28% 36% at 22% 38%, color-mix(in oklab, var(--card) 70%, transparent), transparent 70%),
+        radial-gradient(32% 40% at 68% 62%, color-mix(in oklab, var(--card) 60%, transparent), transparent 72%),
+        radial-gradient(24% 30% at 48% 30%, color-mix(in oklab, var(--muted-foreground) 22%, transparent), transparent 70%),
+        color-mix(in oklab, var(--muted) 82%, var(--muted-foreground));
+      filter: blur(8px); animation: fog-drift 16s ease-in-out infinite alternate; transition: opacity 600ms ease-out; }
+    .sent-stage.is-fog.is-done .sent-fog { opacity: 0; }
+    .sent-stage.is-fog.is-done .wbox .wtx { color: inherit; }
+    @keyframes fog-drift { from { transform: translate3d(-4%, 0, 0); } to { transform: translate3d(4%, 2%, 0); } }
+    @media (prefers-reduced-motion: reduce) { .sent-fog { animation: none; } .wslot.cur .brick { animation: none; } }
     .lvl-loop { position: relative; display: inline-flex; flex-shrink: 0; padding: 0; border: 0; background: none; border-radius: .5rem; cursor: pointer; }
     .lvl-loop:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
     .lvl-loop-ic { position: absolute; right: -6px; bottom: -4px; display: grid; place-items: center; width: 1.375rem; height: 1.375rem; border-radius: 999px; background: var(--primary); color: var(--primary-foreground); box-shadow: 0 0 0 2px var(--card); }
@@ -539,7 +565,7 @@
           <p class="text-muted-foreground text-sm" id="home-date"></p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <span class="badge" data-variant="secondary" title="Vàng: nhận khi luyện thêm từ đã tính điểm hôm nay"><svg class="coin" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="#FFC93C" stroke="#3A2B4A" stroke-width="2"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="#3A2B4A" stroke-width="1.5" opacity=".55"/><path d="M9.5 8.5 Q8 12 9.5 15.5" fill="none" stroke="#FFF6E6" stroke-width="1.6" stroke-linecap="round"/></svg><span id="home-coins" data-num>0</span> vàng</span>
+          <span class="badge" data-variant="secondary" title="Vàng: nhận khi luyện thêm từ đã đủ điểm hôm nay"><svg class="coin" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="#FFC93C" stroke="#3A2B4A" stroke-width="2"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="#3A2B4A" stroke-width="1.5" opacity=".55"/><path d="M9.5 8.5 Q8 12 9.5 15.5" fill="none" stroke="#FFF6E6" stroke-width="1.6" stroke-linecap="round"/></svg><span id="home-coins" data-num>0</span> vàng</span>
           <span class="badge" data-variant="secondary"><span id="home-streak" data-num>0</span> ngày liên tiếp</span>
         </div>
       </div>
@@ -581,6 +607,7 @@
           <button type="button" class="mode-tile" data-mode="card"><div class="mode-art" aria-hidden="true"><svg viewBox="0 0 240 110"><rect width="240" height="110" rx="10" class="art-bg"/><rect x="64" y="20" width="96" height="72" rx="8" class="art-paper" transform="rotate(-6 112 56)"/><rect x="84" y="14" width="96" height="72" rx="8" class="art-paper"/><text x="132" y="50" text-anchor="middle" class="art-tile-text">word</text><rect x="104" y="60" width="56" height="6" rx="3" class="art-line"/><path d="M190 70a22 22 0 0 1-22 22" class="art-stroke"/><path d="M164 86l5 7 7-4" class="art-stroke"/></svg></div><div class="min-w-0"><p class="font-medium leading-5">Thẻ lật</p><p class="text-muted-foreground truncate text-xs" id="gt-card"></p></div></button>
           <button type="button" class="mode-tile" data-mode="reverse"><div class="mode-art" aria-hidden="true"><svg viewBox="0 0 240 110"><rect width="240" height="110" rx="10" class="art-bg"/><rect x="40" y="22" width="80" height="66" rx="8" class="art-paper"/><rect x="52" y="38" width="56" height="6" rx="3" class="art-line"/><rect x="52" y="52" width="40" height="6" rx="3" class="art-line"/><rect x="52" y="66" width="48" height="6" rx="3" class="art-line"/><path d="M130 55h26" class="art-stroke"/><path d="M148 46l9 9-9 9" class="art-stroke"/><rect x="166" y="34" width="50" height="42" rx="8" class="art-paper"/><text x="191" y="60" text-anchor="middle" class="art-tile-text">?</text></svg></div><div class="min-w-0"><p class="font-medium leading-5">Thẻ ngược</p><p class="text-muted-foreground truncate text-xs" id="gt-reverse"></p></div></button>
           <button type="button" class="mode-tile" data-mode="quiz"><div class="mode-art" aria-hidden="true"><svg viewBox="0 0 240 110"><rect width="240" height="110" rx="10" class="art-bg"/><rect x="50" y="14" width="140" height="16" rx="5" class="art-paper"/><rect x="60" y="19" width="70" height="6" rx="3" class="art-line"/><rect x="50" y="36" width="140" height="16" rx="5" class="art-paper"/><rect x="60" y="41" width="90" height="6" rx="3" class="art-line"/><rect x="50" y="58" width="140" height="16" rx="5" class="art-paper"/><rect x="60" y="63" width="60" height="6" rx="3" class="art-line"/><rect x="50" y="80" width="140" height="16" rx="5" class="art-paper"/><rect x="60" y="85" width="80" height="6" rx="3" class="art-line"/><rect x="50" y="36" width="140" height="16" rx="5" class="art-blank"/><circle cx="176" cy="44" r="6" class="art-ok"/></svg></div><div class="min-w-0"><p class="font-medium leading-5">Trắc nghiệm</p><p class="text-muted-foreground truncate text-xs" id="gt-quiz"></p></div></button>
+          <button type="button" class="mode-tile" data-mode="p7"><div class="mode-art" aria-hidden="true"><svg viewBox="0 0 240 110"><rect width="240" height="110" rx="10" class="art-bg"/><rect x="22" y="12" width="196" height="40" rx="8" class="art-paper"/><rect x="34" y="22" width="44" height="7" rx="3.5" class="art-line"/><text x="84" y="29" class="art-text">acquire</text><rect x="84" y="32" width="46" height="2.5" class="art-accent"/><rect x="138" y="22" width="66" height="7" rx="3.5" class="art-line"/><rect x="34" y="36" width="120" height="7" rx="3.5" class="art-line"/><rect x="22" y="60" width="94" height="17" rx="5" class="art-paper"/><text x="32" y="72.5" class="art-text">obtain</text><rect x="124" y="60" width="94" height="17" rx="5" class="art-paper"/><rect x="134" y="66" width="50" height="6" rx="3" class="art-line"/><rect x="22" y="83" width="94" height="17" rx="5" class="art-paper"/><rect x="32" y="89" width="58" height="6" rx="3" class="art-line"/><rect x="124" y="83" width="94" height="17" rx="5" class="art-paper"/><rect x="134" y="89" width="42" height="6" rx="3" class="art-line"/><rect x="22" y="60" width="94" height="17" rx="5" class="art-blank"/><circle cx="104" cy="68.5" r="5" class="art-ok"/></svg></div><div class="min-w-0"><p class="font-medium leading-5">Gần nghĩa nhất</p><p class="text-muted-foreground truncate text-xs" id="gt-p7"></p></div></button>
           <button type="button" class="mode-tile" data-mode="cloze"><div class="mode-art" aria-hidden="true"><svg viewBox="0 0 240 110"><rect width="240" height="110" rx="10" class="art-bg"/><rect x="30" y="12" width="180" height="88" rx="8" class="art-paper"/>
                 <rect x="44" y="26" width="110" height="7" rx="3.5" class="art-line"/><text x="166" y="33" class="art-text">ETS</text>
                 <rect x="44" y="51" width="30" height="7" rx="3.5" class="art-line"/>
@@ -609,6 +636,7 @@
           <button type="button" class="mode-tile" data-mode="badminton"><div class="mode-art" aria-hidden="true"><svg viewBox="0 0 240 110"><rect width="240" height="110" rx="10" fill="#2FB389"/><rect x="8" y="6" width="224" height="98" rx="4" fill="none" stroke="#FFF6E6" stroke-width="2.5" opacity=".85"/><rect x="0" y="30" width="240" height="5" fill="#FFF6E6"/><path d="M0 35h240M0 41h240" stroke="#3A2B4A" stroke-opacity=".35"/><g transform="translate(50 58)"><path d="M-9 -2 L-13 -22 L13 -22 L9 -2 Z" fill="#FFFFFF" stroke="#3A2B4A" stroke-width="2" stroke-linejoin="round"/><circle cy="2" r="7" fill="#FFF6E6" stroke="#3A2B4A" stroke-width="2.5"/><rect x="-10" y="-5" width="20" height="4" rx="1" fill="#FF6B6B"/></g><g transform="translate(120 68)"><path d="M-9 -2 L-13 -22 L13 -22 L9 -2 Z" fill="#FFFFFF" stroke="#3A2B4A" stroke-width="2" stroke-linejoin="round"/><circle cy="2" r="7" fill="#FFF6E6" stroke="#3A2B4A" stroke-width="2.5"/><rect x="-10" y="-5" width="20" height="4" rx="1" fill="#FF6B6B"/></g><g transform="translate(190 54)"><path d="M-9 -2 L-13 -22 L13 -22 L9 -2 Z" fill="#FFFFFF" stroke="#3A2B4A" stroke-width="2" stroke-linejoin="round"/><circle cy="2" r="7" fill="#FFF6E6" stroke="#3A2B4A" stroke-width="2.5"/><rect x="-10" y="-5" width="20" height="4" rx="1" fill="#FF6B6B"/></g><path d="M118 100 l18 -26" stroke="#3A2B4A" stroke-width="4" stroke-linecap="round"/><ellipse cx="141" cy="66" rx="10" ry="13" transform="rotate(35 141 66)" fill="none" stroke="#8C6CF2" stroke-width="4"/></svg></div><div class="min-w-0"><p class="font-medium leading-5">Cầu lông</p><p class="text-muted-foreground truncate text-xs" id="gt-badminton"></p></div></button>
           <button type="button" class="mode-tile" data-mode="pig"><div class="mode-art" aria-hidden="true"><svg viewBox="0 0 240 110"><defs><linearGradient id="pig-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2B2A6E"/><stop offset=".65" stop-color="#8C6CF2"/><stop offset="1" stop-color="#FFB3A8"/></linearGradient></defs><rect width="240" height="110" rx="10" fill="url(#pig-sky)"/><g transform="translate(48 30)"><circle r="16" fill="#FFFFFF" fill-opacity=".22" stroke="#FFF6E6" stroke-width="2"/><path d="M-5 3 L-8 -9 L8 -9 L5 3 Z" fill="#FFFFFF" stroke="#3A2B4A" stroke-width="1.6" stroke-linejoin="round"/><circle cy="5" r="4" fill="#FFF6E6" stroke="#3A2B4A" stroke-width="1.6"/></g><g transform="translate(120 24)"><circle r="16" fill="#FFFFFF" fill-opacity=".22" stroke="#FFF6E6" stroke-width="2"/><path d="M-5 3 L-8 -9 L8 -9 L5 3 Z" fill="#FFFFFF" stroke="#3A2B4A" stroke-width="1.6" stroke-linejoin="round"/><circle cy="5" r="4" fill="#FFF6E6" stroke="#3A2B4A" stroke-width="1.6"/></g><g transform="translate(192 30)"><circle r="16" fill="#FFFFFF" fill-opacity=".22" stroke="#FFF6E6" stroke-width="2"/><path d="M-5 3 L-8 -9 L8 -9 L5 3 Z" fill="#FFFFFF" stroke="#3A2B4A" stroke-width="1.6" stroke-linejoin="round"/><circle cy="5" r="4" fill="#FFF6E6" stroke="#3A2B4A" stroke-width="1.6"/></g><g transform="translate(120 94)"><path d="M-21 -14 L-26 -33 L-9 -23 Z M21 -14 L26 -33 L9 -23 Z" fill="#FF9EB5" stroke="#3A2B4A" stroke-width="2.5" stroke-linejoin="round"/><circle r="26" fill="#FFB3C1" stroke="#3A2B4A" stroke-width="2.5"/><ellipse cy="6" rx="11" ry="8" fill="#FF8FA8" stroke="#3A2B4A" stroke-width="2"/><circle cx="-4" cy="6" r="2" fill="#3A2B4A"/><circle cx="4" cy="6" r="2" fill="#3A2B4A"/><circle cx="-10" cy="-7" r="2.6" fill="#3A2B4A"/><circle cx="10" cy="-7" r="2.6" fill="#3A2B4A"/></g></svg></div><div class="min-w-0"><p class="font-medium leading-5">Heo ăn cầu</p><p class="text-muted-foreground truncate text-xs" id="gt-pig"></p></div></button>
           <a class="mode-tile" href="lab/ipa-demo.html" id="btn-ipa"><div class="mode-art" aria-hidden="true"><svg viewBox="0 0 240 110"><rect width="240" height="110" rx="10" fill="#FFF3D6"/><ellipse cx="78" cy="58" rx="46" ry="40" fill="#FFDCC2" stroke="#3A2B4A" stroke-width="4"/><path d="M48 58 C56 44 70 42 78 48 C86 42 100 44 108 58 C98 74 58 74 48 58 Z" fill="#FF8A8A" stroke="#3A2B4A" stroke-width="3.5" stroke-linejoin="round"/><path d="M56 58 C66 52 90 52 100 58 C90 64 66 64 56 58 Z" fill="#5B2A3A"/><rect x="64" y="54" width="28" height="4" rx="1.5" fill="#FFFFFF"/><text x="178" y="52" text-anchor="middle" font-size="30" font-weight="700" fill="#3A2B4A">/θ/</text><text x="178" y="86" text-anchor="middle" font-size="18" font-weight="600" fill="#3A2B4A" opacity=".7">ʃ æ ɝ</text></svg></div><div class="min-w-0"><p class="font-medium leading-5">Phát âm IPA</p><p class="text-muted-foreground truncate text-xs">Khẩu hình miệng + bảng phiên âm</p></div></a>
+          <button type="button" class="mode-tile" id="btn-sent"><div class="mode-art" aria-hidden="true"><svg viewBox="0 0 240 110"><rect width="240" height="110" rx="10" class="art-bg"/><rect x="18" y="14" width="204" height="82" rx="8" class="art-paper"/><rect x="30" y="26" width="36" height="20" rx="3" class="art-tile"/><rect x="30" y="43" width="36" height="3" class="art-ok"/><text x="35" y="40" class="art-text">sales</text><rect x="72" y="26" width="24" height="20" rx="3" class="art-brick"/><path d="M72 36h24M84 26v10M78 36v10M90 36v10" class="art-mortar"/><rect x="102" y="26" width="48" height="20" rx="3" class="art-brick"/><path d="M102 36h48M126 26v10M114 36v10M138 36v10" class="art-mortar"/><rect x="156" y="26" width="30" height="20" rx="3" class="art-steel"/><circle cx="160" cy="30" r="1.5" class="art-rivet"/><circle cx="182" cy="30" r="1.5" class="art-rivet"/><rect x="30" y="62" width="150" height="8" rx="4" class="art-line"/><rect x="30" y="78" width="96" height="8" rx="4" class="art-line"/><ellipse cx="78" cy="72" rx="52" ry="14" class="art-fog"/><ellipse cx="150" cy="76" rx="58" ry="15" class="art-fog"/><ellipse cx="196" cy="68" rx="26" ry="10" class="art-fog"/></svg></div><div class="min-w-0"><p class="font-medium leading-5">Chép chính tả câu</p><p class="text-muted-foreground truncate text-xs" id="gt-sent"></p></div></button>
           <button type="button" class="mode-tile" id="btn-tone"><div class="mode-art" aria-hidden="true"><svg viewBox="0 0 240 110"><rect width="240" height="110" rx="10" fill="#FFF1EE"/><path d="M14 58 C34 58 40 30 62 30 C84 30 88 56 108 56 C128 56 132 26 156 26 C182 26 190 60 214 70" fill="none" stroke="#E5484D" stroke-width="4" stroke-linecap="round"/><path d="M206 62 l9 9 -12 2" fill="none" stroke="#E5484D" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="62" cy="30" r="4" fill="#FFF" stroke="#E5484D" stroke-width="2.5"/><circle cx="156" cy="26" r="4" fill="#FFF" stroke="#E5484D" stroke-width="2.5"/><rect x="20" y="70" width="44" height="10" rx="4" fill="#3A2B4A"/><rect x="72" y="72" width="22" height="7" rx="3" fill="#3A2B4A" opacity=".35"/><rect x="102" y="70" width="40" height="10" rx="4" fill="#3A2B4A"/><rect x="150" y="70" width="54" height="10" rx="4" fill="#D93644"/><path d="M56 86 q10 10 20 0" fill="none" stroke="#E5484D" stroke-width="3" stroke-linecap="round"/><path d="M136 86 q10 10 20 0" fill="none" stroke="#3E63DD" stroke-width="3" stroke-linecap="round"/></svg></div><div class="min-w-0"><p class="font-medium leading-5">Ngữ điệu &amp; nối âm</p><p class="text-muted-foreground truncate text-xs" id="gt-tone"></p></div></button>
           <button type="button" class="mode-tile" id="btn-meme"><div class="mode-art" aria-hidden="true"><div class="p04-stage" id="gt-court"></div></div><div class="min-w-0"><p class="font-medium leading-5">Loop từ vựng</p><p class="text-muted-foreground truncate text-xs" id="gt-meme">Nền: sân cầu lông</p></div></button>
         </div>
@@ -773,7 +801,7 @@
         <img id="study-jar" class="hu-jar h-10 w-auto" src="assets/hu/hu_moi.svg" alt="" width="28" height="40" />
         <span class="text-muted-foreground hidden text-xs leading-4 sm:inline" id="study-jar-label"></span>
         <span class="sr-only" id="study-jar-live" aria-live="polite"></span>
-        <span class="badge" data-variant="outline" id="study-practice" title="Từ đã tính điểm hôm nay: nhớ đúng được vàng" hidden><svg class="coin" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="#FFC93C" stroke="#3A2B4A" stroke-width="2"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="#3A2B4A" stroke-width="1.5" opacity=".55"/><path d="M9.5 8.5 Q8 12 9.5 15.5" fill="none" stroke="#FFF6E6" stroke-width="1.6" stroke-linecap="round"/></svg>Luyện thêm</span>
+        <span class="badge" data-variant="outline" id="study-practice" title="Từ đã đủ điểm hôm nay: nhớ đúng được vàng" hidden><svg class="coin" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="#FFC93C" stroke="#3A2B4A" stroke-width="2"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="#3A2B4A" stroke-width="1.5" opacity=".55"/><path d="M9.5 8.5 Q8 12 9.5 15.5" fill="none" stroke="#FFF6E6" stroke-width="1.6" stroke-linecap="round"/></svg>Luyện thêm</span>
       </div>
       <button class="btn" data-variant="ghost" data-size="sm" id="study-known" title="Từ này đã biết rồi: đưa vào Hũ 5 (75 điểm), ôn lại sau 30 ngày" hidden>Đã biết</button>
       <button class="btn" data-variant="ghost" data-size="icon" aria-label="Hoàn tác lần chấm trước" id="study-undo" disabled>
@@ -841,6 +869,7 @@
           </div>
         </header>
         <section class="space-y-3">
+          <p class="text-sm font-medium" id="qz-stem" hidden></p>
           <div id="qz-options" class="grid gap-2"></div>
           <p id="qz-feedback" class="text-sm" aria-live="polite"></p>
         </section>
@@ -1045,6 +1074,37 @@
       </div>
     </div>
   </main>
+  <!-- ===================== CHÉP CHÍNH TẢ CÂU VÍ DỤ: nhánh Gạch (mỗi từ 1 viên) / Sương mù; chỉ cộng vàng ===================== -->
+  <main id="scr-sent" class="fixed inset-0 z-40 flex h-dvh flex-col overflow-hidden bg-background safe-t" hidden>
+    <header class="flex h-14 shrink-0 items-center gap-2 px-3">
+      <button class="btn" data-variant="ghost" data-size="icon" id="sent-back"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7M19 12H5"/></svg></button>
+      <div class="min-w-0 flex-1"><p class="truncate text-sm font-medium" id="sent-title"></p><p class="text-muted-foreground truncate text-xs" id="sent-sub"></p></div>
+      <span class="badge shrink-0" data-variant="secondary" id="sent-coins"><svg class="coin" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="#FFC93C" stroke="#3A2B4A" stroke-width="2"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="#3A2B4A" stroke-width="1.5" opacity=".55"/><path d="M9.5 8.5 Q8 12 9.5 15.5" fill="none" stroke="#FFF6E6" stroke-width="1.6" stroke-linecap="round"/></svg><span data-num id="sent-coins-n">0</span></span>
+    </header>
+    <div class="min-h-0 flex-1 overflow-y-auto px-3 pb-6">
+      <div class="mx-auto max-w-3xl space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="seg" role="radiogroup" id="sent-kind"><button type="button" role="radio" data-sentkind="brick"></button><button type="button" role="radio" data-sentkind="fog"></button></div>
+          <p class="text-muted-foreground text-xs" id="sent-kind-hint"></p>
+        </div>
+        <section class="card"><section class="space-y-3">
+          <div class="flex flex-wrap gap-2">
+            <button class="btn" id="sent-play"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg><span id="sent-play-l"></span></button>
+            <button class="btn" data-variant="secondary" id="sent-slow"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg><span id="sent-slow-l"></span></button>
+            <button class="btn" data-variant="outline" id="sent-hint"></button>
+          </div>
+          <div class="sent-stage" id="sent-stage"><p class="text-lg leading-10" id="sent-line"></p><div class="sent-fog" aria-hidden="true"></div></div>
+          <input class="input w-full" id="sent-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next" />
+          <p class="min-h-6 text-sm leading-6" id="sent-status" aria-live="polite"></p>
+          <div class="space-y-1 text-sm leading-6" id="sent-result" hidden></div>
+          <div class="flex flex-wrap justify-end gap-2">
+            <button class="btn" data-variant="ghost" id="sent-skip"></button>
+            <button class="btn" id="sent-next" hidden></button>
+          </div>
+        </section></section>
+      </div>
+    </div>
+  </main>
   <main id="scr-meme" class="fixed inset-0 z-40 flex h-dvh flex-col overflow-hidden bg-background safe-t" hidden>
     <header class="flex h-14 shrink-0 items-center gap-2 px-3">
       <button class="btn" data-variant="ghost" data-size="icon" aria-label="Dừng, về trang chính" id="mm-back">
@@ -1110,8 +1170,9 @@
             <dt>Đến hạn</dt><dd>hôm nay là ngày hẹn ôn của từ</dd>
             <dt>Đúng hạn</dt><dd>ôn quanh ngày hẹn, cộng nhiều điểm nhất</dd>
             <dt>Ôn sớm, ôn trễ</dt><dd>trước ngày hẹn +2; quá hạn được một nửa</dd>
-            <dt>Quên</dt><dd>−15 điểm, ôn lại ngay hôm đó</dd>
-            <dt>Luyện thêm</dt><dd>học lại từ đã tính điểm hôm nay: không đổi điểm nhớ</dd>
+            <dt>Quên</dt><dd>−15 điểm (mỗi ngày trừ tối đa 15), ôn lại ngay hôm đó</dd>
+            <dt>Gỡ lại</dt><dd>bị trừ vì quên thì nhớ đúng lại trong ngày để lấy lại điểm</dd>
+            <dt>Luyện thêm</dt><dd>học lại từ đã đủ điểm hôm nay: không đổi điểm nhớ</dd>
             <dt><svg class="coin" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="#FFC93C" stroke="#3A2B4A" stroke-width="2"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="#3A2B4A" stroke-width="1.5" opacity=".55"/><path d="M9.5 8.5 Q8 12 9.5 15.5" fill="none" stroke="#FFF6E6" stroke-width="1.6" stroke-linecap="round"/></svg> Vàng</dt><dd>luyện thêm và nhớ đúng: +1 (gõ chữ +2). Dùng mua vật phẩm ở phiên bản sau</dd>
           </dl>
         </section></div>
@@ -1124,9 +1185,10 @@
             <dt>Ôn sớm</dt><dd>+2</dd>
             <dt>Ôn trễ</dt><dd>được một nửa</dd>
             <dt>Quên</dt><dd>−15, rơi về hũ theo điểm</dd>
-            <dt>Trắc nghiệm</dt><dd>×0,7</dd>
-            <dt>Phi thuyền, Cầu lông</dt><dd>×0,5</dd>
-            <dt>Mỗi ngày</dt><dd>mỗi từ chỉ tính điểm một lần; học lại được vàng</dd>
+            <dt>Trắc nghiệm, Gần nghĩa nhất</dt><dd>×0,7</dd>
+            <dt>Phi thuyền, Cầu lông, Heo ăn cầu</dt><dd>×0,5</dd>
+            <dt>Mỗi ngày</dt><dd>mỗi từ được cộng tối đa điểm ôn của ngày đó; quên bị trừ thì nhớ đúng lại để gỡ; đủ điểm rồi học lại được vàng</dd>
+            <dt>Chép câu, Ngữ điệu</dt><dd>chỉ cộng vàng, không đổi điểm nhớ</dd>
           </dl>
         </section></div>
         <p class="text-muted-foreground text-sm">Điểm game (gạch, thiên thạch, trái cầu) chỉ để vui, không đổi điểm nhớ.</p>
@@ -1136,11 +1198,12 @@
         <div class="card w-full"><section>
           <dl class="guide-rule">
             <dt>Thẻ lật, Thẻ ngược</dt><dd>Space: lật · 1: Quên · 2: Thuộc · U: hoàn tác · vuốt trái/phải</dd>
-            <dt>Trắc nghiệm</dt><dd>1–4: chọn · Space: tiếp</dd>
+            <dt>Trắc nghiệm, Gần nghĩa nhất</dt><dd>1–4: chọn · Space: tiếp</dd>
             <dt>Điền câu ETS</dt><dd>Chọn 1 trong 4 từ rồi gõ từng chữ. Sai chữ đầu: 50% điểm game</dd>
             <dt>Nghe và gõ</dt><dd>Gõ từ vừa nghe. Gợi ý càng nhiều, điểm càng ít</dd>
             <dt>Phi thuyền</dt><dd>Lái: ← → hoặc A, D. Bắn: chạm thiên thạch hoặc phím 1–3. Space: tạm dừng</dd>
             <dt>Cầu lông</dt><dd>← → hoặc chạm làn để đưa vợt. Space: tạm dừng</dd>
+            <dt>Chép chính tả câu</dt><dd>Gõ từng từ, Space hoặc Enter để chốt từ</dd>
             <dt>Loop từ vựng</dt><dd>Nghe các từ đã chọn lặp lại, không tính điểm</dd>
             <dt>Mọi màn</dt><dd>Esc: thoát</dd>
           </dl>
@@ -1231,6 +1294,13 @@
         <p id="pick-warn" class="warn-line text-sm" hidden></p>
         </div>
         <div id="pick-step-2" class="space-y-4" hidden>
+          <div class="space-y-1" data-opt="quiz ship badminton">
+            <h3 class="text-sm font-medium" id="qtype-l">Kiểu đề</h3>
+            <div class="seg" role="radiogroup" aria-labelledby="qtype-l">
+              <button type="button" role="radio" data-qtype="def">Nghĩa</button><button type="button" role="radio" data-qtype="syn">Đồng nghĩa</button>
+            </div>
+            <p class="text-muted-foreground text-xs leading-5" id="qtype-hint"></p>
+          </div>
           <div class="space-y-1" data-opt="ship">
             <h3 class="text-sm font-medium" id="ship-ctl-l">Điều khiển</h3>
             <div class="seg" role="radiogroup" aria-labelledby="ship-ctl-l">
@@ -1696,7 +1766,7 @@
     const LANG = (() => { try { return localStorage.getItem("lang") === "en" ? "en" : "vi"; } catch (e) { return "vi"; } })();
     const L = (vi, en) => (LANG === "en" ? en : vi);
     const LOCALE = LANG === "en" ? "en-US" : "vi-VN";
-    const I18N_STATIC = {"Kiểu loop":"Loop type","Từ":"Words","Từ đồng nghĩa":"Synonyms","Ngữ điệu & nối âm":"Intonation & linking","Phát âm IPA":"IPA pronunciation","Khẩu hình miệng + bảng phiên âm":"Mouth shapes + phonemic chart","Heo ăn cầu":"Piggy feast","ETS TOEIC 2023 · 10 đề Reading":"ETS TOEIC 2023 · 10 Reading tests","Nhập tên người dùng để tải tiến độ. Tên mới sẽ được tạo tự động, không cần mật khẩu.":"Enter a username to load your progress. New names are created automatically, no password needed.","Tên người dùng":"Username","2 đến 32 ký tự: chữ thường, số, dấu chấm, gạch dưới, gạch ngang.":"2 to 32 characters: lowercase letters, numbers, periods, underscores, hyphens.","Vào học":"Start studying","Gần đây trên thiết bị này":"Recent on this device","Chưa cấu hình server: tiến độ chỉ lưu trên thiết bị này.":"Server not configured: progress is saved on this device only.","Trang chính":"Home","Từ vựng":"Vocabulary","Cài đặt":"Settings","Đã lưu":"Saved","Hôm nay":"Today","ngày liên tiếp":"day streak","Bộ thẻ":"Deck","Học ngay":"Study now","Đến hạn":"Due","Mới hôm nay":"New today","Hũ vàng":"Gold jar","Hôm nay xong rồi":"All done for today","Học thêm 20 thẻ mới":"Study 20 more new cards","Chọn hũ để ôn thêm":"Pick a jar to review more","Chế độ":"Mode","Thẻ lật":"Flashcards","Thẻ ngược":"Reverse cards","Trắc nghiệm":"Quiz","Điền câu ETS":"ETS cloze","Nghe và gõ":"Listen & type","Phi thuyền":"Spaceship","Loop từ vựng":"Vocab loop","Nền: sân cầu lông":"Background: badminton court","Hũ từ vựng":"Vocabulary jars","Điểm nhớ 0–100: nhớ đúng thì lên hũ, quên thì rơi hũ, 100 điểm vào Hũ vàng.":"Memory points 0–100: remember a word to move up a jar, forget it to drop a jar. 100 points reaches the Gold jar.","điểm nhớ trung bình":"average memory points","ôn đúng hạn (30 ngày)":"reviewed on time (30 days)","30 ngày qua":"Last 30 days","thẻ đã ôn":"cards reviewed","trả lời thuộc":"answered Know it","ngày có học":"days studied","Mọi hũ":"All jars","Chưa học":"Not studied","Hũ 1":"Jar 1","Hũ 2":"Jar 2","Hũ 3":"Jar 3","Hũ 4":"Jar 4","Hũ 5":"Jar 5","Đến hạn hôm nay":"Due today","Không có từ nào khớp":"No matching words","Thử từ khoá khác, hoặc bỏ bộ lọc hũ.":"Try another keyword, or clear the jar filter.","Xoá bộ lọc":"Clear filter","Người dùng":"User","Tiến độ được lưu theo tên người dùng và đồng bộ qua server.":"Progress is saved per username and synced through the server.","Đồng bộ ngay":"Sync now","Đổi người dùng":"Switch user","Học":"Study","Thẻ mới mỗi ngày":"New cards per day","Thẻ đến hạn luôn được ôn hết, không bị giới hạn này.":"Due cards are always reviewed in full, regardless of this limit.","Giọng đọc":"Voice","Mặc định của thiết bị":"Device default","Giọng tiếng Anh có sẵn trên thiết bị này.":"English voices available on this device.","Tự phát âm khi lật thẻ":"Auto-pronounce on flip","Phát âm ngay khi hiện mặt trước":"Speak as soon as the front appears","Đọc cả câu ví dụ khi lật":"Also read the example sentence on flip","Tốc độ đọc:":"Speech rate:","Kéo sang trái để đọc chậm hơn. Bấm nút loa để nghe thử.":"Drag left to slow down. Tap the speaker button to preview.","Sao lưu":"Backup","Tải tiến độ về máy, hoặc nhập lại từ file đã tải. Nhập sẽ gộp theo từng từ, lấy bản mới hơn.":"Download your progress, or import it back from a downloaded file. Import merges word by word and keeps the newer entry.","Tải tiến độ (JSON)":"Download progress (JSON)","Nhập từ file JSON":"Import from JSON file","Xoá tiến độ":"Delete progress","Xoá toàn bộ hũ, điểm nhớ và lịch ôn của người dùng này, cả trên thiết bị lẫn server. Không khôi phục được.":"Deletes all jars, memory points, and review schedule for this user, on both the device and the server. This can't be undone.","Xoá tiến độ…":"Delete progress…","Nguồn từ vựng: Boost Your Vocabulary, TOEIC Reading Test 1 đến 10 (ETS 2023).":"Vocabulary source: Boost Your Vocabulary, TOEIC Reading Tests 1 to 10 (ETS 2023).","Đã biết":"Already known","Thuộc":"Know it","Quên":"Forgot","Nghĩa":"Meaning","Ví dụ":"Example","điểm":"points","Phi thuyền từ vựng":"Vocabulary spaceship","Bắt đầu":"Start","Kết thúc":"End","Gợi ý":"Hint","Không biết":"Don't know","Tiếp theo":"Next","Lật thẻ":"Flip card","Xong phiên này":"Session complete","Đã ôn":"Reviewed","Về trang chính":"Back to Home","15 giây":"15 sec","Đang tải meme…":"Loading meme…","Hết loop":"Loop over","Chạy lại":"Run again","Đổi meme":"Change meme","Chọn lại":"Choose again","Đặt vào hũ":"Move to jar","Chưa học (xoá điểm)":"Not studied (reset points)","Hũ 1 (0 điểm), ôn sau 1 ngày":"Jar 1 (0 points), review in 1 day","Hũ 2 (5 điểm), ôn sau 1 ngày":"Jar 2 (5 points), review in 1 day","Hũ 3 (15 điểm), ôn sau 3 ngày":"Jar 3 (15 points), review in 3 days","Hũ 4 (30 điểm), ôn sau 7 ngày":"Jar 4 (30 points), review in 7 days","Hũ 5 (50 điểm), ôn sau 14 ngày":"Jar 5 (50 points), review in 14 days","Hũ vàng (100 điểm), đã xong":"Gold jar (100 points), done","Điểm nhớ được đặt bằng mức thấp nhất của hũ. Dùng khi đã biết từ này.":"Memory points are set to the jar's minimum. Use this when you already know the word.","Đóng":"Close","Lưu hũ":"Save jar","Chọn hũ để học":"Pick a jar to study","Số từ":"Word count","Tất cả từ đã chọn":"All selected words","10 từ":"10 words","20 từ":"20 words","30 từ":"30 words","Tốc độ thiên thạch":"Asteroid speed","Chậm":"Slow","Vừa":"Medium","Siêu tốc":"Turbo","Huỷ":"Cancel","Chọn nền, kiểu loop, các từ muốn tụng và tốc độ đọc. Mỗi lần đọc một từ, nghĩa hiện cùng lúc. Đổi từ thì chữ đổi màu và có tiếng chuông.":"Choose a background, loop type, the words to drill, and speech rate. Each word is read aloud while its meaning appears. A new word gets a new color and a chime.","1. Nền":"1. Background","Sân cầu lông":"Badminton court","Chọn meme":"Choose meme","Tiếng meme bằng 1/4 tiếng đọc.":"Meme audio plays at a quarter of the voice volume.","Nguồn clip: cloud (Google Drive)":"Clip source: cloud (Google Drive)","URL Apps Script meme (đã điền sẵn)":"Meme Apps Script URL (prefilled)","Mã khoá riêng (không bắt buộc)":"Private key (optional)","Chỉ cần khi dùng một Apps Script meme khác.":"Only needed when using a different meme Apps Script.","Lưu và kết nối":"Save & connect","Ngắt cloud":"Disconnect cloud","Chọn thư mục":"Choose folder","(hoặc các file .webm/.mp4). Nạp từ máy thì clip chỉ lưu trong trình duyệt của thiết bị này.":"(or .webm/.mp4 files). Clips loaded from your computer are stored only in this device's browser.","Chọn file":"Choose files","Xoá clip đã nạp":"Remove loaded clips","2. Chọn từ":"2. Pick words","0 từ đã chọn":"0 selected","Tick từ nào thì từ đó vào loop, đọc theo thứ tự tick.":"Tick the words to loop; they're read in the order you tick them.","Bỏ chọn hết":"Clear all","3. Tốc độ đọc":"3. Speech rate","Rất nhanh":"Very fast","4. Thời gian mỗi từ":"4. Time per word","10 giây":"10 sec","30 giây":"30 sec","45 giây":"45 sec","60 giây":"60 sec","Xoá toàn bộ tiến độ?":"Delete all progress?","Mọi hũ, điểm nhớ, lịch ôn và chuỗi ngày của người dùng này sẽ bị xoá trên thiết bị và trên server. Nếu muốn giữ, tải tiến độ về máy trước.":"All jars, memory points, review schedule, and streak for this user will be deleted from this device and the server. To keep them, download your progress first.","Giữ lại":"Keep","Flashcard 3.330 từ vựng TOEIC Reading (ETS 2023), ôn theo hũ điểm nhớ (Leitner), đồng bộ theo username.":"Flashcards for 3,330 TOEIC Reading words (ETS 2023), reviewed by memory-point jars (Leitner), synced by username.","Điều hướng":"Navigation","Trạng thái đồng bộ":"Sync status","Đổi giao diện sáng tối":"Toggle light/dark theme","Số từ trong mỗi hũ của bộ thẻ đang chọn":"Words in each jar of the selected deck","Số thẻ ôn mỗi ngày trong 30 ngày qua":"Cards reviewed per day over the last 30 days","Tìm từ, nghĩa, synonym…":"Search words, meanings, synonyms…","Tìm kiếm":"Search","Hũ":"Jar","Kết thúc phiên, về trang chính":"End session, back to Home","Từ này đã biết rồi: đưa vào Hũ 5 (75 điểm), ôn lại sau 30 ngày":"Already know this word: move to Jar 5 (75 points), review again in 30 days","Hoàn tác lần chấm trước":"Undo last rating","Tiến độ phiên học":"Session progress","Thẻ từ vựng, chạm để lật":"Vocabulary card, tap to flip","Phát âm":"Pronounce","Đọc câu ví dụ":"Read example sentence","Màn chơi phi thuyền: 3 làn thiên thạch, mỗi thiên thạch mang một từ":"Spaceship game: 3 asteroid lanes, each asteroid carries a word","Số mạng":"Lives","Sang làn trái":"Move left","Tạm dừng":"Pause","Sang làn phải":"Move right","4 lựa chọn, gõ từ đúng vào chỗ trống":"4 choices, type the correct word into the blank","Gõ từng chữ cái của đáp án":"Type each letter of the answer","Dừng, về trang chính":"Stop, back to Home","Thời gian còn lại của loop":"Loop time remaining","Clip meme đang lặp":"Looping meme clip","Chọn hũ, có thể chọn nhiều":"Pick jars, multiple allowed","Để trống: dùng mã mặc định":"Leave blank to use the default key","Chọn một meme":"Choose a meme","Tìm trong bộ thẻ đang chọn":"Search in the selected deck","Tìm từ để tick":"Search words to tick","Tick các từ muốn loop":"Tick the words to loop","Cầu lông":"Badminton","Hu hu… hết mạng rồi":"Boo hoo… out of lives","Chơi lại":"Play again","Xem kết quả":"See results","Trái cầu từ vựng":"Vocab shuttles","Giới thiệu":"Guide","Gặp An, Mai và Bé Cầu":"Meet An, Mai and Bé Cầu","An và Mai mê cầu lông. Bé Cầu là trái cầu tinh nghịch: vui khi bạn nhớ từ, nổi giận khi bạn gõ sai, và cháy đen nếu hết mạng.":"An and Mai love badminton. Bé Cầu is a cheeky shuttlecock: happy when you remember a word, fuming when you mistype, and burnt to a crisp when you run out of lives.","Hành trình tới Hũ vàng":"The road to the Gold jar","Mỗi từ có điểm nhớ 0–100. Nhớ đúng thì từ lên hũ và trái cầu của từ mọc thêm một lông. Đủ 100 điểm, từ vào Hũ vàng và thành trái cầu hoàn chỉnh.":"Every word has 0–100 memory points. Remember it and the word moves up a jar, and its shuttle grows one more feather. At 100 points the word reaches the Gold jar as a complete shuttle.","Điểm nhớ được tính thế nào":"How memory points work","Ôn đúng hạn":"Review on time","+5 · +10 · +15 · +20 · +25 (Hũ 1 → Hũ 5)":"+5 · +10 · +15 · +20 · +25 (Jar 1 → Jar 5)","Ôn sớm":"Review early","Ôn trễ":"Review late","được một nửa":"half the points","−15, rơi về hũ theo điểm":"−15, drops to the matching jar","Phi thuyền, Cầu lông":"Spaceship, Badminton","Mỗi ngày":"Each day","mỗi từ chỉ tính điểm một lần":"each word scores only once","Điểm game (gạch, thiên thạch, trái cầu) chỉ để vui, không đổi điểm nhớ.":"Game points (bricks, asteroids, shuttles) are just for fun and never change memory points.","Chế độ và phím tắt":"Modes and shortcuts","Thẻ lật, Thẻ ngược":"Flashcards, Reverse cards","Space: lật · 1: Quên · 2: Thuộc · U: hoàn tác · vuốt trái/phải":"Space: flip · 1: Forgot · 2: Know it · U: undo · swipe left/right","1–4: chọn · Space: tiếp":"1–4: choose · Space: next","Chọn 1 trong 4 từ rồi gõ từng chữ. Sai chữ đầu: 50% điểm game":"Pick 1 of 4 words, then type it letter by letter. Wrong first letter: 50% game points","Gõ từ vừa nghe. Gợi ý càng nhiều, điểm càng ít":"Type the word you hear. More hints, fewer points","Lái: ← → hoặc A, D. Bắn: chạm thiên thạch hoặc phím 1–3. Space: tạm dừng":"Steer: ← → or A, D. Shoot: tap an asteroid or press 1–3. Space: pause","← → hoặc chạm làn để đưa vợt. Space: tạm dừng":"← → or tap a lane to move the racket. Space: pause","Nghe các từ đã chọn lặp lại, không tính điểm":"Listen to your chosen words on repeat, no scoring","Mọi màn":"Everywhere","Esc: thoát":"Esc: exit","Trái cầu hoàn chỉnh":"The complete shuttle","Gom từ vào Hũ vàng để An và Mai có trái cầu hoàn chỉnh mà chơi.":"Fill the Gold jar with words so An and Mai get a complete shuttle to play with.","Bắt đầu học":"Start learning","Quay lại":"Back","Tiếp":"Next","Điều khiển":"Controls","Lái phi thuyền":"Steer ship","Bắn thiên thạch":"Shoot asteroids","Tốc độ rơi":"Fall speed","Giới thiệu và hướng dẫn":"Guide and help","Đóng giới thiệu":"Close guide","Trang giới thiệu":"Guide pages","×0,7":"×0.7","×0,5":"×0.5","vàng":"coins","Luyện thêm":"Extra practice","Chu trình nhớ 30 ngày":"The 30-day memory cycle","Ôn lại đúng lúc sắp quên giúp nhớ lâu hơn học dồn một lần. App tự hẹn ngày ôn cho từng từ, khoảng cách giãn dần 1 → 3 → 7 → 14 → 30 ngày.":"Reviewing right before you forget makes words stick far better than cramming. The app schedules each word for you, with gaps growing 1 → 3 → 7 → 14 → 30 days.","Ngày 0":"Day 0","Ngày 1":"Day 1","Ngày 4":"Day 4","Ngày 11":"Day 11","Ngày 25":"Day 25","Ngày 55":"Day 55","Mới → Hũ 2":"New → Jar 2","5 điểm":"5 points","15 điểm":"15 points","30 điểm":"30 points","50 điểm":"50 points","75 điểm":"75 points","100 điểm":"100 points","Nhớ đúng hạn mọi lần: trong 30 ngày đầu từ đạt 75 điểm, lần ôn kế tiếp đưa từ vào Hũ vàng. Quên thì bị trừ điểm, ôn lại ngay hôm đó rồi đi tiếp từ hũ thấp hơn.":"Remember on time every time: within the first 30 days a word reaches 75 points, and the next review takes it to the Gold jar. Forget it and it loses points, comes back the same day, then climbs again from a lower jar.","Từ ngữ trong app":"Terms in the app","Điểm nhớ":"Memory points","0–100, đo độ nhớ của từng từ":"0–100, how well you know each word","nhóm từ theo điểm nhớ: Hũ 1 → Hũ 5, đủ 100 điểm vào Hũ vàng":"words grouped by memory points: Jar 1 → Jar 5, 100 points reaches the Gold jar","hôm nay là ngày hẹn ôn của từ":"today is the word's scheduled review day","Đúng hạn":"On time","ôn quanh ngày hẹn, cộng nhiều điểm nhất":"review around the scheduled day, earns the most points","Ôn sớm, ôn trễ":"Early, late","trước ngày hẹn +2; quá hạn được một nửa":"before the scheduled day +2; overdue gets half","−15 điểm, ôn lại ngay hôm đó":"−15 points, review again the same day","học lại từ đã tính điểm hôm nay: không đổi điểm nhớ":"studying a word already scored today: memory points don't change","Vàng":"Coins","luyện thêm và nhớ đúng: +1 (gõ chữ +2). Dùng mua vật phẩm ở phiên bản sau":"extra practice answered correctly: +1 (typing +2). Buys items in the next version","mỗi từ chỉ tính điểm một lần; học lại được vàng":"each word scores only once; studying again earns coins","Học lại từ đã đủ điểm hôm nay?":"Study words already scored today?","Bỏ các từ này":"Skip these words","Vẫn học, nhận vàng":"Study anyway, earn coins","Vàng: nhận khi luyện thêm từ đã tính điểm hôm nay":"Coins: earned by extra practice on words already scored today","Từ đã tính điểm hôm nay: nhớ đúng được vàng":"Already scored today: a correct answer earns coins","Lịch ôn của một từ nhớ đúng hạn mọi lần":"Review schedule of a word remembered on time every time","Thử phát âm":"Test voice"};
+    const I18N_STATIC = {"Kiểu loop":"Loop type","Từ":"Words","Từ đồng nghĩa":"Synonyms","Ngữ điệu & nối âm":"Intonation & linking","Phát âm IPA":"IPA pronunciation","Khẩu hình miệng + bảng phiên âm":"Mouth shapes + phonemic chart","Heo ăn cầu":"Piggy feast","ETS TOEIC 2023 · 10 đề Reading":"ETS TOEIC 2023 · 10 Reading tests","Nhập tên người dùng để tải tiến độ. Tên mới sẽ được tạo tự động, không cần mật khẩu.":"Enter a username to load your progress. New names are created automatically, no password needed.","Tên người dùng":"Username","2 đến 32 ký tự: chữ thường, số, dấu chấm, gạch dưới, gạch ngang.":"2 to 32 characters: lowercase letters, numbers, periods, underscores, hyphens.","Vào học":"Start studying","Gần đây trên thiết bị này":"Recent on this device","Chưa cấu hình server: tiến độ chỉ lưu trên thiết bị này.":"Server not configured: progress is saved on this device only.","Trang chính":"Home","Từ vựng":"Vocabulary","Cài đặt":"Settings","Đã lưu":"Saved","Hôm nay":"Today","ngày liên tiếp":"day streak","Bộ thẻ":"Deck","Học ngay":"Study now","Đến hạn":"Due","Mới hôm nay":"New today","Hũ vàng":"Gold jar","Hôm nay xong rồi":"All done for today","Học thêm 20 thẻ mới":"Study 20 more new cards","Chọn hũ để ôn thêm":"Pick a jar to review more","Chế độ":"Mode","Thẻ lật":"Flashcards","Thẻ ngược":"Reverse cards","Trắc nghiệm":"Quiz","Điền câu ETS":"ETS cloze","Nghe và gõ":"Listen & type","Phi thuyền":"Spaceship","Loop từ vựng":"Vocab loop","Nền: sân cầu lông":"Background: badminton court","Hũ từ vựng":"Vocabulary jars","Điểm nhớ 0–100: nhớ đúng thì lên hũ, quên thì rơi hũ, 100 điểm vào Hũ vàng.":"Memory points 0–100: remember a word to move up a jar, forget it to drop a jar. 100 points reaches the Gold jar.","điểm nhớ trung bình":"average memory points","ôn đúng hạn (30 ngày)":"reviewed on time (30 days)","30 ngày qua":"Last 30 days","thẻ đã ôn":"cards reviewed","trả lời thuộc":"answered Know it","ngày có học":"days studied","Mọi hũ":"All jars","Chưa học":"Not studied","Hũ 1":"Jar 1","Hũ 2":"Jar 2","Hũ 3":"Jar 3","Hũ 4":"Jar 4","Hũ 5":"Jar 5","Đến hạn hôm nay":"Due today","Không có từ nào khớp":"No matching words","Thử từ khoá khác, hoặc bỏ bộ lọc hũ.":"Try another keyword, or clear the jar filter.","Xoá bộ lọc":"Clear filter","Người dùng":"User","Tiến độ được lưu theo tên người dùng và đồng bộ qua server.":"Progress is saved per username and synced through the server.","Đồng bộ ngay":"Sync now","Đổi người dùng":"Switch user","Học":"Study","Thẻ mới mỗi ngày":"New cards per day","Thẻ đến hạn luôn được ôn hết, không bị giới hạn này.":"Due cards are always reviewed in full, regardless of this limit.","Giọng đọc":"Voice","Mặc định của thiết bị":"Device default","Giọng tiếng Anh có sẵn trên thiết bị này.":"English voices available on this device.","Tự phát âm khi lật thẻ":"Auto-pronounce on flip","Phát âm ngay khi hiện mặt trước":"Speak as soon as the front appears","Đọc cả câu ví dụ khi lật":"Also read the example sentence on flip","Tốc độ đọc:":"Speech rate:","Kéo sang trái để đọc chậm hơn. Bấm nút loa để nghe thử.":"Drag left to slow down. Tap the speaker button to preview.","Sao lưu":"Backup","Tải tiến độ về máy, hoặc nhập lại từ file đã tải. Nhập sẽ gộp theo từng từ, lấy bản mới hơn.":"Download your progress, or import it back from a downloaded file. Import merges word by word and keeps the newer entry.","Tải tiến độ (JSON)":"Download progress (JSON)","Nhập từ file JSON":"Import from JSON file","Xoá tiến độ":"Delete progress","Xoá toàn bộ hũ, điểm nhớ và lịch ôn của người dùng này, cả trên thiết bị lẫn server. Không khôi phục được.":"Deletes all jars, memory points, and review schedule for this user, on both the device and the server. This can't be undone.","Xoá tiến độ…":"Delete progress…","Nguồn từ vựng: Boost Your Vocabulary, TOEIC Reading Test 1 đến 10 (ETS 2023).":"Vocabulary source: Boost Your Vocabulary, TOEIC Reading Tests 1 to 10 (ETS 2023).","Đã biết":"Already known","Thuộc":"Know it","Quên":"Forgot","Nghĩa":"Meaning","Ví dụ":"Example","điểm":"points","Phi thuyền từ vựng":"Vocabulary spaceship","Bắt đầu":"Start","Kết thúc":"End","Gợi ý":"Hint","Không biết":"Don't know","Tiếp theo":"Next","Lật thẻ":"Flip card","Xong phiên này":"Session complete","Đã ôn":"Reviewed","Về trang chính":"Back to Home","15 giây":"15 sec","Đang tải meme…":"Loading meme…","Hết loop":"Loop over","Chạy lại":"Run again","Đổi meme":"Change meme","Chọn lại":"Choose again","Đặt vào hũ":"Move to jar","Chưa học (xoá điểm)":"Not studied (reset points)","Hũ 1 (0 điểm), ôn sau 1 ngày":"Jar 1 (0 points), review in 1 day","Hũ 2 (5 điểm), ôn sau 1 ngày":"Jar 2 (5 points), review in 1 day","Hũ 3 (15 điểm), ôn sau 3 ngày":"Jar 3 (15 points), review in 3 days","Hũ 4 (30 điểm), ôn sau 7 ngày":"Jar 4 (30 points), review in 7 days","Hũ 5 (50 điểm), ôn sau 14 ngày":"Jar 5 (50 points), review in 14 days","Hũ vàng (100 điểm), đã xong":"Gold jar (100 points), done","Điểm nhớ được đặt bằng mức thấp nhất của hũ. Dùng khi đã biết từ này.":"Memory points are set to the jar's minimum. Use this when you already know the word.","Đóng":"Close","Lưu hũ":"Save jar","Chọn hũ để học":"Pick a jar to study","Số từ":"Word count","Tất cả từ đã chọn":"All selected words","10 từ":"10 words","20 từ":"20 words","30 từ":"30 words","Tốc độ thiên thạch":"Asteroid speed","Chậm":"Slow","Vừa":"Medium","Siêu tốc":"Turbo","Huỷ":"Cancel","Chọn nền, kiểu loop, các từ muốn tụng và tốc độ đọc. Mỗi lần đọc một từ, nghĩa hiện cùng lúc. Đổi từ thì chữ đổi màu và có tiếng chuông.":"Choose a background, loop type, the words to drill, and speech rate. Each word is read aloud while its meaning appears. A new word gets a new color and a chime.","1. Nền":"1. Background","Sân cầu lông":"Badminton court","Chọn meme":"Choose meme","Tiếng meme bằng 1/4 tiếng đọc.":"Meme audio plays at a quarter of the voice volume.","Nguồn clip: cloud (Google Drive)":"Clip source: cloud (Google Drive)","URL Apps Script meme (đã điền sẵn)":"Meme Apps Script URL (prefilled)","Mã khoá riêng (không bắt buộc)":"Private key (optional)","Chỉ cần khi dùng một Apps Script meme khác.":"Only needed when using a different meme Apps Script.","Lưu và kết nối":"Save & connect","Ngắt cloud":"Disconnect cloud","Chọn thư mục":"Choose folder","(hoặc các file .webm/.mp4). Nạp từ máy thì clip chỉ lưu trong trình duyệt của thiết bị này.":"(or .webm/.mp4 files). Clips loaded from your computer are stored only in this device's browser.","Chọn file":"Choose files","Xoá clip đã nạp":"Remove loaded clips","2. Chọn từ":"2. Pick words","0 từ đã chọn":"0 selected","Tick từ nào thì từ đó vào loop, đọc theo thứ tự tick.":"Tick the words to loop; they're read in the order you tick them.","Bỏ chọn hết":"Clear all","3. Tốc độ đọc":"3. Speech rate","Rất nhanh":"Very fast","4. Thời gian mỗi từ":"4. Time per word","10 giây":"10 sec","30 giây":"30 sec","45 giây":"45 sec","60 giây":"60 sec","Xoá toàn bộ tiến độ?":"Delete all progress?","Mọi hũ, điểm nhớ, lịch ôn và chuỗi ngày của người dùng này sẽ bị xoá trên thiết bị và trên server. Nếu muốn giữ, tải tiến độ về máy trước.":"All jars, memory points, review schedule, and streak for this user will be deleted from this device and the server. To keep them, download your progress first.","Giữ lại":"Keep","Flashcard 3.330 từ vựng TOEIC Reading (ETS 2023), ôn theo hũ điểm nhớ (Leitner), đồng bộ theo username.":"Flashcards for 3,330 TOEIC Reading words (ETS 2023), reviewed by memory-point jars (Leitner), synced by username.","Điều hướng":"Navigation","Trạng thái đồng bộ":"Sync status","Đổi giao diện sáng tối":"Toggle light/dark theme","Số từ trong mỗi hũ của bộ thẻ đang chọn":"Words in each jar of the selected deck","Số thẻ ôn mỗi ngày trong 30 ngày qua":"Cards reviewed per day over the last 30 days","Tìm từ, nghĩa, synonym…":"Search words, meanings, synonyms…","Tìm kiếm":"Search","Hũ":"Jar","Kết thúc phiên, về trang chính":"End session, back to Home","Từ này đã biết rồi: đưa vào Hũ 5 (75 điểm), ôn lại sau 30 ngày":"Already know this word: move to Jar 5 (75 points), review again in 30 days","Hoàn tác lần chấm trước":"Undo last rating","Tiến độ phiên học":"Session progress","Thẻ từ vựng, chạm để lật":"Vocabulary card, tap to flip","Phát âm":"Pronounce","Đọc câu ví dụ":"Read example sentence","Màn chơi phi thuyền: 3 làn thiên thạch, mỗi thiên thạch mang một từ":"Spaceship game: 3 asteroid lanes, each asteroid carries a word","Số mạng":"Lives","Sang làn trái":"Move left","Tạm dừng":"Pause","Sang làn phải":"Move right","4 lựa chọn, gõ từ đúng vào chỗ trống":"4 choices, type the correct word into the blank","Gõ từng chữ cái của đáp án":"Type each letter of the answer","Dừng, về trang chính":"Stop, back to Home","Thời gian còn lại của loop":"Loop time remaining","Clip meme đang lặp":"Looping meme clip","Chọn hũ, có thể chọn nhiều":"Pick jars, multiple allowed","Để trống: dùng mã mặc định":"Leave blank to use the default key","Chọn một meme":"Choose a meme","Tìm trong bộ thẻ đang chọn":"Search in the selected deck","Tìm từ để tick":"Search words to tick","Tick các từ muốn loop":"Tick the words to loop","Cầu lông":"Badminton","Hu hu… hết mạng rồi":"Boo hoo… out of lives","Chơi lại":"Play again","Xem kết quả":"See results","Trái cầu từ vựng":"Vocab shuttles","Giới thiệu":"Guide","Gặp An, Mai và Bé Cầu":"Meet An, Mai and Bé Cầu","An và Mai mê cầu lông. Bé Cầu là trái cầu tinh nghịch: vui khi bạn nhớ từ, nổi giận khi bạn gõ sai, và cháy đen nếu hết mạng.":"An and Mai love badminton. Bé Cầu is a cheeky shuttlecock: happy when you remember a word, fuming when you mistype, and burnt to a crisp when you run out of lives.","Hành trình tới Hũ vàng":"The road to the Gold jar","Mỗi từ có điểm nhớ 0–100. Nhớ đúng thì từ lên hũ và trái cầu của từ mọc thêm một lông. Đủ 100 điểm, từ vào Hũ vàng và thành trái cầu hoàn chỉnh.":"Every word has 0–100 memory points. Remember it and the word moves up a jar, and its shuttle grows one more feather. At 100 points the word reaches the Gold jar as a complete shuttle.","Điểm nhớ được tính thế nào":"How memory points work","Ôn đúng hạn":"Review on time","+5 · +10 · +15 · +20 · +25 (Hũ 1 → Hũ 5)":"+5 · +10 · +15 · +20 · +25 (Jar 1 → Jar 5)","Ôn sớm":"Review early","Ôn trễ":"Review late","được một nửa":"half the points","−15, rơi về hũ theo điểm":"−15, drops to the matching jar","Phi thuyền, Cầu lông":"Spaceship, Badminton","Mỗi ngày":"Each day","−15 điểm (mỗi ngày trừ tối đa 15), ôn lại ngay hôm đó":"−15 points (at most 15 per day), review again the same day","Gỡ lại":"Recover","bị trừ vì quên thì nhớ đúng lại trong ngày để lấy lại điểm":"lost points for forgetting? Get it right again the same day to win them back","Trắc nghiệm, Gần nghĩa nhất":"Quiz, Closest meaning","Phi thuyền, Cầu lông, Heo ăn cầu":"Spaceship, Badminton, Piggy feast","mỗi từ được cộng tối đa điểm ôn của ngày đó; quên bị trừ thì nhớ đúng lại để gỡ; đủ điểm rồi học lại được vàng":"each word earns at most that day's review points; lost points can be won back the same day; once maxed out, extra study earns coins","Chép câu, Ngữ điệu":"Sentence dictation, Intonation","chỉ cộng vàng, không đổi điểm nhớ":"coins only, memory points don't change","Chép chính tả câu":"Sentence dictation","Gõ từng từ, Space hoặc Enter để chốt từ":"Type word by word; Space or Enter locks in each word","Gần nghĩa nhất":"Closest meaning","Kiểu đề":"Question type","Đồng nghĩa":"Synonym","mỗi từ chỉ tính điểm một lần":"each word scores only once","Điểm game (gạch, thiên thạch, trái cầu) chỉ để vui, không đổi điểm nhớ.":"Game points (bricks, asteroids, shuttles) are just for fun and never change memory points.","Chế độ và phím tắt":"Modes and shortcuts","Thẻ lật, Thẻ ngược":"Flashcards, Reverse cards","Space: lật · 1: Quên · 2: Thuộc · U: hoàn tác · vuốt trái/phải":"Space: flip · 1: Forgot · 2: Know it · U: undo · swipe left/right","1–4: chọn · Space: tiếp":"1–4: choose · Space: next","Chọn 1 trong 4 từ rồi gõ từng chữ. Sai chữ đầu: 50% điểm game":"Pick 1 of 4 words, then type it letter by letter. Wrong first letter: 50% game points","Gõ từ vừa nghe. Gợi ý càng nhiều, điểm càng ít":"Type the word you hear. More hints, fewer points","Lái: ← → hoặc A, D. Bắn: chạm thiên thạch hoặc phím 1–3. Space: tạm dừng":"Steer: ← → or A, D. Shoot: tap an asteroid or press 1–3. Space: pause","← → hoặc chạm làn để đưa vợt. Space: tạm dừng":"← → or tap a lane to move the racket. Space: pause","Nghe các từ đã chọn lặp lại, không tính điểm":"Listen to your chosen words on repeat, no scoring","Mọi màn":"Everywhere","Esc: thoát":"Esc: exit","Trái cầu hoàn chỉnh":"The complete shuttle","Gom từ vào Hũ vàng để An và Mai có trái cầu hoàn chỉnh mà chơi.":"Fill the Gold jar with words so An and Mai get a complete shuttle to play with.","Bắt đầu học":"Start learning","Quay lại":"Back","Tiếp":"Next","Điều khiển":"Controls","Lái phi thuyền":"Steer ship","Bắn thiên thạch":"Shoot asteroids","Tốc độ rơi":"Fall speed","Giới thiệu và hướng dẫn":"Guide and help","Đóng giới thiệu":"Close guide","Trang giới thiệu":"Guide pages","×0,7":"×0.7","×0,5":"×0.5","vàng":"coins","Luyện thêm":"Extra practice","Chu trình nhớ 30 ngày":"The 30-day memory cycle","Ôn lại đúng lúc sắp quên giúp nhớ lâu hơn học dồn một lần. App tự hẹn ngày ôn cho từng từ, khoảng cách giãn dần 1 → 3 → 7 → 14 → 30 ngày.":"Reviewing right before you forget makes words stick far better than cramming. The app schedules each word for you, with gaps growing 1 → 3 → 7 → 14 → 30 days.","Ngày 0":"Day 0","Ngày 1":"Day 1","Ngày 4":"Day 4","Ngày 11":"Day 11","Ngày 25":"Day 25","Ngày 55":"Day 55","Mới → Hũ 2":"New → Jar 2","5 điểm":"5 points","15 điểm":"15 points","30 điểm":"30 points","50 điểm":"50 points","75 điểm":"75 points","100 điểm":"100 points","Nhớ đúng hạn mọi lần: trong 30 ngày đầu từ đạt 75 điểm, lần ôn kế tiếp đưa từ vào Hũ vàng. Quên thì bị trừ điểm, ôn lại ngay hôm đó rồi đi tiếp từ hũ thấp hơn.":"Remember on time every time: within the first 30 days a word reaches 75 points, and the next review takes it to the Gold jar. Forget it and it loses points, comes back the same day, then climbs again from a lower jar.","Từ ngữ trong app":"Terms in the app","Điểm nhớ":"Memory points","0–100, đo độ nhớ của từng từ":"0–100, how well you know each word","nhóm từ theo điểm nhớ: Hũ 1 → Hũ 5, đủ 100 điểm vào Hũ vàng":"words grouped by memory points: Jar 1 → Jar 5, 100 points reaches the Gold jar","hôm nay là ngày hẹn ôn của từ":"today is the word's scheduled review day","Đúng hạn":"On time","ôn quanh ngày hẹn, cộng nhiều điểm nhất":"review around the scheduled day, earns the most points","Ôn sớm, ôn trễ":"Early, late","trước ngày hẹn +2; quá hạn được một nửa":"before the scheduled day +2; overdue gets half","−15 điểm, ôn lại ngay hôm đó":"−15 points, review again the same day","học lại từ đã đủ điểm hôm nay: không đổi điểm nhớ":"studying a word already maxed out today: memory points don't change","Vàng":"Coins","luyện thêm và nhớ đúng: +1 (gõ chữ +2). Dùng mua vật phẩm ở phiên bản sau":"extra practice answered correctly: +1 (typing +2). Buys items in the next version","mỗi từ chỉ tính điểm một lần; học lại được vàng":"each word scores only once; studying again earns coins","Học lại từ đã đủ điểm hôm nay?":"Study words already maxed out today?","Bỏ các từ này":"Skip these words","Vẫn học, nhận vàng":"Study anyway, earn coins","Vàng: nhận khi luyện thêm từ đã đủ điểm hôm nay":"Coins: earned by extra practice on words already maxed out today","Từ đã đủ điểm hôm nay: nhớ đúng được vàng":"Already scored today: a correct answer earns coins","Lịch ôn của một từ nhớ đúng hạn mọi lần":"Review schedule of a word remembered on time every time","Thử phát âm":"Test voice"};
     (function () {
       document.documentElement.lang = LANG;
       if (LANG !== "en") return;
@@ -1771,7 +1841,7 @@
     // ================================================================
     const API_URL = "https://script.google.com/macros/s/AKfycbwBiNwckLC-9o_m0X0TBDE-vjazUJMWD4UlIsySwcsFuUjMyBGBo3mfVQGEhWl47CJ7DA/exec";
     const SCHEMA = 1;
-    const APP_VER = "1.18.1";
+    const APP_VER = "1.19.0";
     const VERSION_URL = "version.json";       // cùng repo; build_vocab.py tự đồng bộ số phiên bản vào file này
     const VERSION_CHECK_MS = 10 * 60 * 1000;
     const NEW_BATCH = 20;                       // "Học thêm 20 thẻ mới"
@@ -1785,7 +1855,7 @@
     // Hũ = dải điểm: 1 [0,5) · 2 [5,15) · 3 [15,30) · 4 [30,50) · 5 [50,100) · 6 = Hũ vàng (100, khoá)
     const JAR_MIN = [0, 0, 5, 15, 30, 50, 100];
     const JAR_GAIN = { 1: 5, 2: 10, 3: 15, 4: 20, 5: 25 };
-    const MODE_W = { card: 1, reverse: 1, cloze: 1, dictation: 1, quiz: 0.7, ship: 0.5, badminton: 0.5, pig: 0.5 };
+    const MODE_W = { card: 1, reverse: 1, cloze: 1, dictation: 1, quiz: 0.7, p7: 0.7, ship: 0.5, badminton: 0.5, pig: 0.5 };
     const PENALTY = 15, EARLY_GAIN = 2, LOG_MAX = 30, GOLD = 6, GOLD_DUE = "9999-12-31";
     const OLD_BOX_SCORE = { 1: 0, 2: 5, 3: 15, 4: 30, 5: 50 };
     const OLD_INTERVAL = { 1: 0, 2: 1, 3: 3, 4: 7, 5: 14 };
@@ -1807,38 +1877,61 @@
       c.last = c.last || ""; c.ok = c.ok || 0; c.log = [logLine(today, c.score, "c", "-", box, c.box)];
       return c;
     }
-    /** một lượt chấm → thẻ mới + sự kiện; mỗi từ chỉ tính điểm 1 lần/ngày, Hũ vàng khoá */
+    // Trần điểm trong ngày (v1.19): lượt chấm đầu tiên trong ngày đặt "điểm của ngày" g (theo hũ + đúng hạn/sớm/trễ, chưa nhân hệ số chế độ).
+    // Trong ngày điểm nhớ nằm trong [s0 − PENALTY, s0 + g] (s0 = điểm đầu ngày): quên thì trừ (× hệ số), nhớ đúng thì cộng g × hệ số tới trần.
+    // Đủ trần (hoặc Hũ vàng): lượt sau là luyện thêm (p), không đổi điểm. r = gỡ lại (lượt nhớ đúng sau lượt đầu ngày).
+    function dayGain(c, kind) { const base = JAR_GAIN[c.box] || JAR_GAIN[1]; return Math.max(1, Math.round(kind === "e" ? EARLY_GAIN : kind === "l" ? base / 2 : base)); }
+    function dayOf(c, today) {
+      if (!c) return null;
+      if (c.day && c.day.d === today) return c.day;
+      if (c.last !== today) return null;
+      // thẻ đã chấm hôm nay bằng bản cũ (chưa có trần): suy điểm đầu ngày từ nhật ký
+      let s0 = c.score || 0;
+      for (const ln of c.log || []) { const a = String(ln).split("|"); if (a[0] === today) s0 -= Number(a[1]) || 0; }
+      s0 = Math.max(0, Math.min(100, s0));
+      return { d: today, s0, cap: Math.max(c.score || 0, s0), g: JAR_GAIN[jarOf(s0)] || JAR_GAIN[1] };
+    }
+    /** từ đã đủ điểm hôm nay (hoặc ở Hũ vàng): học lại không đổi điểm nhớ */
+    function capReached(c, today) { if (!c) return false; if (c.box === GOLD) return true; const d = dayOf(c, today); return !!d && (c.score || 0) >= d.cap; }
+    /** một lượt chấm → thẻ mới + sự kiện; điểm trong ngày có trần và có thể gỡ lại (xem trên), Hũ vàng khoá */
     function applyReview(prev, known, mode, today) {
       const c = prev ? JSON.parse(JSON.stringify(prev)) : { box: 1, score: 0, due: today, iv: 0, last: "", seen: 0, lapses: 0, ok: 0, log: [] };
-      const from = prev ? c.box : 0; const w = MODE_W[mode] || 1;
+      const from = prev ? c.box : 0; const w = MODE_W[mode] || 1; const before = c.score || 0;
       c.seen = (c.seen || 0) + 1;
-      let kind, delta = 0;
-      // r = nhớ lại từ vừa quên hôm nay: không đổi điểm (1 lần/ngày) nhưng dời hạn sang mai, để từ rời danh sách đến hạn
-      if (prev && known && c.box !== GOLD && c.last === today && c.due <= today) { kind = "r"; c.iv = 1; c.due = dAdd(today, 1); }
-      else if (prev && (c.box === GOLD || c.last === today)) kind = "p";
-      else if (!known) { kind = "f"; delta = -Math.max(1, Math.round(PENALTY * w)); c.lapses = (c.lapses || 0) + 1; }
+      let kind, delta = 0, d = prev ? dayOf(c, today) : null; const first = !d;
+      if (c.box === GOLD) kind = "p";
       else {
-        kind = timing(prev, today); const base = JAR_GAIN[c.box] || JAR_GAIN[1];
-        delta = Math.max(1, Math.round((kind === "e" ? EARLY_GAIN : kind === "l" ? base / 2 : base) * w));
-        if (kind === "o") c.ok = (c.ok || 0) + 1;
+        const k0 = first ? timing(prev, today) : null;
+        if (first) { const g = dayGain(c, k0); d = { d: today, s0: before, cap: Math.min(100, before + g), g }; }
+        if (!known) {
+          kind = "f"; c.lapses = (c.lapses || 0) + 1;
+          const floor = Math.max(0, d.s0 - PENALTY);   // một ngày trừ tối đa PENALTY
+          c.score = Math.max(before - Math.max(1, Math.round(PENALTY * w)), Math.min(before, floor));
+        } else if (before >= d.cap) kind = "p";
+        else {
+          kind = first ? k0 : "r";
+          c.score = Math.min(d.cap, before + Math.max(1, Math.round(d.g * w)));
+          if (kind === "o") c.ok = (c.ok || 0) + 1;
+        }
       }
-      if (kind !== "p" && kind !== "r") {
-        const before = c.score || 0; c.score = Math.max(0, Math.min(100, before + delta)); c.box = jarOf(c.score); delta = c.score - before;
+      if (kind !== "p") {
+        c.score = Math.max(0, Math.min(100, c.score)); c.box = jarOf(c.score); delta = c.score - before;
         if (kind === "f") { c.iv = 0; c.due = today; }
         else { c.iv = jarInterval(c.box, c.score); c.due = c.box === GOLD ? GOLD_DUE : dAdd(today, c.iv); }
-        c.last = today;
+        c.last = today; c.day = { d: today, s0: d.s0, cap: d.cap, g: d.g };
       }
       c.log = [...(c.log || []), logLine(today, delta, kind, mode, from, c.box)].slice(-LOG_MAX);
       return { card: c, ev: { delta, kind, from, to: c.box, score: c.score } };
     }
     function knownCard(mode, today) {
-      return { box: 5, score: 75, iv: 30, due: dAdd(today, 30), last: today, seen: 1, lapses: 0, ok: 0, log: [logLine(today, 75, "k", mode, 0, 5)] };
+      return { box: 5, score: 75, iv: 30, due: dAdd(today, 30), last: today, seen: 1, lapses: 0, ok: 0, day: { d: today, s0: 0, cap: 75, g: 0 }, log: [logLine(today, 75, "k", mode, 0, 5)] };
     }
     function manualCard(prev, jar, today) {
       const c = prev ? JSON.parse(JSON.stringify(prev)) : { seen: 0, lapses: 0, ok: 0, log: [] };
       const from = prev ? prev.box : 0; const before = prev ? prev.score || 0 : 0;
       c.score = JAR_MIN[jar]; c.box = jarOf(c.score); c.iv = jarInterval(c.box, c.score);
       c.due = c.box === GOLD ? GOLD_DUE : dAdd(today, c.iv); c.last = c.last || "";
+      if (c.last === today) c.day = { d: today, s0: c.score, cap: c.score, g: JAR_GAIN[c.box] || JAR_GAIN[1] }; else delete c.day;
       c.log = [...(c.log || []), logLine(today, c.score - before, "m", "-", from, c.box)].slice(-LOG_MAX);
       return c;
     }
@@ -1846,12 +1939,11 @@
     const jarName = (b) => (b === GOLD ? L("Hũ vàng", "Gold jar") : b ? L(`Hũ ${b}`, `Jar ${b}`) : L("Mới", "New"));
     const jarSrc = (b) => `assets/hu/${b === GOLD ? "hu_vang" : b ? "hu_" + b : "hu_moi"}.svg`;
     const JAR_RANGE = { 0: L("chưa học", "not studied"), 1: "0-4", 2: "5-14", 3: "15-29", 4: "30-49", 5: "50-99", 6: "100" };
-    const KIND_LABEL = { n: L("Lần đầu", "First time"), o: L("Đúng hạn", "On time"), e: L("Ôn sớm", "Early review"), l: L("Trễ hạn", "Overdue"), f: L("Quên", "Forgot"), p: L("Luyện thêm", "Extra practice"), r: L("Nhớ lại", "Relearned"), k: L("Đã biết", "Already known"), m: L("Đặt tay", "Set manually"), c: L("Quy đổi", "Converted") };
-    const MODE_LABEL = { card: L("Thẻ lật", "Flashcards"), reverse: L("Thẻ ngược", "Reverse cards"), quiz: L("Trắc nghiệm", "Quiz"), cloze: L("Điền câu", "Cloze"), dictation: L("Nghe và gõ", "Listen & type"), ship: L("Phi thuyền", "Spaceship"), "-": "" };
+    const KIND_LABEL = { n: L("Lần đầu", "First time"), o: L("Đúng hạn", "On time"), e: L("Ôn sớm", "Early review"), l: L("Trễ hạn", "Overdue"), f: L("Quên", "Forgot"), p: L("Luyện thêm", "Extra practice"), r: L("Gỡ lại", "Recovered"), k: L("Đã biết", "Already known"), m: L("Đặt tay", "Set manually"), c: L("Quy đổi", "Converted") };
+    const MODE_LABEL = { card: L("Thẻ lật", "Flashcards"), reverse: L("Thẻ ngược", "Reverse cards"), quiz: L("Trắc nghiệm", "Quiz"), p7: L("Gần nghĩa nhất", "Closest meaning"), cloze: L("Điền câu", "Cloze"), dictation: L("Nghe và gõ", "Listen & type"), ship: L("Phi thuyền", "Spaceship"), badminton: L("Cầu lông", "Badminton"), pig: L("Heo ăn cầu", "Piggy feast"), "-": "" };
     /** câu ngắn cho người học: "+10 điểm nhớ (đúng hạn), Hũ 2 → Hũ 3" */
     function evText(ev) {
-      if (ev.kind === "p") return ev.to === GOLD ? L("Từ đã ở Hũ vàng, lượt này không đổi điểm.", "Word is already in the Gold jar, no points change this time.") : L("Hôm nay từ này đã được tính điểm, lượt này là luyện thêm.", "This word already scored today, so this round is extra practice.");
-      if (ev.kind === "r") return L(`Đã nhớ lại. Điểm nhớ giữ ở ${ev.score} (hôm nay đã tính điểm), ôn lại vào ngày mai.`, `Relearned. Memory points stay at ${ev.score} (already scored today), next review tomorrow.`);
+      if (ev.kind === "p") return ev.to === GOLD ? L("Từ đã ở Hũ vàng, lượt này không đổi điểm.", "Word is already in the Gold jar, no points change this time.") : L("Hôm nay từ này đã đủ điểm, lượt này là luyện thêm.", "This word is already maxed out today, so this round is extra practice.");
       if (ev.delta === 0) return L(`Điểm nhớ giữ ở ${ev.score} (${KIND_LABEL[ev.kind].toLowerCase()}), ${jarName(ev.to)}.`, `Memory points stay at ${ev.score} (${KIND_LABEL[ev.kind].toLowerCase()}), ${jarName(ev.to)}.`);
       const move = ev.from !== ev.to ? L(`, ${ev.from ? jarName(ev.from) : "Mới"} → ${jarName(ev.to)}`, `, ${ev.from ? jarName(ev.from) : "New"} → ${jarName(ev.to)}`) : L(`, vẫn ở ${jarName(ev.to)}`, `, still in ${jarName(ev.to)}`);
       return L(`${ev.delta > 0 ? "+" : "−"}${Math.abs(ev.delta)} điểm nhớ (${KIND_LABEL[ev.kind].toLowerCase()})${move}.`, `${ev.delta > 0 ? "+" : "−"}${Math.abs(ev.delta)} memory points (${KIND_LABEL[ev.kind].toLowerCase()})${move}.`);
@@ -1896,7 +1988,7 @@
       session: null, table: null, voices: [],
     };
 
-    const SETTINGS_DEFAULT = { newPerDay: 20, voice: "", autoSpeak: true, speakFront: false, speakExample: false, rate: 0.95, mode: "card", shipSpeed: "normal", memeRate: 0.85, memeSecs: 15, memeApi: "", memeKey: "", loopBg: "court", shipCtl: "steer" };
+    const SETTINGS_DEFAULT = { newPerDay: 20, voice: "", autoSpeak: true, speakFront: false, speakExample: false, rate: 0.95, mode: "card", shipSpeed: "normal", memeRate: 0.85, memeSecs: 15, memeApi: "", memeKey: "", loopBg: "court", shipCtl: "steer", qType: "def", sentKind: "brick" };
     const HISTORY_DAYS = 90;
     /** bù trường thiếu cho tiến độ cũ (schema cũ hơn) */
     function normalizeProgress(p) {
@@ -2291,14 +2383,14 @@
       state.session = { deckId, queue, idx: 0, known: 0, forgot: 0, history: [], again: new Set(), flipped: false, mode, quiz: null, extraNew: !!extraNew, game: null, gameLog: [] };
       const isGame = mode === "cloze" || mode === "dictation";
       $("shell").hidden = true; $("scr-study").hidden = false; $("study-done").hidden = true;
-      $("fc-scene").hidden = mode === "quiz" || isGame || isArcade(mode) || mode === "pig"; $("pig-panel").hidden = mode !== "pig"; $("quiz-panel").hidden = mode !== "quiz"; $("game-panel").hidden = !isGame; $("ship-panel").hidden = !isArcade(mode);
+      $("fc-scene").hidden = mode === "quiz" || mode === "p7" || isGame || isArcade(mode) || mode === "pig"; $("pig-panel").hidden = mode !== "pig"; $("quiz-panel").hidden = mode !== "quiz" && mode !== "p7"; $("game-panel").hidden = !isGame; $("ship-panel").hidden = !isArcade(mode);
       $("scr-study").querySelector(":scope > footer").hidden = false;
       $("scr-study").classList.toggle("is-space", mode === "ship"); $("scr-study").classList.toggle("is-court", mode === "badminton");
       window.scrollTo(0, 0);
       if (isArcade(mode)) shipInit();
       if (mode === "pig") pigInit();
-      const modeLabel = { card: "", reverse: L(" · ngược", " · reverse"), quiz: L(" · trắc nghiệm", " · quiz"), cloze: L(" · điền câu", " · cloze"), dictation: L(" · nghe và gõ", " · listen & type"), ship: L(" · phi thuyền", " · spaceship"), badminton: L(" · cầu lông", " · badminton"), pig: L(" · heo ăn cầu", " · piggy feast") }[mode] || "";
-      $("study-deck").textContent = deckById(deckId).name + modeLabel + (extraNew ? L(" · thẻ mới", " · new card") : "");
+      const modeLabel = { card: "", reverse: L(" · ngược", " · reverse"), quiz: L(" · trắc nghiệm", " · quiz"), p7: L(" · gần nghĩa nhất", " · closest meaning"), cloze: L(" · điền câu", " · cloze"), dictation: L(" · nghe và gõ", " · listen & type"), ship: L(" · phi thuyền", " · spaceship"), badminton: L(" · cầu lông", " · badminton"), pig: L(" · heo ăn cầu", " · piggy feast") }[mode] || "";
+      $("study-deck").textContent = deckById(deckId).name + modeLabel + (["quiz", "ship", "badminton"].includes(mode) && qType() === "syn" ? L(" · đồng nghĩa", " · synonyms") : "") + (extraNew ? L(" · thẻ mới", " · new card") : "");
       renderCard(); p04Wake();
     }
 
@@ -2311,19 +2403,20 @@
 
     // ---- Hộp thoại chọn hũ: chọn nhóm từ, xáo, mỗi từ chỉ một lần trong phiên
     const ICON_CLOCK = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
-    const PICK_MODE_NAME = { card: L("Thẻ lật", "Flashcards"), reverse: L("Thẻ ngược", "Reverse cards"), quiz: L("Trắc nghiệm", "Quiz"), cloze: L("Điền câu ETS", "ETS cloze"), dictation: L("Nghe và gõ", "Listen & type"), ship: L("Phi thuyền", "Spaceship"), badminton: L("Cầu lông", "Badminton"), pig: L("Heo ăn cầu", "Piggy feast") };
+    const PICK_MODE_NAME = { card: L("Thẻ lật", "Flashcards"), reverse: L("Thẻ ngược", "Reverse cards"), quiz: L("Trắc nghiệm", "Quiz"), p7: L("Gần nghĩa nhất", "Closest meaning"), cloze: L("Điền câu ETS", "ETS cloze"), dictation: L("Nghe và gõ", "Listen & type"), ship: L("Phi thuyền", "Spaceship"), badminton: L("Cầu lông", "Badminton"), pig: L("Heo ăn cầu", "Piggy feast") };
     // một dòng giới thiệu cho mỗi chế độ (hướng dẫn chi tiết để ở chế độ Giới thiệu)
     const MODE_INTRO = {
       card: L("Xem từ, đoán nghĩa, lật thẻ rồi tự chấm Thuộc hoặc Quên.", "See the word, guess the meaning, flip the card, then mark Know it or Forgot."),
       reverse: L("Xem nghĩa, đoán từ, lật thẻ rồi tự chấm.", "See the meaning, guess the word, flip the card, then grade yourself."),
       quiz: L("Chọn nghĩa đúng trong 4 đáp án.", "Pick the right meaning from 4 options."),
+      p7: L("Kiểu câu hỏi Part 7: từ gạch chân trong câu ETS gần nghĩa nhất với đáp án nào? Đáp án được chia đúng dạng từ trong câu.", "Part 7 style: which option is closest in meaning to the underlined word in the ETS sentence? Options match the word's form in the sentence."),
       cloze: L("Chọn 1 trong 4 từ rồi gõ từng chữ vào chỗ trống trong câu ETS.", "Pick 1 of 4 words, then type it letter by letter into the blank in the ETS sentence."),
       dictation: L("Nghe giọng Mỹ, gõ lại đúng chính tả.", "Listen to the US voice and type the word with correct spelling."),
       ship: L("Đọc nghĩa, lái phi thuyền vào thiên thạch mang từ đúng.", "Read the meaning and steer the spaceship into the asteroid with the right word."),
       badminton: L("Đọc nghĩa, đưa vợt đỡ trái cầu xịn mang từ đúng.", "Read the meaning and move your racket to hit the real shuttle with the right word."),
       pig: L("Nghe từ, kéo trái cầu mang nghĩa đúng vào miệng Heo Ủn. Đúng thì heo lớn thêm, sai thì heo gầy đi.", "Hear the word and drag the shuttle with the right meaning into Piggy's mouth. Right makes Piggy grow, wrong makes Piggy shrink."),
     };
-    const MODE_STEPS = { ship: 2, badminton: 2 };
+    const MODE_STEPS = { ship: 2, badminton: 2, quiz: 2 };
     const isArcade = (m) => m === "ship" || m === "badminton";
     const pick = { mode: "card", groups: {}, sel: new Set(), step: 1 };
     function pickGroups(mode) {
@@ -2348,14 +2441,14 @@
       pickSum();
     }
     function pickIds() { const ids = new Set(); for (const k of pick.sel) for (const id of pick.groups[k] || []) ids.add(id); return [...ids]; }
-    // từ đã tính điểm hôm nay (nhớ đúng) hoặc đã ở Hũ vàng: học lại là "luyện thêm", không đổi điểm nhớ, nhớ đúng được vàng
-    const isPractice = (c) => !!c && (c.box === GOLD || (c.last === todayStr() && c.due > todayStr()));
+    // từ đã đủ điểm hôm nay (nhớ đúng) hoặc đã ở Hũ vàng: học lại là "luyện thêm", không đổi điểm nhớ, nhớ đúng được vàng
+    const isPractice = (c) => capReached(c, todayStr());
     const coinsLeft = () => { const k = state.progress.coins || {}; return Math.max(0, (k.earned || 0) - (k.spent || 0)); };
     const COIN_GAIN = { cloze: 2, dictation: 2 };
     function pickSum() {
       const n = pickIds().length; const size = Number($("pick-size").value) || 0; const take = size ? Math.min(size, n) : n;
       const prac = pickIds().filter((id) => isPractice(cardState(id))).length; const w = $("pick-warn");
-      w.hidden = !prac; w.textContent = prac ? L(`${ui.fmt(prac)} từ đã tính điểm hôm nay hoặc đã ở Hũ vàng: học lại không cộng điểm nhớ, chỉ nhận vàng.`, `${ui.fmt(prac)} words already scored today or in the Gold jar: studying them again adds no memory points, only coins.`) : "";
+      w.hidden = !prac; w.textContent = prac ? L(`${ui.fmt(prac)} từ đã đủ điểm hôm nay hoặc đã ở Hũ vàng: học lại không cộng điểm nhớ, chỉ nhận vàng.`, `${ui.fmt(prac)} words already maxed out today or in the Gold jar: studying them again adds no memory points, only coins.`) : "";
       $("pick-sum").textContent = n ? L(`${ui.fmt(take)} / ${ui.fmt(n)} từ, xáo ngẫu nhiên · ${deckById(state.deck).name}`, `${ui.fmt(take)} / ${ui.fmt(n)} words, shuffled · ${deckById(state.deck).name}`) : L("Chưa chọn hũ nào có từ.", "No selected jar has words.");
       $("pick-go").disabled = n === 0;
     }
@@ -2373,11 +2466,21 @@
       const steps = MODE_STEPS[pick.mode] || 1; pick.step = n;
       $("pick-step-1").hidden = n !== 1; $("pick-step-2").hidden = n !== 2;
       document.querySelectorAll("#pick-step-2 [data-opt]").forEach((el) => { el.hidden = !el.dataset.opt.split(" ").includes(pick.mode); });
+      qtypeSync();
       $("pick-step-l").hidden = steps < 2; $("pick-step-l").textContent = L(`Bước ${n}/${steps} · ${n === 1 ? "Chọn hũ" : "Tuỳ chọn"}`, `Step ${n}/${steps} · ${n === 1 ? "Pick jars" : "Options"}`);
       $("pick-go").textContent = n < steps ? L("Tiếp", "Next") : L("Bắt đầu", "Start");
       $("pick-back").textContent = n > 1 ? L("Quay lại", "Back") : L("Huỷ", "Cancel");
       if (n === 1) pickSum(); else $("pick-go").disabled = false;
     }
+    // kiểu đề: "def" = nghĩa (danh sách đồng nghĩa, như cũ); "syn" = một đồng nghĩa đơn
+    const qType = () => (state.progress.settings.qType === "syn" ? "syn" : "def");
+    function qtypeSync() {
+      const t = qType(); document.querySelectorAll("[data-qtype]").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.qtype === t)));
+      $("qtype-hint").textContent = t === "def" ? L("Đề như cũ: đọc nghĩa (danh sách đồng nghĩa).", "As before: read the meaning (list of synonyms).")
+        : pick.mode === "quiz" ? L("Mỗi câu một kiểu: xem từ rồi chọn 1 đồng nghĩa, hoặc xem 1 đồng nghĩa rồi chọn từ TOEIC.", "Each question is one of two kinds: see the word and pick 1 synonym, or see 1 synonym and pick the TOEIC word.")
+        : L("Đề chỉ hiện 1 đồng nghĩa, chọn từ TOEIC cùng nghĩa.", "The question shows just 1 synonym; pick the TOEIC word with the same meaning.");
+    }
+    document.querySelectorAll("[data-qtype]").forEach((b) => b.addEventListener("click", () => { state.progress.settings.qType = b.dataset.qtype; markDirty(); qtypeSync(); }));
     $("pick-back").addEventListener("click", () => { if (pick.step > 1) pickStep(pick.step - 1); else $("dlg-pick").close(); });
     $("pick-size").addEventListener("change", pickSum);
     $("pick-go").addEventListener("click", () => {
@@ -2395,7 +2498,7 @@
     function practiceAsk(queue, prac, mode) {
       Object.assign(pend, { queue, prac, mode });
       const gain = COIN_GAIN[mode] || 1;
-      $("prac-desc").textContent = L(`${ui.fmt(prac.length)} / ${ui.fmt(queue.length)} từ đã tính điểm nhớ hôm nay hoặc đã ở Hũ vàng. Học lại không đổi điểm nhớ; mỗi lần nhớ đúng được +${gain} vàng. Vàng dùng để mua vật phẩm ở phiên bản sau.`, `${ui.fmt(prac.length)} / ${ui.fmt(queue.length)} words already scored today or are in the Gold jar. Studying them again won't change memory points; each correct answer earns +${gain} coins. Coins will buy items in the next version.`);
+      $("prac-desc").textContent = L(`${ui.fmt(prac.length)} / ${ui.fmt(queue.length)} từ đã đủ điểm nhớ hôm nay hoặc đã ở Hũ vàng. Học lại không đổi điểm nhớ; mỗi lần nhớ đúng được +${gain} vàng. Vàng dùng để mua vật phẩm ở phiên bản sau.`, `${ui.fmt(prac.length)} / ${ui.fmt(queue.length)} words already maxed out today or are in the Gold jar. Studying them again won't change memory points; each correct answer earns +${gain} coins. Coins will buy items in the next version.`);
       $("prac-skip").hidden = prac.length === queue.length;
       $("dlg-practice").showModal(); $("prac-go").focus();
     }
@@ -2417,7 +2520,7 @@
       const img = $("study-jar"); const wrap = $("study-jar-wrap");
       img.src = jarSrc(ev.to); $("study-jar-label").textContent = `${jarName(ev.to)} · ${ui.fmt(ev.score)}`;
       $("study-jar-live").textContent = evText(ev);
-      if (ev.kind === "p" || ev.kind === "r") return;
+      if (ev.kind === "p") return;
       const cls = ev.to === GOLD && ev.from !== GOLD ? "is-gold" : ev.delta < 0 ? "is-fall" : "is-catch";
       img.className = "hu-jar h-10 w-auto"; void img.offsetWidth; img.classList.add(cls);
       const f = document.createElement("span"); f.className = "hu-score " + (ev.delta < 0 ? "down" : "up");
@@ -2470,7 +2573,7 @@
     function renderCard() {
       const s = state.session; const id = currentId();
       if (!id) { finishSession(); return; }
-      if (s.mode === "quiz") { renderQuiz(); return; }
+      if (s.mode === "quiz" || s.mode === "p7") { renderQuiz(); return; }
       if (s.mode === "cloze" || s.mode === "dictation") { renderGame(); return; }
       if (isArcade(s.mode)) { renderShip(); return; }
       if (s.mode === "pig") { renderPig(); return; }
@@ -2517,11 +2620,85 @@
       const options = shuffle([e, ...picks].map((c) => ({ id: c.id, def: shortDef(mainSyn(c)) })));
       return { options, answered: false, correct: null };
     }
+    // ---- Đồng nghĩa: tập nghĩa của một từ (chính nó + các đồng nghĩa), chọn 1 đồng nghĩa, chọn từ nhiễu không dính nghĩa
+    const SYNSET = new Map();
+    function synSetOf(e) {
+      if (!SYNSET.has(e.id)) SYNSET.set(e.id, new Set([stripParen(e.word).toLowerCase(), ...mmSyns(e).map((t) => stripParen(t).toLowerCase())]));
+      return SYNSET.get(e.id);
+    }
+    function synRelated(a, b) { const A = synSetOf(a), B = synSetOf(b); for (const x of A) if (B.has(x)) return true; return false; }
+    // đồng nghĩa dùng làm đáp án: không quá dài, không chứa chính từ đó
+    const synList = (e) => { const wl = stripParen(e.word).toLowerCase(); return mmSyns(e).filter((t) => t.length <= 28 && !t.toLowerCase().includes(wl)); };
+    const synPick = (e) => { const l = synList(e); return l.length ? l[Math.floor(Math.random() * l.length)] : null; };
+    function synPool(e, extra) {
+      const mpos = posOf(e)[0];
+      const ok = (c) => c.id !== e.id && posOf(c)[0] === mpos && (!extra || extra(c)) && !synRelated(e, c);
+      let pool = deckCards(state.session ? state.session.deckId : state.deck).filter(ok);
+      if (pool.length < 6) pool = VOCAB.filter(ok);
+      return shuffle(pool.slice());
+    }
+    /** dir: "w2s" xem từ → chọn 1 đồng nghĩa; "s2w" xem 1 đồng nghĩa → chọn từ TOEIC */
+    function synQuiz(e, dir, accept) {
+      const syn = synPick(e); if (!syn) return null;
+      if (dir === "s2w") {
+        const others = synPool(e, (c) => stripParen(c.word).length <= 28).slice(0, 3); if (others.length < 3) return null;
+        return { options: shuffle([e, ...others].map((c) => ({ id: c.id, def: stripParen(c.word) }))), answered: false, correct: null, dir, syn };
+      }
+      const mine = synSetOf(e), seen = new Set([syn.toLowerCase()]), wrong = [];
+      for (const c of synPool(e)) {
+        const l = synList(c).filter((x) => !accept || accept(x)); const t = l.length ? l[Math.floor(Math.random() * l.length)] : null;
+        if (!t || seen.has(t.toLowerCase()) || mine.has(stripParen(t).toLowerCase())) continue;
+        seen.add(t.toLowerCase()); wrong.push({ id: c.id, def: t }); if (wrong.length === 3) break;
+      }
+      if (wrong.length < 3) return null;
+      return { options: shuffle([{ id: e.id, def: syn }, ...wrong]), answered: false, correct: null, dir, syn };
+    }
+    // chia đáp án theo dạng của từ trong câu (acquired → obtained); động từ bất quy tắc thường gặp có bảng riêng
+    const IRR = { get: ["got", "gotten"], take: ["took", "taken"], make: ["made", "made"], give: ["gave", "given"], buy: ["bought", "bought"], keep: ["kept", "kept"], hold: ["held", "held"],
+      find: ["found", "found"], bring: ["brought", "brought"], send: ["sent", "sent"], set: ["set", "set"], put: ["put", "put"], run: ["ran", "run"], meet: ["met", "met"], leave: ["left", "left"],
+      pay: ["paid", "paid"], lead: ["led", "led"], build: ["built", "built"], spend: ["spent", "spent"], sell: ["sold", "sold"], tell: ["told", "told"], think: ["thought", "thought"],
+      see: ["saw", "seen"], go: ["went", "gone"], come: ["came", "come"], begin: ["began", "begun"], choose: ["chose", "chosen"], win: ["won", "won"], cut: ["cut", "cut"], deal: ["dealt", "dealt"],
+      draw: ["drew", "drawn"], grow: ["grew", "grown"], know: ["knew", "known"], lend: ["lent", "lent"], lose: ["lost", "lost"], mean: ["meant", "meant"], rise: ["rose", "risen"], seek: ["sought", "sought"],
+      shut: ["shut", "shut"], stand: ["stood", "stood"], understand: ["understood", "understood"], write: ["wrote", "written"], undertake: ["undertook", "undertaken"], oversee: ["oversaw", "overseen"],
+      withdraw: ["withdrew", "withdrawn"], forecast: ["forecast", "forecast"], show: ["showed", "shown"], speak: ["spoke", "spoken"], break: ["broke", "broken"], drive: ["drove", "driven"],
+      teach: ["taught", "taught"], catch: ["caught", "caught"], fall: ["fell", "fallen"], feel: ["felt", "felt"], hear: ["heard", "heard"], let: ["let", "let"], read: ["read", "read"], say: ["said", "said"],
+      shake: ["shook", "shaken"], strike: ["struck", "struck"], wear: ["wore", "worn"], hang: ["hung", "hung"], bear: ["bore", "borne"], arise: ["arose", "arisen"], foresee: ["foresaw", "foreseen"] };
+    const DBL = new Set(["defer", "prefer", "refer", "transfer", "confer", "commit", "admit", "permit", "submit", "omit", "emit", "plan", "stop", "ship", "drop", "shop", "plug", "chat", "ban", "occur", "recur", "regret", "control", "equip", "compel", "propel", "expel", "forget", "begin", "rob", "grab", "scan", "trim", "slip", "step", "map", "tap", "wrap", "pin", "jog", "nod", "rub", "tag", "kid", "fit", "quit", "split", "sit", "upset", "outfit", "run", "get", "set", "put", "cut", "let", "win", "swim", "hit", "shut"]);
+    const NOPL = new Set(["staff", "information", "equipment", "advice", "furniture", "feedback", "research", "software", "hardware", "personnel", "luggage", "baggage", "merchandise", "machinery", "assistance", "knowledge", "news", "money", "work", "help", "support", "funding", "lateness"]);
+    function inflectSyn(text, tok, base, pos) {
+      const parts = text.split(/\s+/); const prep = parts.findIndex((x, j) => j > 0 && /^(of|on|for|in|to|with|by|at|from|about)$/i.test(x));
+      const vi = parts.length > 1 && pos === "v" ? 0 : prep > 0 ? prep - 1 : parts.length - 1;   // động từ: chia từ đầu; cụm danh từ có giới từ: chia danh từ trước giới từ
+      const w = parts[vi].toLowerCase(), t = tok.token.trim().toLowerCase().split(/\s+/).pop(), b = stripParen(base).trim().toLowerCase().split(/\s+/).pop();
+      if (IRR[w] && /d$/.test(t) && t !== b) { const pp = /\b(is|are|was|were|be|been|being|has|have|had|get|gets|got)\s+(\w+\s+)?$/i.test(tok.before); parts[vi] = IRR[w][pp ? 1 : 0]; }
+      else if (w === "be" && t !== b && /ing$/.test(t)) parts[vi] = "being";
+      else if (/s$/.test(t) && t !== b && (NOPL.has(w) || /(ness|s)$/.test(w))) { /* danh từ không đếm được: giữ nguyên */ }
+      else if (DBL.has(w) && t !== b && /(ed|ing)$/.test(t)) parts[vi] = w + w.slice(-1) + (/ing$/.test(t) ? "ing" : "ed");   // defer → deferred
+      else parts[vi] = inflectLike(parts[vi], tok.token, base);
+      const out = parts.join(" ");
+      return out.toLowerCase() === text.toLowerCase() ? text : out;   // không chia thì giữ nguyên chữ hoa (CV, IT…)
+    }
+    function p7Quiz(e) {
+      const t = findToken(e.example, e.word); if (!t) return null;
+      const pos = sensesOf(e)[0].pos;
+      // động từ: bỏ đáp án nhiễu đã ở dạng -ing/-ed (drawing → "drawinged")
+      const q = synQuiz(e, "w2s", pos === "v" ? (x) => !/(ing|ed)$/i.test(x.split(/\s+/)[0]) : null); if (!q) return null;
+      q.options = q.options.map((o) => ({ ...o, def: inflectSyn(o.def, t, e.word, pos) }));
+      q.dir = "p7"; q.stem = L(`Trong câu trên, từ “${t.token}” gần nghĩa nhất với:`, `In the sentence above, the word “${t.token}” is closest in meaning to:`);
+      return q;
+    }
+    function quizFor(mode, e) {
+      if (mode === "p7") { const q = p7Quiz(e); if (q) return q; }
+      if (mode === "quiz" && qType() === "syn") { const q = synQuiz(e, Math.random() < 0.5 ? "w2s" : "s2w") || synQuiz(e, "w2s"); if (q) return q; }
+      return buildQuiz(e.id);
+    }
     function renderQuiz() {
       const s = state.session; const id = currentId(); const e = BY_ID.get(id); const cs = cardState(id);
-      s.flipped = false; s.quiz = buildQuiz(id);
-      $("qz-word").textContent = e.word; $("qz-ipa").textContent = e.ipa; $("qz-pos").innerHTML = posChipsHtml(e);
-      $("qz-ex").hidden = !e.example; $("qz-ex").innerHTML = e.example ? highlight(e.example, e.word) : ""; $("qz-ex-vi").hidden = true;
+      s.flipped = false; s.quiz = quizFor(s.mode, e);
+      const q = s.quiz, hide = q.dir === "s2w";   // đề là 1 đồng nghĩa: giấu từ, IPA, câu ví dụ tới khi trả lời
+      $("qz-word").textContent = hide ? "≈ " + q.syn : e.word; $("qz-ipa").textContent = hide ? "" : e.ipa; $("qz-ipa").hidden = hide; $("qz-speak").hidden = hide;
+      $("qz-pos").innerHTML = posChipsHtml(e);
+      $("qz-ex").hidden = !e.example || hide; $("qz-ex").innerHTML = e.example && !hide ? highlight(e.example, e.word) : ""; $("qz-ex-vi").hidden = true;
+      $("qz-stem").hidden = !q.stem && !hide; $("qz-stem").textContent = q.stem || (hide ? L("Từ TOEIC nào cùng nghĩa?", "Which TOEIC word has the same meaning?") : "");
       const box = $("qz-options"); box.innerHTML = "";
       s.quiz.options.forEach((o, i) => {
         const b = document.createElement("button"); b.type = "button"; b.className = "btn qz-opt w-full"; b.dataset.variant = "outline"; b.dataset.i = i;
@@ -2534,7 +2711,7 @@
       $("study-actions-front").hidden = true; $("study-actions-back").hidden = true; $("study-actions-quiz").hidden = false; $("study-actions-game").hidden = true;
       $("btn-quiz-next").hidden = true; $("study-known").hidden = true;
       $("quiz-panel").scrollTop = 0;
-      if (state.progress.settings.speakFront) speak(e.word);
+      if (state.progress.settings.speakFront && !hide) speak(e.word);
     }
     function answerQuiz(i) {
       const s = state.session; if (!s || !s.quiz || s.quiz.answered) return;
@@ -2542,7 +2719,9 @@
       const correctIdx = q.options.findIndex((o) => o.id === id); q.correct = i === correctIdx;
       const btns = $("qz-options").querySelectorAll("button");
       btns.forEach((b, j) => { b.disabled = true; if (j === correctIdx) b.dataset.state = "correct"; else if (j === i) b.dataset.state = "wrong"; });
-      const pv = applyReview(cardState(id), q.correct, "quiz", todayStr()).ev;
+      const pv = applyReview(cardState(id), q.correct, s.mode, todayStr()).ev;
+      if (q.dir === "s2w") { const e = BY_ID.get(id); $("qz-word").textContent = `${e.word} ≈ ${q.syn}`; $("qz-ipa").textContent = e.ipa; $("qz-ipa").hidden = false; $("qz-speak").hidden = false;
+        if (e.example) { $("qz-ex").innerHTML = highlight(e.example, e.word); $("qz-ex").hidden = false; } }
       $("qz-feedback").textContent = (q.correct ? L("Đúng. ", "Correct. ") : L("Chưa đúng, đáp án đúng được đánh dấu bên trên. ", "Not quite, the right answer is marked above. ")) + evText(pv);
       { const vi = exampleVi(BY_ID.get(id)); $("qz-ex-vi").textContent = vi; $("qz-ex-vi").hidden = !vi; }
       $("btn-quiz-next").hidden = false; $("btn-quiz-next").focus();
@@ -2592,6 +2771,7 @@
       if (mode === "cloze") return (e) => !!findToken(e.example, e.word);
       if (mode === "dictation") return (e) => !!dictAnswers(e);
       if (isArcade(mode)) return (e) => stripParen(e.word).length <= 22;
+      if (mode === "p7") return (e) => sensesOf(e).length === 1 && !!findToken(e.example, e.word) && synList(e).length > 0;
       return () => true;
     }
     // ---- Tường gạch: mỗi chữ cái một viên. Gõ đúng: gạch nổ, lộ chữ (vạch xanh). Gõ sai: gạch hoá thép,
@@ -2902,7 +3082,8 @@
     function renderGameTiles() {
       if (typeof mmLoad === "function" && !renderGameTiles.mm) { renderGameTiles.mm = true; mmLoad(); }
       $("gt-tone").textContent = L(`${ui.fmt(toneList().length)} câu ví dụ có sẵn`, `${ui.fmt(toneList().length)} example sentences`);
-      for (const m of ["card", "reverse", "quiz", "cloze", "dictation", "ship", "badminton", "pig"]) {
+      { const n = sentPool().length; $("gt-sent").textContent = n ? L(`${ui.fmt(n)} câu · chỉ cộng vàng`, `${ui.fmt(n)} sentences · coins only`) : L("Bộ này chưa có câu ví dụ", "No example sentences in this deck"); $("btn-sent").disabled = !n; }
+      for (const m of ["card", "reverse", "quiz", "p7", "cloze", "dictation", "ship", "badminton", "pig"]) {
         const st = deckStats(state.deck, m); const el = $("gt-" + m); const btn = document.querySelector(`[data-mode="${m}"]`);
         el.textContent = st.total === 0 ? L("Không có từ phù hợp", "No matching words") : st.due + st.newLeft > 0 ? L(`${ui.fmt(st.due)} đến hạn · ${ui.fmt(st.newLeft)} mới`, `${ui.fmt(st.due)} due · ${ui.fmt(st.newLeft)} new`) : st.fresh > 0 ? L("Xong hôm nay", "Done for today") : L("Đã học hết bộ này", "Deck finished");
         btn.disabled = st.total === 0;
@@ -3316,6 +3497,11 @@
         const tot = tgtWords.filter(Boolean).length, pct = Math.round(m.n / Math.max(1, tot) * 100);
         $("tone-result").textContent = L(`Khớp ${m.n}/${tot} từ (${pct}%). Máy nghe được: “${best}”.` + (pct < 100 ? " Từ gạch đỏ: đọc lại cho rõ." : ""), `Matched ${m.n}/${tot} words (${pct}%). Heard: “${best}”.` + (pct < 100 ? " Red-underlined words: say them more clearly." : ""))
           + (pct >= 90 ? L(" Tốt lắm!", " Great!") : "");
+        // vàng: ≥80% +2, 100% +3; mỗi câu một lần mỗi lần mở màn (không đổi điểm nhớ)
+        const coin = pct >= 100 ? 3 : pct >= 80 ? 2 : 0, ck = r.words.map((x) => x.core).join(" ");
+        tone.paid = tone.paid || new Map();
+        const had = tone.paid.get(ck) || 0;
+        if (coin > had) { addCoins(coin - had); tone.paid.set(ck, coin); $("tone-result").textContent += L(` +${coin - had} vàng.`, ` +${coin - had} coins.`); }
       };
       try { rec.start(); } catch (e) { tone.rec = null; $("tone-result").textContent = L("Không mở được micro.", "Couldn't start the microphone."); }
     }
@@ -3328,6 +3514,127 @@
       return { n: hit.size, hit };
     }
     $("btn-tone").addEventListener("click", toneOpen);
+
+    // ================================================================
+    // CHÉP CHÍNH TẢ CÂU VÍ DỤ: nghe cả câu, gõ lần lượt từng từ (Space/Enter để chốt).
+    // Gạch: mỗi từ một viên (thấy độ dài từ). Sương mù: cả câu chìm trong sương, gõ đúng từ nào sương tan ở từ đó.
+    // Chỉ cộng vàng: không đổi điểm nhớ, không tính là học từ mới.
+    // ================================================================
+    const SENT_COIN = { brick: 2, fog: 4 };
+    const sent = { list: [], i: 0, e: null, toks: [], k: 0, err: 0, hints: 0, done: true, earned: 0, paid: new Set() };
+    const sentKind = () => (state.progress.settings.sentKind === "fog" ? "fog" : "brick");
+    const sentKey = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+    const sentPool = () => deckCards(state.deck).filter((e) => e.example && e.example.trim().split(/\s+/).length >= 4);
+    function addCoins(n) { const p = state.progress; p.coins = p.coins || { earned: 0, spent: 0 }; p.coins.earned = (p.coins.earned || 0) + n; markDirty(); }
+    function sentOpen() {
+      sent.list = shuffle(sentPool()); sent.i = 0; sent.earned = 0;
+      if (!sent.list.length) { ui.toast(L("Không có câu ví dụ", "No example sentences"), L("Bộ thẻ này chưa có câu ví dụ. Chọn bộ khác.", "This deck has no example sentences. Pick another deck."), "info"); return; }
+      $("shell").hidden = true; $("scr-sent").hidden = false; window.scrollTo(0, 0);
+      $("sent-title").textContent = L("Chép chính tả câu", "Sentence dictation");
+      $("sent-back").setAttribute("aria-label", L("Về trang chính", "Back to home"));
+      $("sent-kind").setAttribute("aria-label", L("Nhánh chơi", "Variant"));
+      const [b1, b2] = $("sent-kind").querySelectorAll("button"); b1.textContent = L("Gạch", "Bricks"); b2.textContent = L("Sương mù", "Fog");
+      $("sent-play-l").textContent = L("Nghe", "Listen"); $("sent-slow-l").textContent = L("Nghe chậm", "Slow");
+      $("sent-hint").textContent = L("Gợi ý 1 từ", "Reveal 1 word"); $("sent-skip").textContent = L("Bỏ qua", "Skip"); $("sent-next").textContent = L("Câu tiếp", "Next sentence");
+      $("sent-input").placeholder = L("Gõ từng từ, Space để chốt", "Type word by word, Space to lock in");
+      $("sent-coins").title = L("Vàng nhận ở màn này", "Coins earned here"); $("sent-coins-n").textContent = "0";
+      sentKindSync(); sentShow();
+    }
+    function sentKindSync() {
+      const k = sentKind();
+      document.querySelectorAll("[data-sentkind]").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.sentkind === k)));
+      $("sent-kind-hint").textContent = k === "fog" ? L(`Cả câu chìm trong sương, chỉ nghe. Xong câu: +${SENT_COIN.fog} vàng.`, `The whole sentence is hidden in fog; listen only. Finish: +${SENT_COIN.fog} coins.`)
+        : L(`Mỗi từ một viên gạch, thấy độ dài từ. Xong câu: +${SENT_COIN.brick} vàng.`, `One brick per word, so you see each word's length. Finish: +${SENT_COIN.brick} coins.`);
+      $("sent-stage").classList.toggle("is-fog", k === "fog");
+    }
+    function sentShow() {
+      const e = sent.list[sent.i % sent.list.length]; sent.e = e; Object.assign(sent, { k: 0, err: 0, hints: 0, done: false, toks: [] });
+      const line = $("sent-line"); line.innerHTML = "";
+      e.example.trim().split(/\s+/).forEach((raw, n) => {
+        if (n) line.appendChild(document.createTextNode(" "));
+        const m = raw.match(/^([^\p{L}\p{N}]*)(.*?)([^\p{L}\p{N}]*)$/u) || ["", "", raw, ""];
+        const span = document.createElement("span"); span.className = "wslot";
+        const piece = (t) => { if (t) span.appendChild(document.createTextNode(t)); };
+        piece(m[1]);
+        const key = sentKey(m[2]);
+        if (key) {
+          const box = document.createElement("span"); box.className = "wbox";
+          const tx = document.createElement("span"); tx.className = "wtx"; tx.textContent = m[2];
+          const br = document.createElement("span"); br.className = "brick";
+          box.append(tx, br); span.appendChild(box);
+          sent.toks.push({ el: span, brick: br, key, text: m[2], wrong: false, helped: false });
+        } else piece(m[2]);
+        piece(m[3]); line.appendChild(span);
+      });
+      $("sent-stage").classList.remove("is-done");
+      $("sent-sub").textContent = `${deckById(state.deck).name} · ${L("câu", "sentence")} ${ui.fmt(sent.i % sent.list.length + 1)}/${ui.fmt(sent.list.length)}`;
+      $("sent-result").hidden = true; $("sent-result").innerHTML = ""; $("sent-next").hidden = true; $("sent-skip").hidden = false;
+      const inp = $("sent-input"); inp.value = ""; inp.disabled = false; $("sent-hint").disabled = false;
+      sentStatus(L(`${ui.fmt(sent.toks.length)} từ. Nghe rồi gõ lần lượt từng từ.`, `${ui.fmt(sent.toks.length)} words. Listen, then type them in order.`));
+      sentMark(); toneSpeak(e.example, { rate: 0.95 }); inp.focus();
+    }
+    const sentStatus = (t) => { $("sent-status").textContent = t; };
+    function sentMark() { sent.toks.forEach((t, j) => t.el.classList.toggle("cur", j === sent.k && !sent.done)); }
+    function sentReveal(t, kind) {
+      t.el.classList.add("on", kind);
+      if (sentKind() === "brick") shatter(t.brick, t.brick.classList.contains("steel"));
+      if (!reducedMotion()) t.el.animate([{ opacity: 0.2, transform: "scale(.9)" }, { opacity: 1, transform: "scale(1)" }], { duration: 260, easing: "cubic-bezier(0.16, 1, 0.3, 1)" });
+    }
+    function sentTry(w) {
+      const t = sent.toks[sent.k]; if (!t || sent.done) return;
+      if (sentKey(w) === t.key) {
+        sentReveal(t, t.wrong || t.helped ? "retry" : "ok"); sent.k++; sentMark();
+        if (sent.k >= sent.toks.length) sentFinish(true);
+        else sentStatus(L(`Đúng. Còn ${ui.fmt(sent.toks.length - sent.k)} từ.`, `Correct. ${ui.fmt(sent.toks.length - sent.k)} words left.`));
+        return;
+      }
+      sent.err++; t.wrong = true;
+      sentStatus(L(`“${w}” chưa đúng, gõ lại từ thứ ${sent.k + 1}.`, `“${w}” is wrong, retype word ${sent.k + 1}.`));
+      if (sentKind() === "brick") { t.brick.classList.add("steel"); sparks(t.brick); }
+      if (!reducedMotion()) (sentKind() === "brick" ? t.el : $("sent-stage")).animate([{ transform: "translateX(0)" }, { transform: "translateX(-6px)" }, { transform: "translateX(6px)" }, { transform: "translateX(-3px)" }, { transform: "translateX(0)" }], { duration: 280, easing: "ease-in-out" });
+    }
+    function sentSubmit(raw) { const words = String(raw).trim().split(/\s+/).filter(Boolean); $("sent-input").value = ""; for (const w of words) { if (sent.done) break; sentTry(w); } }
+    function sentHint() {
+      const t = sent.toks[sent.k]; if (!t || sent.done) return;
+      t.helped = true; sent.hints++; sentTry(t.text); $("sent-input").focus();
+    }
+    function sentFinish(completed) {
+      if (sent.done) return; sent.done = true; sentMark();
+      sent.toks.slice(sent.k).forEach((t) => t.el.classList.add("on", "miss"));
+      $("sent-stage").classList.add("is-done");
+      $("sent-input").disabled = true; $("sent-hint").disabled = true; $("sent-skip").hidden = true; $("sent-next").hidden = false;
+      const kind = sentKind(), full = SENT_COIN[kind], key = kind + "|" + sent.e.id;
+      let coin = !completed ? 0 : sent.err <= 1 && !sent.hints ? full : Math.max(1, full - sent.hints - Math.max(0, sent.err - 1));
+      const again = coin && sent.paid.has(key); if (again) coin = 0;
+      if (coin) { sent.paid.add(key); sent.earned += coin; addCoins(coin); $("sent-coins-n").textContent = ui.fmt(sent.earned); }
+      const head = !completed ? L("Đã bỏ qua câu này.", "Skipped this sentence.")
+        : (sent.err || sent.hints ? L(`Xong câu: sai ${ui.fmt(sent.err)} lần, gợi ý ${ui.fmt(sent.hints)} từ.`, `Done: ${ui.fmt(sent.err)} mistakes, ${ui.fmt(sent.hints)} hints.`) : L("Hoàn hảo!", "Perfect!"))
+          + (coin ? L(` +${coin} vàng.`, ` +${coin} coins.`) : again ? L(" Câu này đã nhận vàng lần trước.", " Coins for this sentence were already earned.") : "");
+      sentStatus(head);
+      const e = sent.e, vi = exampleVi(e), mean = sensesOf(e).map((x) => (POS_LABEL[x.pos] || x.pos) + " " + x.syn).join("; ");
+      $("sent-result").innerHTML = (vi ? `<p class="text-muted-foreground">${escapeHtml(vi)}</p>` : "") + `<p><span class="font-medium">${escapeHtml(e.word)}</span> <span class="text-muted-foreground">${escapeHtml(mean)}</span></p>`;
+      $("sent-result").hidden = false; $("sent-next").focus();
+    }
+    function sentExit() { try { speechSynthesis.cancel(); } catch (e) {} $("scr-sent").hidden = true; $("shell").hidden = false; show("home"); renderAll(); }
+    $("btn-sent").addEventListener("click", sentOpen);
+    $("sent-back").addEventListener("click", sentExit);
+    $("sent-play").addEventListener("click", () => { if (sent.e) toneSpeak(sent.e.example, { rate: 0.95 }); $("sent-input").focus(); });
+    $("sent-slow").addEventListener("click", () => { if (sent.e) toneSpeak(sent.e.example, { rate: 0.7 }); $("sent-input").focus(); });
+    $("sent-hint").addEventListener("click", sentHint);
+    $("sent-skip").addEventListener("click", () => sentFinish(false));
+    $("sent-next").addEventListener("click", () => { sent.i++; sentShow(); });
+    $("sent-stage").addEventListener("click", () => { if (!$("sent-input").disabled) $("sent-input").focus(); });
+    $("sent-input").addEventListener("keydown", (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); sentSubmit(ev.target.value); } });
+    $("sent-input").addEventListener("input", (ev) => { if (/\s/.test(ev.target.value)) sentSubmit(ev.target.value); });
+    document.querySelectorAll("[data-sentkind]").forEach((b) => b.addEventListener("click", () => {
+      state.progress.settings.sentKind = b.dataset.sentkind; markDirty(); sentKindSync();
+      if (sent.e && !sent.done && sent.k === 0) sentShow(); else $("sent-input").focus();
+    }));
+    document.addEventListener("keydown", (e) => {
+      if ($("scr-sent").hidden || document.querySelector("dialog[open]")) return;
+      if (e.key === "Escape") { sentExit(); return; }
+      if (e.key === "Enter" && sent.done && document.activeElement !== $("sent-next")) { e.preventDefault(); $("sent-next").click(); }
+    });
     $("tone-back").addEventListener("click", toneExit);
     $("tone-prev").addEventListener("click", () => toneShow(tone.i - 1));
     $("tone-next").addEventListener("click", () => toneShow(tone.i + 1));
@@ -3633,7 +3940,8 @@
       const sense = sensesOf(e)[0];
       if (!verdict) {
         const ex = e.example ? `<p class="text-muted-foreground mt-1 line-clamp-2 text-sm italic">${maskExample(e.example, e.word)}</p>` : "";
-        $("ship-q").innerHTML = `<p class="font-medium leading-6"><span class="hud-chip me-1">${POS_LABEL[sense.pos] || sense.pos}</span>${escapeHtml(sense.syn)}</p>${ex}`;
+        $("ship-q").innerHTML = ship.qsyn ? `<p class="font-medium leading-6"><span class="hud-chip me-1">${POS_LABEL[sense.pos] || sense.pos}</span>≈ ${escapeHtml(ship.qsyn)}</p><p class="text-sm opacity-80">${L("Từ TOEIC nào cùng nghĩa?", "Which TOEIC word has the same meaning?")}</p>${ex}`
+          : `<p class="font-medium leading-6"><span class="hud-chip me-1">${POS_LABEL[sense.pos] || sense.pos}</span>${escapeHtml(sense.syn)}</p>${ex}`;
       } else {
         $("ship-q").innerHTML = L(`<p class="${verdict.ok ? "gm-ok" : "gm-bad"} text-sm font-medium">${verdict.ok ? `Đúng, +${verdict.pts} điểm game.` : "Chưa đúng."} ${escapeHtml(verdict.mem || "")}</p>
           <p class="leading-6"><span class="text-lg font-semibold">${escapeHtml(stripParen(e.word))}</span> <span class="text-muted-foreground">${escapeHtml(e.ipa)}</span></p>
@@ -3644,7 +3952,7 @@
     }
     function shipBuildWave(id) {
       const e = BY_ID.get(id); const mpos = posOf(e)[0]; const wl = normAns(stripParen(e.word));
-      const okC = (c) => c.id !== id && posOf(c)[0] === mpos && stripParen(c.word).length <= 22 && normAns(stripParen(c.word)) !== wl;
+      const okC = (c) => c.id !== id && posOf(c)[0] === mpos && stripParen(c.word).length <= 22 && normAns(stripParen(c.word)) !== wl && !(ship.qsyn && synRelated(e, c));
       let pool = deckCards(state.session.deckId).filter(okC); if (pool.length < 2) pool = VOCAB.filter(okC);
       const labels = shuffle([{ text: stripParen(e.word), correct: true }, ...shuffle(pool.slice()).slice(0, 2).map((c) => ({ text: stripParen(c.word), correct: false }))]);
       const sp = SHIP_SPEED[state.progress.settings.shipSpeed] || SHIP_SPEED.normal;
@@ -3739,6 +4047,7 @@
       const id = currentId(); const e = BY_ID.get(id);
       renderProgressBar(s);
       $("study-actions-front").hidden = true; $("study-actions-back").hidden = true; $("study-actions-quiz").hidden = true; $("study-actions-game").hidden = true; $("study-known").hidden = true;
+      ship.qsyn = qType() === "syn" ? synPick(e) : null;
       shipQuestion(e, null); shipBuildWave(id);
     }
     function shipGameOver() {
@@ -4134,7 +4443,7 @@
       if (e.key === "u" || e.key === "U") { undo(); return; }
       if (e.key === "Escape") { exitStudy(); return; }
       if (state.session.mode === "cloze" || state.session.mode === "dictation") return;
-      if (state.session.mode === "quiz") {
+      if (state.session.mode === "quiz" || state.session.mode === "p7") {
         if (e.key === " " || e.key === "Enter") { e.preventDefault(); quizNext(); return; }
         if (/^[1-4]$/.test(e.key)) answerQuiz(Number(e.key) - 1);
         return;

@@ -3,7 +3,7 @@ const fs = require("fs"); const assert = require("assert");
 const html = fs.readFileSync(process.argv[2], "utf8");
 const m = html.match(/\/\/ <MEM-CORE>([\s\S]*?)\/\/ <\/MEM-CORE>/);
 assert(m, "MEM-CORE block not found");
-const core = new Function("//" + m[1] + "\nreturn { jarOf, jarInterval, timing, applyReview, migrateCard, knownCard, manualCard, dAdd, JAR_MIN };")();
+const core = new Function("//" + m[1] + "\nreturn { jarOf, jarInterval, timing, applyReview, migrateCard, knownCard, manualCard, dAdd, JAR_MIN, capReached, dayOf };")();
 const { jarOf, timing, applyReview, migrateCard, knownCard, manualCard, dAdd } = core;
 let n = 0; const t = (name, fn) => { fn(); n++; console.log("ok -", name); };
 const T = "2026-10-11";
@@ -51,21 +51,46 @@ t("mode weight: ship ×0.5, quiz ×0.7 on gain and penalty", () => {
   assert.strictEqual(applyReview(c, true, "quiz", T).ev.delta, 11);  // 15 × .7 = 10.5 → 11
   assert.strictEqual(applyReview(c, false, "ship", T).ev.delta, -8); // −15 × .5
 });
-t("one scored event per day: second review same day is practice, no change", () => {
-  const c = applyReview(null, true, "card", T).card;
-  const r = applyReview(c, false, "card", T);
-  assert.strictEqual(r.ev.kind, "p"); assert.strictEqual(r.ev.delta, 0); assert.strictEqual(r.card.score, 5); assert.strictEqual(r.card.box, 2);
+t("daily cap: once maxed out today, more correct answers are practice", () => {
+  const c = applyReview(null, true, "card", T).card;                 // +5 → cap 5
+  const r = applyReview(c, true, "card", T);
+  assert.strictEqual(r.ev.kind, "p"); assert.strictEqual(r.ev.delta, 0); assert.strictEqual(r.card.score, 5);
+  assert.ok(core.capReached(c, T)); assert.ok(!core.capReached(c, "2026-10-12"));
 });
-t("forgot today then correct: relearned, no score change, due moves to tomorrow", () => {
+t("wrong after scoring today still deducts; correct again recovers up to the cap", () => {
+  const c = applyReview(null, true, "card", T).card;                 // 5, cap 5
+  const w = applyReview(c, false, "card", T);                        // floor max(0, 0−15) = 0
+  assert.deepStrictEqual([w.ev.kind, w.ev.delta, w.card.score, w.card.due], ["f", -5, 0, T]);
+  const r = applyReview(w.card, true, "card", T);
+  assert.deepStrictEqual([r.ev.kind, r.ev.delta, r.card.score, r.card.box, r.card.due], ["r", 5, 5, 2, "2026-10-12"]);
+  assert.strictEqual(applyReview(r.card, true, "card", T).ev.kind, "p");
+});
+t("forgot first then correct twice: recover the penalty and still earn the day's points", () => {
   const c = { box: 3, score: 20, due: T, iv: 3, last: "2026-10-08", seen: 3, lapses: 0, ok: 2, log: [] };
-  const f = applyReview(c, false, "card", T).card;           // −15 → 5, due today
-  const r = applyReview(f, true, "card", T);
-  assert.strictEqual(r.ev.kind, "r"); assert.strictEqual(r.ev.delta, 0); assert.strictEqual(r.card.score, f.score);
-  assert.strictEqual(r.card.due, "2026-10-12"); assert.strictEqual(r.card.iv, 1);
-  const again = applyReview(f, false, "card", T);             // quên tiếp: vẫn đến hạn hôm nay
-  assert.strictEqual(again.ev.kind, "p"); assert.strictEqual(again.card.due, T);
-  const nw = applyReview(applyReview(null, false, "card", T).card, true, "card", T);  // từ mới sai rồi đúng
-  assert.strictEqual(nw.ev.kind, "r"); assert.strictEqual(nw.card.due, "2026-10-12");
+  const f = applyReview(c, false, "card", T).card;                   // −15 → 5, cap 35, floor 5
+  assert.strictEqual(f.score, 5); assert.deepStrictEqual(f.day, { d: T, s0: 20, cap: 35, g: 15 });
+  const r1 = applyReview(f, true, "card", T); assert.deepStrictEqual([r1.ev.kind, r1.card.score, r1.card.box, r1.card.due], ["r", 20, 3, "2026-10-14"]);
+  const r2 = applyReview(r1.card, true, "card", T); assert.deepStrictEqual([r2.ev.kind, r2.card.score, r2.card.box], ["r", 35, 4]);
+  assert.strictEqual(applyReview(r2.card, true, "card", T).ev.kind, "p");
+});
+t("several wrongs in a day: total penalty capped at 15", () => {
+  let c = { box: 4, score: 40, due: T, iv: 7, last: "2026-10-04", seen: 4, lapses: 0, ok: 3, log: [] };
+  for (let i = 0; i < 4; i++) c = applyReview(c, false, "ship", T).card;   // −8, −7, 0, 0
+  assert.strictEqual(c.score, 25); assert.strictEqual(c.lapses, 4);
+});
+t("game weight applies to recovery: ship earns half the day's points per correct, card tops up", () => {
+  const c = { box: 2, score: 10, due: T, iv: 1, last: "2026-10-10", seen: 2, lapses: 0, ok: 1, log: [] };
+  const a = applyReview(c, true, "ship", T).card;    // g 10 × .5 → 15, cap 20
+  assert.strictEqual(a.score, 15); assert.ok(!core.capReached(a, T));
+  const b = applyReview(a, true, "card", T).card;    // +10 → capped at 20
+  assert.strictEqual(b.score, 20); assert.ok(core.capReached(b, T));
+});
+t("legacy card scored today before the cap existed", () => {
+  const up = { box: 3, score: 25, due: "2026-10-14", iv: 3, last: T, seen: 3, lapses: 0, ok: 2, log: ["2026-10-11|+10|o|card|2|3"] };
+  assert.ok(core.capReached(up, T)); assert.strictEqual(applyReview(up, true, "card", T).ev.kind, "p");
+  const down = { box: 2, score: 5, due: T, iv: 0, last: T, seen: 3, lapses: 1, ok: 2, log: ["2026-10-11|-15|f|card|3|2"] };
+  assert.ok(!core.capReached(down, T));
+  const r = applyReview(down, true, "card", T); assert.strictEqual(r.ev.kind, "r"); assert.strictEqual(r.card.score, 20);
 });
 t("gold is locked", () => {
   const c = { box: 6, score: 100, due: "9999-12-31", iv: 0, last: "2026-09-01", seen: 9, lapses: 0, ok: 6, log: [] };
