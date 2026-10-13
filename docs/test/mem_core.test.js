@@ -91,6 +91,15 @@ t("legacy card scored today before the cap existed", () => {
   const down = { box: 2, score: 5, due: T, iv: 0, last: T, seen: 3, lapses: 1, ok: 2, log: ["2026-10-11|-15|f|card|3|2"] };
   assert.ok(!core.capReached(down, T));
   const r = applyReview(down, true, "card", T); assert.strictEqual(r.ev.kind, "r"); assert.strictEqual(r.card.score, 20);
+  // bản cũ: từ mới sai ở 0 điểm (delta 0) vẫn gỡ được, không kẹt đến hạn hôm nay
+  const zero = { box: 1, score: 0, due: T, iv: 0, last: T, seen: 1, lapses: 1, ok: 0, log: [T + "|0|f|card|0|1"] };
+  assert.ok(!core.capReached(zero, T));
+  const z = applyReview(zero, true, "card", T); assert.deepStrictEqual([z.ev.kind, z.card.score, z.card.due], ["r", 5, "2026-10-12"]);
+});
+t("known today then forgotten: daily penalty still capped at 15", () => {
+  let k = knownCard("card", T);
+  for (let i = 0; i < 3; i++) k = applyReview(k, false, "card", T).card;
+  assert.strictEqual(k.score, 60);
 });
 t("gold is locked", () => {
   const c = { box: 6, score: 100, due: "9999-12-31", iv: 0, last: "2026-09-01", seen: 9, lapses: 0, ok: 6, log: [] };

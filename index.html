@@ -1888,8 +1888,9 @@
       // thẻ đã chấm hôm nay bằng bản cũ (chưa có trần): suy điểm đầu ngày từ nhật ký
       let s0 = c.score || 0;
       for (const ln of c.log || []) { const a = String(ln).split("|"); if (a[0] === today) s0 -= Number(a[1]) || 0; }
-      s0 = Math.max(0, Math.min(100, s0));
-      return { d: today, s0, cap: Math.max(c.score || 0, s0), g: JAR_GAIN[jarOf(s0)] || JAR_GAIN[1] };
+      s0 = Math.max(0, Math.min(100, s0)); const g = JAR_GAIN[jarOf(s0)] || JAR_GAIN[1];
+      // còn đến hạn hôm nay = vừa quên ở bản cũ: vẫn cho gỡ tới s0 + g (không thì từ quên ở 0 điểm kẹt cả ngày)
+      return { d: today, s0, cap: c.due <= today ? Math.min(100, s0 + g) : Math.max(c.score || 0, s0), g };
     }
     /** từ đã đủ điểm hôm nay (hoặc ở Hũ vàng): học lại không đổi điểm nhớ */
     function capReached(c, today) { if (!c) return false; if (c.box === GOLD) return true; const d = dayOf(c, today); return !!d && (c.score || 0) >= d.cap; }
@@ -1924,7 +1925,7 @@
       return { card: c, ev: { delta, kind, from, to: c.box, score: c.score } };
     }
     function knownCard(mode, today) {
-      return { box: 5, score: 75, iv: 30, due: dAdd(today, 30), last: today, seen: 1, lapses: 0, ok: 0, day: { d: today, s0: 0, cap: 75, g: 0 }, log: [logLine(today, 75, "k", mode, 0, 5)] };
+      return { box: 5, score: 75, iv: 30, due: dAdd(today, 30), last: today, seen: 1, lapses: 0, ok: 0, day: { d: today, s0: 75, cap: 75, g: 0 }, log: [logLine(today, 75, "k", mode, 0, 5)] };
     }
     function manualCard(prev, jar, today) {
       const c = prev ? JSON.parse(JSON.stringify(prev)) : { seen: 0, lapses: 0, ok: 0, log: [] };
@@ -2627,19 +2628,29 @@
       return SYNSET.get(e.id);
     }
     function synRelated(a, b) { const A = synSetOf(a), B = synSetOf(b); for (const x of A) if (B.has(x)) return true; return false; }
+    // gần nghĩa bậc 2: t là từ TOEIC dính nghĩa với e, hoặc là đồng nghĩa của một đồng nghĩa của e
+    // (complete ≈ carry out; "accomplish" là mục từ khác có đồng nghĩa "complete" → không dùng làm đáp án nhiễu)
+    let WORD_IDX = null;
+    function synNear(e, t) {
+      if (!WORD_IDX) { WORD_IDX = new Map(); for (const x of VOCAB) { const k = stripParen(x.word).toLowerCase(); if (!WORD_IDX.has(k)) WORD_IDX.set(k, []); WORD_IDX.get(k).push(x); } }
+      const k = stripParen(t).toLowerCase();
+      if ((WORD_IDX.get(k) || []).some((x) => x.id === e.id || synRelated(e, x))) return true;
+      for (const s of synSetOf(e)) if ((WORD_IDX.get(s) || []).some((y) => synSetOf(y).has(k))) return true;
+      return false;
+    }
     // đồng nghĩa dùng làm đáp án: không quá dài, không chứa chính từ đó
     const synList = (e) => { const wl = stripParen(e.word).toLowerCase(); return mmSyns(e).filter((t) => t.length <= 28 && !t.toLowerCase().includes(wl)); };
-    const synPick = (e) => { const l = synList(e); return l.length ? l[Math.floor(Math.random() * l.length)] : null; };
+    const synPick = (e, accept) => { const l = synList(e).filter((x) => !accept || accept(x)); return l.length ? l[Math.floor(Math.random() * l.length)] : null; };
     function synPool(e, extra) {
       const mpos = posOf(e)[0];
-      const ok = (c) => c.id !== e.id && posOf(c)[0] === mpos && (!extra || extra(c)) && !synRelated(e, c);
+      const ok = (c) => c.id !== e.id && posOf(c)[0] === mpos && (!extra || extra(c)) && !synRelated(e, c) && !synNear(e, c.word);
       let pool = deckCards(state.session ? state.session.deckId : state.deck).filter(ok);
       if (pool.length < 6) pool = VOCAB.filter(ok);
       return shuffle(pool.slice());
     }
     /** dir: "w2s" xem từ → chọn 1 đồng nghĩa; "s2w" xem 1 đồng nghĩa → chọn từ TOEIC */
     function synQuiz(e, dir, accept) {
-      const syn = synPick(e); if (!syn) return null;
+      const syn = synPick(e, dir === "w2s" ? accept : null); if (!syn) return null;
       if (dir === "s2w") {
         const others = synPool(e, (c) => stripParen(c.word).length <= 28).slice(0, 3); if (others.length < 3) return null;
         return { options: shuffle([e, ...others].map((c) => ({ id: c.id, def: stripParen(c.word) }))), answered: false, correct: null, dir, syn };
@@ -2647,7 +2658,7 @@
       const mine = synSetOf(e), seen = new Set([syn.toLowerCase()]), wrong = [];
       for (const c of synPool(e)) {
         const l = synList(c).filter((x) => !accept || accept(x)); const t = l.length ? l[Math.floor(Math.random() * l.length)] : null;
-        if (!t || seen.has(t.toLowerCase()) || mine.has(stripParen(t).toLowerCase())) continue;
+        if (!t || seen.has(t.toLowerCase()) || mine.has(stripParen(t).toLowerCase()) || synNear(e, t)) continue;
         seen.add(t.toLowerCase()); wrong.push({ id: c.id, def: t }); if (wrong.length === 3) break;
       }
       if (wrong.length < 3) return null;
@@ -2660,14 +2671,26 @@
       see: ["saw", "seen"], go: ["went", "gone"], come: ["came", "come"], begin: ["began", "begun"], choose: ["chose", "chosen"], win: ["won", "won"], cut: ["cut", "cut"], deal: ["dealt", "dealt"],
       draw: ["drew", "drawn"], grow: ["grew", "grown"], know: ["knew", "known"], lend: ["lent", "lent"], lose: ["lost", "lost"], mean: ["meant", "meant"], rise: ["rose", "risen"], seek: ["sought", "sought"],
       shut: ["shut", "shut"], stand: ["stood", "stood"], understand: ["understood", "understood"], write: ["wrote", "written"], undertake: ["undertook", "undertaken"], oversee: ["oversaw", "overseen"],
-      withdraw: ["withdrew", "withdrawn"], forecast: ["forecast", "forecast"], show: ["showed", "shown"], speak: ["spoke", "spoken"], break: ["broke", "broken"], drive: ["drove", "driven"],
+      withdraw: ["withdrew", "withdrawn"], become: ["became", "become"], forecast: ["forecast", "forecast"], show: ["showed", "shown"], speak: ["spoke", "spoken"], break: ["broke", "broken"], drive: ["drove", "driven"],
       teach: ["taught", "taught"], catch: ["caught", "caught"], fall: ["fell", "fallen"], feel: ["felt", "felt"], hear: ["heard", "heard"], let: ["let", "let"], read: ["read", "read"], say: ["said", "said"],
       shake: ["shook", "shaken"], strike: ["struck", "struck"], wear: ["wore", "worn"], hang: ["hung", "hung"], bear: ["bore", "borne"], arise: ["arose", "arisen"], foresee: ["foresaw", "foreseen"] };
     const DBL = new Set(["defer", "prefer", "refer", "transfer", "confer", "commit", "admit", "permit", "submit", "omit", "emit", "plan", "stop", "ship", "drop", "shop", "plug", "chat", "ban", "occur", "recur", "regret", "control", "equip", "compel", "propel", "expel", "forget", "begin", "rob", "grab", "scan", "trim", "slip", "step", "map", "tap", "wrap", "pin", "jog", "nod", "rub", "tag", "kid", "fit", "quit", "split", "sit", "upset", "outfit", "run", "get", "set", "put", "cut", "let", "win", "swim", "hit", "shut"]);
     const NOPL = new Set(["staff", "information", "equipment", "advice", "furniture", "feedback", "research", "software", "hardware", "personnel", "luggage", "baggage", "merchandise", "machinery", "assistance", "knowledge", "news", "money", "work", "help", "support", "funding", "lateness"]);
+    // động từ gốc chia được: từ đầu của mục từ có nghĩa động từ + bảng bất quy tắc / nhân đôi phụ âm (không gồm "be")
+    let VERB_OK = null;
+    function verbOk() {
+      if (!VERB_OK) {
+        VERB_OK = new Set([...Object.keys(IRR), ...DBL]);
+        for (const x of VOCAB) if (sensesOf(x).some((s) => s.pos === "v" || s.pos === "phr.v")) VERB_OK.add(stripParen(x.word).toLowerCase().split(/\s+/)[0]);
+        for (const w of [...VERB_OK]) if (w === "be" || /(ing|ed)$/.test(w) || w.includes("/")) VERB_OK.delete(w);
+      }
+      return VERB_OK;
+    }
     function inflectSyn(text, tok, base, pos) {
       const parts = text.split(/\s+/); const prep = parts.findIndex((x, j) => j > 0 && /^(of|on|for|in|to|with|by|at|from|about)$/i.test(x));
       const vi = parts.length > 1 && pos === "v" ? 0 : prep > 0 ? prep - 1 : parts.length - 1;   // động từ: chia từ đầu; cụm danh từ có giới từ: chia danh từ trước giới từ
+      // cụm danh từ dài (> 2 từ trước giới từ: "figure or role", "document proving who you are"): không đoán được từ chính, giữ nguyên
+      if (pos !== "v" && (prep > 0 ? prep : parts.length) > 2) return text;
       const w = parts[vi].toLowerCase(), t = tok.token.trim().toLowerCase().split(/\s+/).pop(), b = stripParen(base).trim().toLowerCase().split(/\s+/).pop();
       if (IRR[w] && /d$/.test(t) && t !== b) { const pp = /\b(is|are|was|were|be|been|being|has|have|had|get|gets|got)\s+(\w+\s+)?$/i.test(tok.before); parts[vi] = IRR[w][pp ? 1 : 0]; }
       else if (w === "be" && t !== b && /ing$/.test(t)) parts[vi] = "being";
@@ -2680,8 +2703,10 @@
     function p7Quiz(e) {
       const t = findToken(e.example, e.word); if (!t) return null;
       const pos = sensesOf(e)[0].pos;
-      // động từ: bỏ đáp án nhiễu đã ở dạng -ing/-ed (drawing → "drawinged")
-      const q = synQuiz(e, "w2s", pos === "v" ? (x) => !/(ing|ed)$/i.test(x.split(/\s+/)[0]) : null); if (!q) return null;
+      const last = (x) => x.trim().toLowerCase().split(/\s+/).pop();
+      const infl = last(t.token) !== last(stripParen(e.word));
+      // động từ phải chia: chỉ nhận đáp án mở đầu bằng động từ gốc đã biết (bỏ "drawing", "went up", "be present", "improvement" → "drawinged", "wented", "bed", "improvemented")
+      const q = synQuiz(e, "w2s", pos === "v" && infl ? (x) => verbOk().has(x.split(/\s+/)[0].toLowerCase()) : null); if (!q) return null;
       q.options = q.options.map((o) => ({ ...o, def: inflectSyn(o.def, t, e.word, pos) }));
       q.dir = "p7"; q.stem = L(`Trong câu trên, từ “${t.token}” gần nghĩa nhất với:`, `In the sentence above, the word “${t.token}” is closest in meaning to:`);
       return q;
@@ -3952,7 +3977,7 @@
     }
     function shipBuildWave(id) {
       const e = BY_ID.get(id); const mpos = posOf(e)[0]; const wl = normAns(stripParen(e.word));
-      const okC = (c) => c.id !== id && posOf(c)[0] === mpos && stripParen(c.word).length <= 22 && normAns(stripParen(c.word)) !== wl && !(ship.qsyn && synRelated(e, c));
+      const okC = (c) => c.id !== id && posOf(c)[0] === mpos && stripParen(c.word).length <= 22 && normAns(stripParen(c.word)) !== wl && !(ship.qsyn && (synRelated(e, c) || synNear(e, c.word)));
       let pool = deckCards(state.session.deckId).filter(okC); if (pool.length < 2) pool = VOCAB.filter(okC);
       const labels = shuffle([{ text: stripParen(e.word), correct: true }, ...shuffle(pool.slice()).slice(0, 2).map((c) => ({ text: stripParen(c.word), correct: false }))]);
       const sp = SHIP_SPEED[state.progress.settings.shipSpeed] || SHIP_SPEED.normal;
